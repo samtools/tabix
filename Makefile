@@ -40,7 +40,7 @@ bgzip:bgzip.o bgzf.o knetfile.o
 kstring.o:kstring.h
 knetfile.o:knetfile.h
 bgzf.o:bgzf.h knetfile.h
-index.o:tabix.h khash.h ksort.h kstring.h
+index.o:bgzf.h tabix.h khash.h ksort.h kstring.h
 main.o:tabix.h kstring.h bgzf.h
 bgzip.o:bgzf.h
 
