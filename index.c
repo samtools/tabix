@@ -45,8 +45,11 @@ typedef struct {
 	int tid, beg, end, bin;
 } ti_intv_t;
 
-
 ti_conf_t ti_conf_gff = { 0, 1, 4, 5, '#', 0 };
+ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2, 3, '#', 0 };
+ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, '#', 0 };
+ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, '@', 0 };
+ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, '#', 0 };
 
 /***************
  * read a line *
@@ -119,41 +122,75 @@ static inline int ti_reg2bin(uint32_t beg, uint32_t end)
 	return 0;
 }
 
-static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
+static int get_tid(ti_index_t *idx, const char *ss)
 {
 	khint_t k;
+	int tid;
+	k = kh_get(s, idx->tname, ss);
+	if (k == kh_end(idx->tname)) { // a new target sequence
+		int ret, size;
+		// update idx->n, ->max, ->index and ->index2
+		if (idx->n == idx->max) {
+			idx->max = idx->max? idx->max<<1 : 8;
+			idx->index = realloc(idx->index, idx->max * sizeof(void*));
+			idx->index2 = realloc(idx->index2, idx->max * sizeof(ti_lidx_t));
+		}
+		memset(&idx->index2[idx->n], 0, sizeof(ti_lidx_t));
+		idx->index[idx->n++] = kh_init(i);
+		// update ->tname
+		tid = size = kh_size(idx->tname);
+		k = kh_put(s, idx->tname, strdup(ss), &ret);
+		kh_value(idx->tname, k) = size;
+		assert(idx->n == kh_size(idx->tname));
+	} else tid = kh_value(idx->tname, k);
+	return tid;
+}
+
+static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
+{
 	int i, b = 0, id = 1;
 	char *s;
-
-	if (idx->conf.preset != TI_PRESET_GENERIC) return -1;
 	intv->tid = intv->beg = intv->end = intv->bin = -1;
 	for (i = 0; i <= str->l; ++i) {
 		if (str->s[i] == '\t' || str->s[i] == 0) {
 			if (id == idx->conf.sc) {
 				str->s[i] = 0;
-				k = kh_get(s, idx->tname, str->s + b);
-				if (k == kh_end(idx->tname)) { // a new target sequence
-					int ret, size;
-					// update idx->n, ->max, ->index and ->index2
-					if (idx->n == idx->max) {
-						idx->max = idx->max? idx->max<<1 : 8;
-						idx->index = realloc(idx->index, idx->max * sizeof(void*));
-						idx->index2 = realloc(idx->index2, idx->max * sizeof(ti_lidx_t));
-					}
-					memset(&idx->index2[idx->n], 0, sizeof(ti_lidx_t));
-					idx->index[idx->n++] = kh_init(i);
-					// update ->tname
-					intv->tid = size = kh_size(idx->tname);
-					s = strdup(str->s + b);
-					k = kh_put(s, idx->tname, s, &ret);
-					kh_value(idx->tname, k) = size;
-					assert(idx->n == kh_size(idx->tname));
-				} else intv->tid = kh_value(idx->tname, k);
+				intv->tid = get_tid(idx, str->s + b);
 				if (i != str->l) str->s[i] = '\t';
 			} else if (id == idx->conf.bc) {
+				// here ->beg is 1-based. it will be changed to 0-based at the end of this routine.
 				intv->beg = strtol(str->s + b, &s, 0);
-			} else if (id == idx->conf.ec) {
-				intv->end = strtol(str->s + b, &s, 0);
+				if (idx->conf.preset&TI_FLAG_UCSC) ++intv->beg;
+			} else {
+				if ((idx->conf.preset&0xffff) == TI_PRESET_GENERIC) {
+					if (id == idx->conf.ec) intv->end = strtol(str->s + b, &s, 0);
+				} else if ((idx->conf.preset&0xffff) == TI_PRESET_SAM) {
+					if (id == 6) { // CIGAR
+						int l = 0, op;
+						char *t;
+						for (s = str->s + b; s < str->s + i;) {
+							long x = strtol(s, &t, 10);
+							op = toupper(*t);
+							if (op == 'M' || op == 'D' || op == 'N') l += x;
+							s = t + 1;
+						}
+						intv->end = intv->beg + l - 1;
+					}
+				} else if ((idx->conf.preset&0xffff) == TI_PRESET_VCF) {
+					// FIXME: the following is NOT tested and is likely to be buggy
+					if (id == 5) { // ALT
+						char *t;
+						int max = 1;
+						for (s = str->s + b; s < str->s + i;) {
+							if (s[i] == 'D') {
+								long x = strtol(s + 1, &t, 10);
+								if (x > max) max = x;
+								s = t + 1;
+							} else ++s;
+						}
+						intv->end = intv->beg + max - 1;
+					}
+				}
 			}
 			b = i + 1;
 			++id;
@@ -740,7 +777,7 @@ int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *d
 				curr_off = bgzf_tell(fp);
 				if (str->s[0] == idx->conf.meta_char) continue;
 				get_intv((ti_index_t*)idx, str, &intv);
-				if (intv.tid != tid || intv.end >= end) break; // no need to proceed
+				if (intv.tid != tid || intv.beg >= end) break; // no need to proceed
 				else if (is_overlap(beg, end, intv.beg, intv.end)) func(str->l, str->s, data);
 			} else break; // end of file
 		}

@@ -9,6 +9,8 @@
 #define TI_PRESET_SAM     1
 #define TI_PRESET_VCF     2
 
+#define TI_FLAG_UCSC      0x10000
+
 typedef int (*ti_fetch_f)(int l, const char *s, void *data);
 
 struct __ti_index_t;
@@ -20,7 +22,7 @@ typedef struct {
 	int32_t meta_char, line_skip;
 } ti_conf_t;
 
-extern ti_conf_t ti_conf_gff, ti_conf_bed;
+extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam;
 
 #ifdef __cplusplus
 extern "C" {

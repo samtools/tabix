@@ -1,5 +1,5 @@
 CC=			gcc
-CFLAGS=		-g -Wall -arch ppc #-m64
+CFLAGS=		-g -Wall -O2 #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE
 LOBJS=		bgzf.o kstring.o knetfile.o index.o
 AOBJS=		main.o
