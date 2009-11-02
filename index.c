@@ -144,11 +144,15 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 				k = kh_get(s, idx->tname, str->s + b);
 				if (k == kh_end(idx->tname)) { // a new target sequence
 					int ret, size;
+					// update idx->n, ->max, ->index and ->index2
 					if (idx->n == idx->max) {
 						idx->max = idx->max? idx->max<<1 : 8;
 						idx->index = realloc(idx->index, idx->max * sizeof(void*));
+						idx->index2 = realloc(idx->index2, idx->max * sizeof(ti_lidx_t));
 					}
+					memset(&idx->index2[idx->n], 0, sizeof(ti_lidx_t));
 					idx->index[idx->n++] = kh_init(i);
+					// update ->tname
 					intv->tid = size = kh_size(idx->tname);
 					s = strdup(str->s + b);
 					k = kh_put(s, idx->tname, s, &ret);
@@ -186,7 +190,7 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 	idx->n = idx->max = 0;
 	idx->tname = kh_init(s);
 	idx->index = 0;
-	idx->index2 = (ti_lidx_t*)calloc(idx->n, sizeof(ti_lidx_t));
+	idx->index2 = 0;
 
 	save_bin = save_tid = last_tid = last_bin = 0xffffffffu;
 	save_off = last_off = bgzf_tell(fp); last_coor = 0xffffffffu;
@@ -220,6 +224,8 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 	}
 	if (save_tid >= 0) insert_offset(idx->index[save_tid], save_bin, save_off, bgzf_tell(fp));
 	merge_chunks(idx);
+
+	free(str->s); free(str);
 	return idx;
 }
 
@@ -364,13 +370,15 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 		khint_t k;
 		str = calloc(1, sizeof(kstring_t));
 		j = 0;
-		while ((c = fgetc(fp)) != EOF && j < idx->n) {
+		while ((c = fgetc(fp)) != EOF) {
 			if (c == 0) {
 				k = kh_put(s, idx->tname, strdup(str->s), &ret);
 				kh_value(idx->tname, k) = j++;
 				str->l = 0;
+				if (j == idx->n) break;
 			} else kputc(c, str);
 		}
+		free(str->s); free(str);
 	}
 	for (i = 0; i < idx->n; ++i) {
 		khash_t(i) *index;
@@ -480,7 +488,7 @@ ti_index_t *ti_index_load(const char *fn)
 	idx = ti_index_load_local(fn);
 	if (idx == 0 && (strstr(fn, "ftp://") == fn || strstr(fn, "http://") == fn)) {
 		char *fnidx = calloc(strlen(fn) + 5, 1);
-		strcat(strcpy(fnidx, fn), ".tai");
+		strcat(strcpy(fnidx, fn), ".idx");
 		fprintf(stderr, "[ti_index_load] attempting to download the remote index file.\n");
 		download_from_remote(fnidx);
 		idx = ti_index_load_local(fn);
@@ -503,7 +511,7 @@ int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 	bgzf_close(fp);
 	if (_fnidx == 0) {
 		fnidx = (char*)calloc(strlen(fn) + 5, 1);
-		strcpy(fnidx, fn); strcat(fnidx, ".tai");
+		strcpy(fnidx, fn); strcat(fnidx, ".idx");
 	} else fnidx = strdup(_fnidx);
 	fpidx = fopen(fnidx, "w");
 	if (fpidx == 0) {
@@ -549,7 +557,7 @@ int ti_parse_region(ti_index_t *idx, const char *str, int *tid, int *begin, int 
 	*tid = kh_value(h, iter);
 	if (i == k) { /* dump the whole sequence */
 		*begin = 0; *end = 1<<29; free(s);
-		return -1;
+		return 0;
 	}
 	for (p = s + i + 1; i != k; ++i) if (s[i] == '-') break;
 	*begin = atoi(p);

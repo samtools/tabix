@@ -1,5 +1,5 @@
 CC=			gcc
-CFLAGS=		-g -Wall #-O2 #-m64 #-arch ppc
+CFLAGS=		-g -Wall -O2 #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE
 LOBJS=		bgzf.o kstring.o knetfile.o index.o
 AOBJS=		main.o
@@ -37,10 +37,12 @@ tabix:lib $(AOBJS)
 bgzip:bgzip.o bgzf.o knetfile.o
 		$(CC) $(CFLAGS) -o $@ bgzip.o bgzf.o knetfile.o -lz
 
-bgzf.o:bgzf.h knetfile.h
+kstring.o:kstring.h
 knetfile.o:knetfile.h
+bgzf.o:bgzf.h knetfile.h
 index.o:tabix.h khash.h ksort.h kstring.h
-main.o:tabix.h
+main.o:tabix.h kstring.h bgzf.h
+bgzip.o:bgzf.h
 
 cleanlocal:
 		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a
