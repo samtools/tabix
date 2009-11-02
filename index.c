@@ -316,22 +316,22 @@ void ti_index_destroy(ti_index_t *idx)
  * index file I/O *
  ******************/
 
-void ti_index_save(const ti_index_t *idx, FILE *fp)
+void ti_index_save(const ti_index_t *idx, BGZF *fp)
 {
 	int32_t i, size, ti_is_be;
 	khint_t k;
 	ti_is_be = bam_is_big_endian();
-	fwrite("TBI\1", 1, 4, fp);
+	bgzf_write(fp, "TBI\1", 4);
 	if (ti_is_be) {
 		uint32_t x = idx->n;
-		fwrite(bam_swap_endian_4p(&x), 4, 1, fp);
-	} else fwrite(&idx->n, 4, 1, fp);
+		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
+	} else bgzf_write(fp, &idx->n, 4);
 	assert(sizeof(ti_conf_t) == 24);
 	if (ti_is_be) { // write ti_conf_t;
 		uint32_t x[6];
 		memcpy(x, &idx->conf, 24);
-		for (i = 0; i < 6; ++i) fwrite(bam_swap_endian_4p(&x[i]), 4, 1, fp);
-	} else fwrite(&idx->conf, sizeof(ti_conf_t), 1, fp);
+		for (i = 0; i < 6; ++i) bgzf_write(fp, bam_swap_endian_4p(&x[i]), 4);
+	} else bgzf_write(fp, &idx->conf, sizeof(ti_conf_t));
 	{ // write target names
 		char **name;
 		int32_t l = 0;
@@ -341,10 +341,10 @@ void ti_index_save(const ti_index_t *idx, FILE *fp)
 				name[kh_value(idx->tname, k)] = (char*)kh_key(idx->tname, k);
 		for (i = 0; i < kh_size(idx->tname); ++i)
 			l += strlen(name[i]) + 1;
-		if (ti_is_be) fwrite(bam_swap_endian_4p(&l), 4, 1, fp);
-		else fwrite(&l, 4, 1, fp);
+		if (ti_is_be) bgzf_write(fp, bam_swap_endian_4p(&l), 4);
+		else bgzf_write(fp, &l, 4);
 		for (i = 0; i < kh_size(idx->tname); ++i)
-			fwrite(name[i], 1, strlen(name[i]) + 1, fp);
+			bgzf_write(fp, name[i], strlen(name[i]) + 1);
 		free(name);
 	}
 	for (i = 0; i < idx->n; ++i) {
@@ -354,49 +354,48 @@ void ti_index_save(const ti_index_t *idx, FILE *fp)
 		size = kh_size(index);
 		if (ti_is_be) { // big endian
 			uint32_t x = size;
-			fwrite(bam_swap_endian_4p(&x), 4, 1, fp);
-		} else fwrite(&size, 4, 1, fp);
+			bgzf_write(fp, bam_swap_endian_4p(&x), 4);
+		} else bgzf_write(fp, &size, 4);
 		for (k = kh_begin(index); k != kh_end(index); ++k) {
 			if (kh_exist(index, k)) {
 				ti_binlist_t *p = &kh_value(index, k);
 				if (ti_is_be) { // big endian
 					uint32_t x;
-					x = kh_key(index, k); fwrite(bam_swap_endian_4p(&x), 4, 1, fp);
-					x = p->n; fwrite(bam_swap_endian_4p(&x), 4, 1, fp);
+					x = kh_key(index, k); bgzf_write(fp, bam_swap_endian_4p(&x), 4);
+					x = p->n; bgzf_write(fp, bam_swap_endian_4p(&x), 4);
 					for (x = 0; (int)x < p->n; ++x) {
 						bam_swap_endian_8p(&p->list[x].u);
 						bam_swap_endian_8p(&p->list[x].v);
 					}
-					fwrite(p->list, 16, p->n, fp);
+					bgzf_write(fp, p->list, 16 * p->n);
 					for (x = 0; (int)x < p->n; ++x) {
 						bam_swap_endian_8p(&p->list[x].u);
 						bam_swap_endian_8p(&p->list[x].v);
 					}
 				} else {
-					fwrite(&kh_key(index, k), 4, 1, fp);
-					fwrite(&p->n, 4, 1, fp);
-					fwrite(p->list, 16, p->n, fp);
+					bgzf_write(fp, &kh_key(index, k), 4);
+					bgzf_write(fp, &p->n, 4);
+					bgzf_write(fp, p->list, 16 * p->n);
 				}
 			}
 		}
 		// write linear index (index2)
 		if (ti_is_be) {
 			int x = index2->n;
-			fwrite(bam_swap_endian_4p(&x), 4, 1, fp);
-		} else fwrite(&index2->n, 4, 1, fp);
+			bgzf_write(fp, bam_swap_endian_4p(&x), 4);
+		} else bgzf_write(fp, &index2->n, 4);
 		if (ti_is_be) { // big endian
 			int x;
 			for (x = 0; (int)x < index2->n; ++x)
 				bam_swap_endian_8p(&index2->offset[x]);
-			fwrite(index2->offset, 8, index2->n, fp);
+			bgzf_write(fp, index2->offset, 8 * index2->n);
 			for (x = 0; (int)x < index2->n; ++x)
 				bam_swap_endian_8p(&index2->offset[x]);
-		} else fwrite(index2->offset, 8, index2->n, fp);
+		} else bgzf_write(fp, index2->offset, 8 * index2->n);
 	}
-	fflush(fp);
 }
 
-static ti_index_t *ti_index_load_core(FILE *fp)
+static ti_index_t *ti_index_load_core(BGZF *fp)
 {
 	int i, ti_is_be;
 	char magic[4];
@@ -406,20 +405,19 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 		fprintf(stderr, "[ti_index_load_core] fail to load index.\n");
 		return 0;
 	}
-	fread(magic, 1, 4, fp);
+	bgzf_read(fp, magic, 4);
 	if (strncmp(magic, "TBI\1", 4)) {
 		fprintf(stderr, "[ti_index_load] wrong magic number.\n");
-		fclose(fp);
 		return 0;
 	}
 	idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));	
-	fread(&idx->n, 4, 1, fp);
+	bgzf_read(fp, &idx->n, 4);
 	if (ti_is_be) bam_swap_endian_4p(&idx->n);
 	idx->tname = kh_init(s);
 	idx->index = (khash_t(i)**)calloc(idx->n, sizeof(void*));
 	idx->index2 = (ti_lidx_t*)calloc(idx->n, sizeof(ti_lidx_t));
 	// read idx->conf
-	fread(&idx->conf, sizeof(ti_conf_t), 1, fp);
+	bgzf_read(fp, &idx->conf, sizeof(ti_conf_t));
 	if (ti_is_be) {
 		bam_swap_endian_4p(&idx->conf.preset);
 		bam_swap_endian_4p(&idx->conf.sc);
@@ -433,10 +431,10 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 		kstring_t *str;
 		int32_t l;
 		uint8_t *buf;
-		fread(&l, 4, 1, fp);
-		buf = calloc(l, 1);
-		fread(buf, l, 1, fp);
+		bgzf_read(fp, &l, 4);
 		if (ti_is_be) bam_swap_endian_4p(&l);
+		buf = calloc(l, 1);
+		bgzf_read(fp, buf, l);
 		str = calloc(1, sizeof(kstring_t));
 		for (i = j = 0; i < l; ++i) {
 			if (buf[i] == 0) {
@@ -456,18 +454,18 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 		ti_binlist_t *p;
 		index = idx->index[i] = kh_init(i);
 		// load binning index
-		fread(&size, 4, 1, fp);
+		bgzf_read(fp, &size, 4);
 		if (ti_is_be) bam_swap_endian_4p(&size);
 		for (j = 0; j < (int)size; ++j) {
-			fread(&key, 4, 1, fp);
+			bgzf_read(fp, &key, 4);
 			if (ti_is_be) bam_swap_endian_4p(&key);
 			k = kh_put(i, index, key, &ret);
 			p = &kh_value(index, k);
-			fread(&p->n, 4, 1, fp);
+			bgzf_read(fp, &p->n, 4);
 			if (ti_is_be) bam_swap_endian_4p(&p->n);
 			p->m = p->n;
 			p->list = (pair64_t*)malloc(p->m * 16);
-			fread(p->list, 16, p->n, fp);
+			bgzf_read(fp, p->list, 16 * p->n);
 			if (ti_is_be) {
 				int x;
 				for (x = 0; x < p->n; ++x) {
@@ -477,11 +475,11 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 			}
 		}
 		// load linear index
-		fread(&index2->n, 4, 1, fp);
+		bgzf_read(fp, &index2->n, 4);
 		if (ti_is_be) bam_swap_endian_4p(&index2->n);
 		index2->m = index2->n;
 		index2->offset = (uint64_t*)calloc(index2->m, 8);
-		fread(index2->offset, index2->n, 8, fp);
+		bgzf_read(fp, index2->offset, index2->n * 8);
 		if (ti_is_be)
 			for (j = 0; j < index2->n; ++j) bam_swap_endian_8p(&index2->offset[j]);
 	}
@@ -490,7 +488,7 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 
 ti_index_t *ti_index_load_local(const char *_fn)
 {
-	FILE *fp;
+	BGZF *fp;
 	char *fnidx, *fn;
 
 	if (strstr(_fn, "ftp://") == _fn || strstr(_fn, "http://") == _fn) {
@@ -502,11 +500,11 @@ ti_index_t *ti_index_load_local(const char *_fn)
 	} else fn = strdup(_fn);
 	fnidx = (char*)calloc(strlen(fn) + 5, 1);
 	strcpy(fnidx, fn); strcat(fnidx, ".tbi");
-	fp = fopen(fnidx, "r");
+	fp = bgzf_open(fnidx, "r");
 	free(fnidx); free(fn);
 	if (fp) {
 		ti_index_t *idx = ti_index_load_core(fp);
-		fclose(fp);
+		bgzf_close(fp);
 		return idx;
 	} else return 0;
 }
@@ -567,8 +565,7 @@ ti_index_t *ti_index_load(const char *fn)
 int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 {
 	char *fnidx;
-	FILE *fpidx;
-	BGZF *fp;
+	BGZF *fp, *fpidx;
 	ti_index_t *idx;
 	if ((fp = bgzf_open(fn, "r")) == 0) {
 		fprintf(stderr, "[ti_index_build2] fail to open the BAM file.\n");
@@ -580,7 +577,7 @@ int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 		fnidx = (char*)calloc(strlen(fn) + 5, 1);
 		strcpy(fnidx, fn); strcat(fnidx, ".tbi");
 	} else fnidx = strdup(_fnidx);
-	fpidx = fopen(fnidx, "w");
+	fpidx = bgzf_open(fnidx, "w");
 	if (fpidx == 0) {
 		fprintf(stderr, "[ti_index_build2] fail to create the index file.\n");
 		free(fnidx);
@@ -588,7 +585,7 @@ int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 	}
 	ti_index_save(idx, fpidx);
 	ti_index_destroy(idx);
-	fclose(fpidx);
+	bgzf_close(fpidx);
 	free(fnidx);
 	return 0;
 }
