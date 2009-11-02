@@ -17,6 +17,7 @@ typedef struct __ti_index_t ti_index_t;
 typedef struct {
 	int32_t preset;
 	int32_t sc, bc, ec;
+	int32_t meta_char, line_skip;
 } ti_conf_t;
 
 extern ti_conf_t ti_conf_gff, ti_conf_bed;

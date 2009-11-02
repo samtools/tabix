@@ -46,7 +46,11 @@ typedef struct {
 } ti_intv_t;
 
 
-ti_conf_t ti_conf_gff = { 0, 1, 4, 5 };
+ti_conf_t ti_conf_gff = { 0, 1, 4, 5, '#', 0 };
+
+/***************
+ * read a line *
+ ***************/
 
 /*
 int ti_readline(BGZF *fp, kstring_t *str)
@@ -99,6 +103,70 @@ int ti_readline(BGZF *fp, kstring_t *str)
 	str->s[str->l] = 0;
 	return str->l;
 }
+
+/*************************************
+ * get the interval from a data line *
+ *************************************/
+
+static inline int ti_reg2bin(uint32_t beg, uint32_t end)
+{
+	--end;
+	if (beg>>14 == end>>14) return 4681 + (beg>>14);
+	if (beg>>17 == end>>17) return  585 + (beg>>17);
+	if (beg>>20 == end>>20) return   73 + (beg>>20);
+	if (beg>>23 == end>>23) return    9 + (beg>>23);
+	if (beg>>26 == end>>26) return    1 + (beg>>26);
+	return 0;
+}
+
+static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
+{
+	khint_t k;
+	int i, b = 0, id = 1;
+	char *s;
+
+	if (idx->conf.preset != TI_PRESET_GENERIC) return -1;
+	intv->tid = intv->beg = intv->end = intv->bin = -1;
+	for (i = 0; i <= str->l; ++i) {
+		if (str->s[i] == '\t' || str->s[i] == 0) {
+			if (id == idx->conf.sc) {
+				str->s[i] = 0;
+				k = kh_get(s, idx->tname, str->s + b);
+				if (k == kh_end(idx->tname)) { // a new target sequence
+					int ret, size;
+					// update idx->n, ->max, ->index and ->index2
+					if (idx->n == idx->max) {
+						idx->max = idx->max? idx->max<<1 : 8;
+						idx->index = realloc(idx->index, idx->max * sizeof(void*));
+						idx->index2 = realloc(idx->index2, idx->max * sizeof(ti_lidx_t));
+					}
+					memset(&idx->index2[idx->n], 0, sizeof(ti_lidx_t));
+					idx->index[idx->n++] = kh_init(i);
+					// update ->tname
+					intv->tid = size = kh_size(idx->tname);
+					s = strdup(str->s + b);
+					k = kh_put(s, idx->tname, s, &ret);
+					kh_value(idx->tname, k) = size;
+					assert(idx->n == kh_size(idx->tname));
+				} else intv->tid = kh_value(idx->tname, k);
+				if (i != str->l) str->s[i] = '\t';
+			} else if (id == idx->conf.bc) {
+				intv->beg = strtol(str->s + b, &s, 0);
+			} else if (id == idx->conf.ec) {
+				intv->end = strtol(str->s + b, &s, 0);
+			}
+			b = i + 1;
+			++id;
+		}
+	}
+	if (intv->tid < 0 || intv->beg < 0 || intv->end < 0) return -1;
+	intv->bin = ti_reg2bin(intv->beg-1, intv->end);
+	return 0;
+}
+
+/************
+ * indexing *
+ ************/
 
 // requirement: len <= LEN_MASK
 static inline void insert_offset(khash_t(i) *h, int bin, uint64_t beg, uint64_t end)
@@ -157,69 +225,13 @@ static void merge_chunks(ti_index_t *idx)
 	} // ~for(i)
 }
 
-static inline int ti_reg2bin(uint32_t beg, uint32_t end)
-{
-	--end;
-	if (beg>>14 == end>>14) return 4681 + (beg>>14);
-	if (beg>>17 == end>>17) return  585 + (beg>>17);
-	if (beg>>20 == end>>20) return   73 + (beg>>20);
-	if (beg>>23 == end>>23) return    9 + (beg>>23);
-	if (beg>>26 == end>>26) return    1 + (beg>>26);
-	return 0;
-}
-
-static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
-{
-	khint_t k;
-	int i, b = 0, id = 1;
-	char *s;
-
-	if (idx->conf.preset != TI_PRESET_GENERIC) return -1;
-	intv->tid = intv->beg = intv->end = intv->bin = -1;
-	for (i = 0; i <= str->l; ++i) {
-		if (str->s[i] == '\t' || str->s[i] == 0) {
-			if (id == idx->conf.sc) {
-				str->s[i] = 0;
-				k = kh_get(s, idx->tname, str->s + b);
-				if (k == kh_end(idx->tname)) { // a new target sequence
-					int ret, size;
-					// update idx->n, ->max, ->index and ->index2
-					if (idx->n == idx->max) {
-						idx->max = idx->max? idx->max<<1 : 8;
-						idx->index = realloc(idx->index, idx->max * sizeof(void*));
-						idx->index2 = realloc(idx->index2, idx->max * sizeof(ti_lidx_t));
-					}
-					memset(&idx->index2[idx->n], 0, sizeof(ti_lidx_t));
-					idx->index[idx->n++] = kh_init(i);
-					// update ->tname
-					intv->tid = size = kh_size(idx->tname);
-					s = strdup(str->s + b);
-					k = kh_put(s, idx->tname, s, &ret);
-					kh_value(idx->tname, k) = size;
-					assert(idx->n == kh_size(idx->tname));
-				} else intv->tid = kh_value(idx->tname, k);
-				if (i != str->l) str->s[i] = '\t';
-			} else if (id == idx->conf.bc) {
-				intv->beg = strtol(str->s + b, &s, 0);
-			} else if (id == idx->conf.ec) {
-				intv->end = strtol(str->s + b, &s, 0);
-			}
-			b = i + 1;
-			++id;
-		}
-	}
-	if (intv->tid < 0 || intv->beg < 0 || intv->end < 0) return -1;
-	intv->bin = ti_reg2bin(intv->beg-1, intv->end);
-	return 0;
-}
-
 ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 {
 	int ret;
 	ti_index_t *idx;
 	uint32_t last_bin, save_bin;
 	int32_t last_coor, last_tid, save_tid;
-	uint64_t save_off, last_off;
+	uint64_t save_off, last_off, lineno = 0;
 	kstring_t *str;
 
 	str = calloc(1, sizeof(kstring_t));
@@ -235,13 +247,17 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 	save_off = last_off = bgzf_tell(fp); last_coor = 0xffffffffu;
 	while ((ret = ti_readline(fp, str)) >= 0) {
 		ti_intv_t intv;
+		++lineno;
+		if (lineno <= idx->conf.line_skip || str->s[0] == idx->conf.meta_char) {
+			last_off = bgzf_tell(fp);
+			continue;
+		}
 		get_intv(idx, str, &intv);
 		if (last_tid != intv.tid) { // change of chromosomes
 			last_tid = intv.tid;
 			last_bin = 0xffffffffu;
 		} else if (last_coor > intv.beg) {
-			fprintf(stderr, "[ti_index_core] the file is not sorted: %u > %u in %d-th chr\n",
-					last_coor, intv.beg, intv.tid + 1);
+			fprintf(stderr, "[ti_index_core] the file is not sorted at line %llu\n", (unsigned long long)lineno);
 			exit(1);
 		}
 		if (intv.bin < 4681) insert_offset2(&idx->index2[intv.tid], intv.beg, intv.end, last_off);
@@ -296,30 +312,37 @@ void ti_index_destroy(ti_index_t *idx)
 	free(idx);
 }
 
+/******************
+ * index file I/O *
+ ******************/
+
 void ti_index_save(const ti_index_t *idx, FILE *fp)
 {
 	int32_t i, size, ti_is_be;
 	khint_t k;
 	ti_is_be = bam_is_big_endian();
-	fwrite("TAI\1", 1, 4, fp);
+	fwrite("TBI\1", 1, 4, fp);
 	if (ti_is_be) {
 		uint32_t x = idx->n;
 		fwrite(bam_swap_endian_4p(&x), 4, 1, fp);
 	} else fwrite(&idx->n, 4, 1, fp);
+	assert(sizeof(ti_conf_t) == 24);
 	if (ti_is_be) { // write ti_conf_t;
-		uint32_t x;
-		x = bam_swap_endian_4(idx->conf.preset); fwrite(&x, 4, 1, fp);
-		x = bam_swap_endian_4(idx->conf.sc); fwrite(&x, 4, 1, fp);
-		x = bam_swap_endian_4(idx->conf.bc); fwrite(&x, 4, 1, fp);
-		x = bam_swap_endian_4(idx->conf.ec); fwrite(&x, 4, 1, fp);
+		uint32_t x[6];
+		memcpy(x, &idx->conf, 24);
+		for (i = 0; i < 6; ++i) fwrite(bam_swap_endian_4p(&x[i]), 4, 1, fp);
 	} else fwrite(&idx->conf, sizeof(ti_conf_t), 1, fp);
 	{ // write target names
 		char **name;
+		int32_t l = 0;
 		name = calloc(kh_size(idx->tname), sizeof(void*));
-		for (k = kh_begin(idx->tname); k != kh_end(idx->tname); ++k) {
+		for (k = kh_begin(idx->tname); k != kh_end(idx->tname); ++k)
 			if (kh_exist(idx->tname, k))
 				name[kh_value(idx->tname, k)] = (char*)kh_key(idx->tname, k);
-		}
+		for (i = 0; i < kh_size(idx->tname); ++i)
+			l += strlen(name[i]) + 1;
+		if (ti_is_be) fwrite(bam_swap_endian_4p(&l), 4, 1, fp);
+		else fwrite(&l, 4, 1, fp);
 		for (i = 0; i < kh_size(idx->tname); ++i)
 			fwrite(name[i], 1, strlen(name[i]) + 1, fp);
 		free(name);
@@ -384,7 +407,7 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 		return 0;
 	}
 	fread(magic, 1, 4, fp);
-	if (strncmp(magic, "TAI\1", 4)) {
+	if (strncmp(magic, "TBI\1", 4)) {
 		fprintf(stderr, "[ti_index_load] wrong magic number.\n");
 		fclose(fp);
 		return 0;
@@ -402,22 +425,27 @@ static ti_index_t *ti_index_load_core(FILE *fp)
 		bam_swap_endian_4p(&idx->conf.sc);
 		bam_swap_endian_4p(&idx->conf.bc);
 		bam_swap_endian_4p(&idx->conf.ec);
+		bam_swap_endian_4p(&idx->conf.meta_char);
+		bam_swap_endian_4p(&idx->conf.line_skip);
 	}
 	{ // read target names
-		int c, j, ret;
+		int j, ret;
 		kstring_t *str;
-		khint_t k;
+		int32_t l;
+		uint8_t *buf;
+		fread(&l, 4, 1, fp);
+		buf = calloc(l, 1);
+		fread(buf, l, 1, fp);
+		if (ti_is_be) bam_swap_endian_4p(&l);
 		str = calloc(1, sizeof(kstring_t));
-		j = 0;
-		while ((c = fgetc(fp)) != EOF) {
-			if (c == 0) {
-				k = kh_put(s, idx->tname, strdup(str->s), &ret);
+		for (i = j = 0; i < l; ++i) {
+			if (buf[i] == 0) {
+				khint_t k = kh_put(s, idx->tname, strdup(str->s), &ret);
 				kh_value(idx->tname, k) = j++;
 				str->l = 0;
-				if (j == idx->n) break;
-			} else kputc(c, str);
+			} else kputc(buf[i], str);
 		}
-		free(str->s); free(str);
+		free(str->s); free(str); free(buf);
 	}
 	for (i = 0; i < idx->n; ++i) {
 		khash_t(i) *index;
@@ -473,7 +501,7 @@ ti_index_t *ti_index_load_local(const char *_fn)
 		fn = strdup(p + 1);
 	} else fn = strdup(_fn);
 	fnidx = (char*)calloc(strlen(fn) + 5, 1);
-	strcpy(fnidx, fn); strcat(fnidx, ".idx");
+	strcpy(fnidx, fn); strcat(fnidx, ".tbi");
 	fp = fopen(fnidx, "r");
 	free(fnidx); free(fn);
 	if (fp) {
@@ -527,7 +555,7 @@ ti_index_t *ti_index_load(const char *fn)
 	idx = ti_index_load_local(fn);
 	if (idx == 0 && (strstr(fn, "ftp://") == fn || strstr(fn, "http://") == fn)) {
 		char *fnidx = calloc(strlen(fn) + 5, 1);
-		strcat(strcpy(fnidx, fn), ".idx");
+		strcat(strcpy(fnidx, fn), ".tbi");
 		fprintf(stderr, "[ti_index_load] attempting to download the remote index file.\n");
 		download_from_remote(fnidx);
 		idx = ti_index_load_local(fn);
@@ -550,7 +578,7 @@ int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 	bgzf_close(fp);
 	if (_fnidx == 0) {
 		fnidx = (char*)calloc(strlen(fn) + 5, 1);
-		strcpy(fnidx, fn); strcat(fnidx, ".idx");
+		strcpy(fnidx, fn); strcat(fnidx, ".tbi");
 	} else fnidx = strdup(_fnidx);
 	fpidx = fopen(fnidx, "w");
 	if (fpidx == 0) {
@@ -712,8 +740,9 @@ int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *d
 			}
 			if ((ret = ti_readline(fp, str)) >= 0) {
 				ti_intv_t intv;
-				get_intv((ti_index_t*)idx, str, &intv);
 				curr_off = bgzf_tell(fp);
+				if (str->s[0] == idx->conf.meta_char) continue;
+				get_intv((ti_index_t*)idx, str, &intv);
 				if (intv.tid != tid || intv.end >= end) break; // no need to proceed
 				else if (is_overlap(beg, end, intv.beg, intv.end)) func(str->l, str->s, data);
 			} else break; // end of file
