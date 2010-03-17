@@ -159,8 +159,8 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 				if (i != str->l) str->s[i] = '\t';
 			} else if (id == idx->conf.bc) {
 				// here ->beg is 1-based. it will be changed to 0-based at the end of this routine.
-				intv->beg = strtol(str->s + b, &s, 0);
-				if (idx->conf.preset&TI_FLAG_UCSC) ++intv->beg;
+				intv->beg = intv->end = strtol(str->s + b, &s, 0);
+				if (!(idx->conf.preset&TI_FLAG_UCSC)) --intv->beg;
 			} else {
 				if ((idx->conf.preset&0xffff) == TI_PRESET_GENERIC) {
 					if (id == idx->conf.ec) intv->end = strtol(str->s + b, &s, 0);
