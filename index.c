@@ -158,7 +158,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 				intv->tid = get_tid(idx, str->s + b);
 				if (i != str->l) str->s[i] = '\t';
 			} else if (id == idx->conf.bc) {
-				// here ->beg is 1-based. it will be changed to 0-based at the end of this routine.
+				// here ->beg is 0-based.
 				intv->beg = intv->end = strtol(str->s + b, &s, 0);
 				if (!(idx->conf.preset&TI_FLAG_UCSC)) --intv->beg;
 			} else {
@@ -174,7 +174,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 							if (op == 'M' || op == 'D' || op == 'N') l += x;
 							s = t + 1;
 						}
-						intv->end = intv->beg + l - 1;
+						intv->end = intv->beg + l;
 					}
 				} else if ((idx->conf.preset&0xffff) == TI_PRESET_VCF) {
 					// FIXME: the following is NOT tested and is likely to be buggy
@@ -188,7 +188,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 								s = t + 1;
 							} else ++s;
 						}
-						intv->end = intv->beg + max - 1;
+						intv->end = intv->beg + max;
 					}
 				}
 			}
@@ -197,7 +197,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 		}
 	}
 	if (intv->tid < 0 || intv->beg < 0 || intv->end < 0) return -1;
-	intv->bin = ti_reg2bin(intv->beg-1, intv->end);
+	intv->bin = ti_reg2bin(intv->beg, intv->end);
 	return 0;
 }
 
