@@ -32,6 +32,7 @@ extern "C" {
 
 	int ti_index_build(const char *fn, const ti_conf_t *conf);
 	ti_index_t *ti_index_load(const char *fn);
+    int ti_list_chromosomes(const char *fn);
 	void ti_index_destroy(ti_index_t *idx);
 	int ti_parse_region(ti_index_t *idx, const char *str, int *tid, int *begin, int *end);
 	int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *data, ti_fetch_f func);
