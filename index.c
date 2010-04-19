@@ -614,6 +614,7 @@ int ti_list_chromosomes(const char *fn)
     }
     bgzf_read(fp, magic, 4);
     if (strncmp(magic, "TBI\1", 4)) {
+        bgzf_close(fp);
         fprintf(stderr, "[ti_index_load] wrong magic number.\n");
         return -1;
     }
@@ -651,6 +652,7 @@ int ti_list_chromosomes(const char *fn)
         }
         free(str->s); free(str); free(buf);
     }
+    bgzf_close(fp);
     return 0;
 }
 
