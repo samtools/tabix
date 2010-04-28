@@ -44,7 +44,10 @@ index.o:bgzf.h tabix.h khash.h ksort.h kstring.h
 main.o:tabix.h kstring.h bgzf.h
 bgzip.o:bgzf.h
 
+tabix.pdf:tabix.tex
+		pdflatex tabix.tex
+
 cleanlocal:
-		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a
+		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf
 
 clean:cleanlocal-recur
