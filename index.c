@@ -162,6 +162,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 				// here ->beg is 0-based.
 				intv->beg = intv->end = strtol(str->s + b, &s, 0);
 				if (!(idx->conf.preset&TI_FLAG_UCSC)) --intv->beg;
+				else ++intv->end;
 			} else {
 				if ((idx->conf.preset&0xffff) == TI_PRESET_GENERIC) {
 					if (id == idx->conf.ec) intv->end = strtol(str->s + b, &s, 0);
