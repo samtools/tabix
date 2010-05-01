@@ -574,27 +574,27 @@ static void download_from_remote(const char *url)
 }
 #endif
 
-char *get_local_version(const char *fn)
+static char *get_local_version(const char *fn)
 {
     struct stat sbuf;
-
 	char *fnidx = (char*)calloc(strlen(fn) + 5, 1);
-	strcpy(fnidx, fn); strcat(fnidx, ".tbi");
-
-    if ( stat(fnidx, &sbuf)==0 ) return fnidx;
-	if ((strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx)) 
-    {
-        char *p,*ret;
-        int l = strlen(fnidx);
-		fprintf(stderr, "[ti_index_load] attempting to download the remote index file.\n");
-		download_from_remote(fnidx);
-        for (p = fnidx + l - 1; p >= fnidx; --p)
-            if (*p == '/') break;
-        ret = strdup(p + 1);
-        free(fnidx);
-        return ret;
+	strcat(strcpy(fnidx, fn), ".tbi");
+	if ((strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx)) {
+		char *p, *url;
+		int l = strlen(fnidx);
+		for (p = fnidx + l - 1; p >= fnidx; --p)
+			if (*p == '/') break;
+		url = fnidx; fnidx = strdup(p + 1);
+		if (stat(fnidx, &sbuf) == 0) {
+			free(url);
+			return fnidx;
+		}
+		fprintf(stderr, "[%s] downloading the index file...\n", __func__);
+		download_from_remote(url);
+		free(url);
 	}
-	return fnidx;
+    if (stat(fnidx, &sbuf) == 0) return fnidx;
+	free(fnidx); return 0;
 }
 
 int ti_list_chromosomes(const char *fn)
@@ -618,6 +618,7 @@ ti_index_t *ti_index_load(const char *fn)
 {
 	ti_index_t *idx;
     char *fname = get_local_version(fn);
+	if (fname == 0) return 0;
 	idx = ti_index_load_local(fname);
     free(fname);
 	if (idx == 0) fprintf(stderr, "[ti_index_load] fail to load BAM index.\n");
