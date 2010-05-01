@@ -584,11 +584,10 @@ char *get_local_version(const char *fn)
     if ( stat(fnidx, &sbuf)==0 ) return fnidx;
 	if ((strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx)) 
     {
-		fprintf(stderr, "[ti_index_load] attempting to download the remote index file.\n");
-		download_from_remote(fnidx);
-
         char *p,*ret;
         int l = strlen(fnidx);
+		fprintf(stderr, "[ti_index_load] attempting to download the remote index file.\n");
+		download_from_remote(fnidx);
         for (p = fnidx + l - 1; p >= fnidx; --p)
             if (*p == '/') break;
         ret = strdup(p + 1);
@@ -600,61 +599,19 @@ char *get_local_version(const char *fn)
 
 int ti_list_chromosomes(const char *fn)
 {
-    char *fname = get_local_version(fn);
-    BGZF *fp = bgzf_open(fname, "r");
-    free(fname); 
-    if (!fp) return -1;
-
-    int i, ti_is_be;
-    char magic[4];
-    ti_index_t *idx;
-    ti_is_be = bam_is_big_endian();
-    if (fp == 0) {
-        fprintf(stderr, "[ti_index_load_core] fail to load index.\n");
-        return -1;
-    }
-    bgzf_read(fp, magic, 4);
-    if (strncmp(magic, "TBI\1", 4)) {
-        bgzf_close(fp);
-        fprintf(stderr, "[ti_index_load] wrong magic number.\n");
-        return -1;
-    }
-    idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));
-    bgzf_read(fp, &idx->n, 4);
-    if (ti_is_be) bam_swap_endian_4p(&idx->n);
-    idx->tname = kh_init(s);
-    idx->index = (khash_t(i)**)calloc(idx->n, sizeof(void*));
-    idx->index2 = (ti_lidx_t*)calloc(idx->n, sizeof(ti_lidx_t));
-    // read idx->conf
-    bgzf_read(fp, &idx->conf, sizeof(ti_conf_t));
-    if (ti_is_be) {
-        bam_swap_endian_4p(&idx->conf.preset);
-        bam_swap_endian_4p(&idx->conf.sc);
-        bam_swap_endian_4p(&idx->conf.bc);
-        bam_swap_endian_4p(&idx->conf.ec);
-        bam_swap_endian_4p(&idx->conf.meta_char);
-        bam_swap_endian_4p(&idx->conf.line_skip);
-    }
-    { // read target names
-        int j;
-        kstring_t *str;
-        int32_t l;
-        uint8_t *buf;
-        bgzf_read(fp, &l, 4);
-        if (ti_is_be) bam_swap_endian_4p(&l);
-        buf = calloc(l, 1);
-        bgzf_read(fp, buf, l);
-        str = calloc(1, sizeof(kstring_t));
-        for (i = j = 0; i < l; ++i) {
-            if (buf[i] == 0) {
-                printf("%s\n", str->s);
-                str->l = 0;
-            } else kputc(buf[i], str);
-        }
-        free(str->s); free(str); free(buf);
-    }
-    bgzf_close(fp);
-    return 0;
+	ti_index_t *idx;
+	char **names;
+	int i;
+	khint_t k;
+	idx = ti_index_load(fn);
+	names = calloc(idx->n, sizeof(void*));
+	for (k = kh_begin(idx->tname); k < kh_end(idx->tname); ++k)
+		if (kh_exist(idx->tname, k))
+			names[kh_val(idx->tname, k)] = (char*)kh_key(idx->tname, k);
+	for (i = 0; i < idx->n; ++i) printf("%s\n", names[i]);
+	free(names);
+	ti_index_destroy(idx);
+	return 0;
 }
 
 ti_index_t *ti_index_load(const char *fn)

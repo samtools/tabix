@@ -37,6 +37,9 @@ tabix:lib $(AOBJS)
 bgzip:bgzip.o bgzf.o knetfile.o
 		$(CC) $(CFLAGS) -o $@ bgzip.o bgzf.o knetfile.o -lz
 
+TabixReader.class:TabixReader.java
+		javac -cp .:sam.jar TabixReader.java
+
 kstring.o:kstring.h
 knetfile.o:knetfile.h
 bgzf.o:bgzf.h knetfile.h
@@ -48,6 +51,6 @@ tabix.pdf:tabix.tex
 		pdflatex tabix.tex
 
 cleanlocal:
-		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf
+		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class
 
 clean:cleanlocal-recur
