@@ -1,3 +1,30 @@
+/* The MIT License
+
+   Copyright (c) 2010 Broad Institute.
+
+   Permission is hereby granted, free of charge, to any person obtaining
+   a copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject to
+   the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+*/
+
+/* Contact: Heng Li <hengli@broadinstitute.org> */
+
 import net.sf.samtools.util.BlockCompressedInputStream;
 
 import java.io.*;
@@ -40,8 +67,8 @@ public class TabixReader
 	};
 
 	private class TIndex {
-		HashMap<Integer, TPair64[]> b;
-		long[] l;
+		HashMap<Integer, TPair64[]> b; // binning index
+		long[] l; // linear index
 	};
 	private TIndex[] mIndex;
 
@@ -176,7 +203,7 @@ public class TabixReader
 	}
 
 	/**
-	 * Parse a region in the format of "chr1", "chr1:100" or "chr1:100-1,000"
+	 * Parse a region in the format of "chr1", "chr1:100" or "chr1:100-1000"
 	 *
 	 * @param reg Region string
 	 * @return An array where the three elements are sequence_id,
@@ -205,12 +232,38 @@ public class TabixReader
 				intv.beg = intv.end = Integer.parseInt(s.substring(beg, end));
 				if ((mPreset&0x10000) != 0) ++intv.end;
 				else --intv.beg;
-			} else {
+			} else { // FIXME: SAM/VCF supports are not tested yet
 				if ((mPreset&0xffff) == 0) { // generic
 					if (col == mEc)
 						intv.end = Integer.parseInt(s.substring(beg, end));
 				} else if ((mPreset&0xffff) == 1) { // SAM
+					if (col == 6) { // CIGAR
+						int l = 0, i, j;
+						String cigar = s.substring(beg, end);
+						for (i = j = 0; i < cigar.length(); ++i) {
+							if (cigar.charAt(i) > '9') {
+								int op = cigar.charAt(i);
+								if (op == 'M' || op == 'D' || op == 'N')
+									l += Integer.parseInt(cigar.substring(j, i));
+							}
+						}
+						intv.end = intv.beg + l;
+					}
 				} else if ((mPreset&0xffff) == 2) { // VCF
+					if (col == 5) {
+						String alt = s.substring(beg, end);
+						int i, max = 1;
+						for (i = 0; i < alt.length(); ++i) {
+							if (alt.charAt(i) == 'D') { // deletion
+								int j;
+							    for (j = i; j < alt.length() && alt.charAt(j) >= '0' && alt.charAt(j) <= '9'; ++j);
+								int l = Integer.parseInt(alt.substring(i, j));
+								if (max < l) max = l;
+								i = j - 1;
+							}
+						}
+						intv.end = intv.beg + max;
+					}
 				}
 			}
 			beg = end + 1;
