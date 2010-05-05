@@ -163,6 +163,8 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 				intv->beg = intv->end = strtol(str->s + b, &s, 0);
 				if (!(idx->conf.preset&TI_FLAG_UCSC)) --intv->beg;
 				else ++intv->end;
+				if (intv->beg < 0) intv->beg = 0;
+				if (intv->end < 1) intv->end = 1;
 			} else {
 				if ((idx->conf.preset&0xffff) == TI_PRESET_GENERIC) {
 					if (id == idx->conf.ec) intv->end = strtol(str->s + b, &s, 0);
@@ -176,6 +178,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 							if (op == 'M' || op == 'D' || op == 'N') l += x;
 							s = t + 1;
 						}
+						if (l == 0) l = 1;
 						intv->end = intv->beg + l;
 					}
 				} else if ((idx->conf.preset&0xffff) == TI_PRESET_VCF) {
@@ -264,6 +267,17 @@ static void merge_chunks(ti_index_t *idx)
 	} // ~for(i)
 }
 
+static void fill_missing(ti_index_t *idx)
+{
+	int i, j;
+	for (i = 0; i < idx->n; ++i) {
+		ti_lidx_t *idx2 = &idx->index2[i];
+		for (j = 1; j < idx2->n; ++j)
+			if (idx2->offset[j] == 0)
+				idx2->offset[j] = idx2->offset[j-1];
+	}
+}
+
 ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 {
 	int ret;
@@ -318,6 +332,7 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 	}
 	if (save_tid >= 0) insert_offset(idx->index[save_tid], save_bin, save_off, bgzf_tell(fp));
 	merge_chunks(idx);
+	fill_missing(idx);
 
 	free(str->s); free(str);
 	return idx;
@@ -735,7 +750,8 @@ pair64_t *get_chunk_coordinates(const ti_index_t *idx, int tid, int beg, int end
 	bins = (uint16_t*)calloc(MAX_BIN, 2);
 	n_bins = reg2bins(beg, end, bins);
 	index = idx->index[tid];
-	min_off = (beg>>TAD_LIDX_SHIFT >= idx->index2[tid].n)? 0 : idx->index2[tid].offset[beg>>TAD_LIDX_SHIFT];
+	min_off = (beg>>TAD_LIDX_SHIFT >= idx->index2[tid].n)? idx->index2[tid].offset[idx->index2[tid].n-1]
+		: idx->index2[tid].offset[beg>>TAD_LIDX_SHIFT];
 	for (i = n_off = 0; i < n_bins; ++i) {
 		if ((k = kh_get(i, index, bins[i])) != kh_end(index))
 			n_off += kh_value(index, k).n;

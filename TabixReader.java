@@ -232,6 +232,8 @@ public class TabixReader
 				intv.beg = intv.end = Integer.parseInt(s.substring(beg, end));
 				if ((mPreset&0x10000) != 0) ++intv.end;
 				else --intv.beg;
+				if (intv.beg < 0) intv.beg = 0;
+				if (intv.end < 1) intv.end = 1;
 			} else { // FIXME: SAM/VCF supports are not tested yet
 				if ((mPreset&0xffff) == 0) { // generic
 					if (col == mEc)
@@ -318,7 +320,7 @@ public class TabixReader
 		TIndex idx = mIndex[tid];
 		int[] bins = new int[MAX_BIN];
 		int i, l, n_off, n_bins = reg2bins(beg, end, bins);
-		min_off = (beg>>TAD_LIDX_SHIFT >= idx.l.length)? 0 : idx.l[beg>>TAD_LIDX_SHIFT];
+		min_off = (beg>>TAD_LIDX_SHIFT >= idx.l.length)? idx.l[idx.l.length-1] : idx.l[beg>>TAD_LIDX_SHIFT];
 		for (i = n_off = 0; i < n_bins; ++i) {
 			if ((chunks = idx.b.get(bins[i])) != null)
 				n_off += chunks.length;

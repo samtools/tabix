@@ -1,0 +1,14 @@
+Beta Release 0.1.5 (5 May, 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Notable changes:
+
+ * Clarify that tabix is released under MIT/X11.
+
+ * Improve the robustness of indexing and retrieval.
+
+ * Reduce the number of seek calls when the specified region starts from
+   a 16kb block with no data. The index format is the same, but the
+   content is changed a little.
+
+(0.1.5: 5 May 2010, r560)
