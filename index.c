@@ -750,8 +750,17 @@ pair64_t *get_chunk_coordinates(const ti_index_t *idx, int tid, int beg, int end
 	bins = (uint16_t*)calloc(MAX_BIN, 2);
 	n_bins = reg2bins(beg, end, bins);
 	index = idx->index[tid];
-	min_off = (beg>>TAD_LIDX_SHIFT >= idx->index2[tid].n)? idx->index2[tid].offset[idx->index2[tid].n-1]
-		: idx->index2[tid].offset[beg>>TAD_LIDX_SHIFT];
+	if (idx->index2[tid].n > 0) {
+		min_off = (beg>>TAD_LIDX_SHIFT >= idx->index2[tid].n)? idx->index2[tid].offset[idx->index2[tid].n-1]
+			: idx->index2[tid].offset[beg>>TAD_LIDX_SHIFT];
+		if (min_off == 0) { // improvement for index files built by tabix prior to 0.1.4
+			int n = beg>>TAD_LIDX_SHIFT;
+			if (n > idx->index2[tid].n) n = idx->index2[tid].n;
+			for (i = n - 1; i >= 0; --i)
+				if (idx->index2[tid].offset[i] != 0) break;
+			if (i >= 0) min_off = idx->index2[tid].offset[i];
+		}
+	} else min_off = 0; // tabix 0.1.2 may produce such index files
 	for (i = n_off = 0; i < n_bins; ++i) {
 		if ((k = kh_get(i, index, bins[i])) != kh_end(index))
 			n_off += kh_value(index, k).n;
