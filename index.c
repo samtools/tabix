@@ -42,6 +42,16 @@ struct __ti_index_t {
 	ti_lidx_t *index2;
 };
 
+struct __ti_iter_t {
+	int from_first; // read from the first record; no random access
+	int tid, beg, end, n_off, i, finished;
+	uint64_t curr_off;
+	kstring_t str;
+	BGZF *fp;
+	const ti_index_t *idx;
+	pair64_t *off;
+};
+
 typedef struct {
 	int tid, beg, end, bin;
 } ti_intv_t;
@@ -241,9 +251,13 @@ static inline void insert_offset2(ti_lidx_t *index2, int _beg, int _end, uint64_
 		index2->offset = (uint64_t*)realloc(index2->offset, index2->m * 8);
 		memset(index2->offset + old_m, 0, 8 * (index2->m - old_m));
 	}
-	for (i = beg + 1; i <= end; ++i)
+	if (beg == end) {
 		if (index2->offset[i] == 0) index2->offset[i] = offset;
-	index2->n = end + 1;
+	} else {
+		for (i = beg; i <= end; ++i)
+			if (index2->offset[i] == 0) index2->offset[i] = offset;
+	}
+	if (index2->n < end + 1) index2->n = end + 1;
 }
 
 static void merge_chunks(ti_index_t *idx)
@@ -310,10 +324,10 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 			last_tid = intv.tid;
 			last_bin = 0xffffffffu;
 		} else if (last_coor > intv.beg) {
-			fprintf(stderr, "[ti_index_core] the file is not sorted at line %llu\n", (unsigned long long)lineno);
+			fprintf(stderr, "[ti_index_core] the file out of order at line %llu\n", (unsigned long long)lineno);
 			exit(1);
 		}
-		if (intv.bin < 4681) insert_offset2(&idx->index2[intv.tid], intv.beg, intv.end, last_off);
+		insert_offset2(&idx->index2[intv.tid], intv.beg, intv.end, last_off);
 		if (intv.bin != last_bin) { // then possibly write the binning index
 			if (save_bin != 0xffffffffu) // save_bin==0xffffffffu only happens to the first record
 				insert_offset(idx->index[save_tid], save_bin, save_off, last_off);
@@ -612,21 +626,16 @@ static char *get_local_version(const char *fn)
 	free(fnidx); return 0;
 }
 
-int ti_list_chromosomes(const char *fn)
+const char **ti_seqname(const ti_index_t *idx, int *n)
 {
-	ti_index_t *idx;
-	char **names;
-	int i;
+	const char **names;
 	khint_t k;
-	idx = ti_index_load(fn);
+	*n = idx->n;
 	names = calloc(idx->n, sizeof(void*));
 	for (k = kh_begin(idx->tname); k < kh_end(idx->tname); ++k)
 		if (kh_exist(idx->tname, k))
-			names[kh_val(idx->tname, k)] = (char*)kh_key(idx->tname, k);
-	for (i = 0; i < idx->n; ++i) printf("%s\n", names[i]);
-	free(names);
-	ti_index_destroy(idx);
-	return 0;
+			names[kh_val(idx->tname, k)] = kh_key(idx->tname, k);
+	return names;
 }
 
 ti_index_t *ti_index_load(const char *fn)
@@ -732,13 +741,15 @@ static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 	return i;
 }
 
-static inline int is_overlap(int32_t beg, int32_t end, int rbeg, int rend)
+ti_iter_t ti_first(BGZF *fp)
 {
-	return (rend > beg && rbeg < end);
+	ti_iter_t iter;
+	iter = calloc(1, sizeof(struct __ti_iter_t));
+	iter->fp = fp; iter->from_first = 1;
+	return iter;
 }
 
-// ti_fetch helper function retrieves 
-pair64_t *get_chunk_coordinates(const ti_index_t *idx, int tid, int beg, int end, int* cnt_off)
+ti_iter_t ti_query(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end)
 {
 	uint16_t *bins;
 	int i, n_bins, n_off;
@@ -746,7 +757,13 @@ pair64_t *get_chunk_coordinates(const ti_index_t *idx, int tid, int beg, int end
 	khint_t k;
 	khash_t(i) *index;
 	uint64_t min_off;
+	ti_iter_t iter = 0;
 
+	// initialize the iterator
+	iter = calloc(1, sizeof(struct __ti_iter_t));
+	iter->fp = fp; iter->idx = idx;
+	iter->tid = tid; iter->beg = beg; iter->end = end; iter->i = -1;
+	// random access
 	bins = (uint16_t*)calloc(MAX_BIN, 2);
 	n_bins = reg2bins(beg, end, bins);
 	index = idx->index[tid];
@@ -766,7 +783,7 @@ pair64_t *get_chunk_coordinates(const ti_index_t *idx, int tid, int beg, int end
 			n_off += kh_value(index, k).n;
 	}
 	if (n_off == 0) {
-		free(bins); return 0;
+		free(bins); return iter;
 	}
 	off = (pair64_t*)calloc(n_off, 16);
 	for (i = n_off = 0; i < n_bins; ++i) {
@@ -797,44 +814,67 @@ pair64_t *get_chunk_coordinates(const ti_index_t *idx, int tid, int beg, int end
 			n_off = l + 1;
 		}
 	}
-	*cnt_off = n_off;
-	return off;
+	iter->n_off = n_off; iter->off = off;
+	return iter;
+}
+
+const char *ti_iter_read(ti_iter_t iter, int *len)
+{
+	if (iter->finished) return 0;
+	if (iter->from_first) {
+		int ret;
+		if ((ret = ti_readline(iter->fp, &iter->str)) < 0) {
+			iter->finished = 1;
+			return 0;
+		} else {
+			if (len) *len = iter->str.l;
+			return iter->str.s;
+		}
+	}
+	if (iter->n_off == 0) return 0;
+	while (1) {
+		int ret;
+		if (iter->curr_off == 0 || iter->curr_off >= iter->off[iter->i].v) { // then jump to the next chunk
+			if (iter->i == iter->n_off - 1) break; // no more chunks
+			if (iter->i >= 0) assert(iter->curr_off == iter->off[iter->i].v); // otherwise bug
+			if (iter->i < 0 || iter->off[iter->i].v != iter->off[iter->i+1].u) { // not adjacent chunks; then seek
+				bgzf_seek(iter->fp, iter->off[iter->i+1].u, SEEK_SET);
+				iter->curr_off = bgzf_tell(iter->fp);
+			}
+			++iter->i;
+		}
+		if ((ret = ti_readline(iter->fp, &iter->str)) >= 0) {
+			ti_intv_t intv;
+			iter->curr_off = bgzf_tell(iter->fp);
+			if (iter->str.s[0] == iter->idx->conf.meta_char) continue;
+			get_intv((ti_index_t*)iter->idx, &iter->str, &intv);
+			if (intv.tid != iter->tid || intv.beg >= iter->end) break; // no need to proceed
+			else if (intv.end > iter->beg && iter->end > intv.beg) {
+				if (len) *len = iter->str.l;
+				return iter->str.s;
+			}
+		} else break; // end of file
+	}
+	iter->finished = 1;
+	return 0;
+}
+
+void ti_iter_destroy(ti_iter_t iter)
+{
+	if (iter) {
+		free(iter->str.s); free(iter->off);
+		free(iter);
+	}
 }
 
 int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *data, ti_fetch_f func)
 {
-	int n_off;
-	pair64_t *off = get_chunk_coordinates(idx, tid, beg, end, &n_off);
-	if (off == 0) return 0;
-	{
-		// retrive alignments
-		uint64_t curr_off;
-		int i, ret, n_seeks;
-		kstring_t *str = calloc(1, sizeof(kstring_t));
-		n_seeks = 0; i = -1; curr_off = 0;
-		for (;;) {
-			if (curr_off == 0 || curr_off >= off[i].v) { // then jump to the next chunk
-				if (i == n_off - 1) break; // no more chunks
-				if (i >= 0) assert(curr_off == off[i].v); // otherwise bug
-				if (i < 0 || off[i].v != off[i+1].u) { // not adjacent chunks; then seek
-					bgzf_seek(fp, off[i+1].u, SEEK_SET);
-					curr_off = bgzf_tell(fp);
-					++n_seeks;
-				}
-				++i;
-			}
-			if ((ret = ti_readline(fp, str)) >= 0) {
-				ti_intv_t intv;
-				curr_off = bgzf_tell(fp);
-				if (str->s[0] == idx->conf.meta_char) continue;
-				get_intv((ti_index_t*)idx, str, &intv);
-				if (intv.tid != tid || intv.beg >= end) break; // no need to proceed
-				else if (is_overlap(beg, end, intv.beg, intv.end)) func(str->l, str->s, data);
-			} else break; // end of file
-		}
-//		fprintf(stderr, "[ti_fetch] # seek calls: %d\n", n_seeks);
-		free(str->s); free(str);
-	}
-	free(off);
+	ti_iter_t iter;
+	const char *s;
+	int len;
+	iter = ti_query(fp, idx, tid, beg, end);
+	while ((s = ti_iter_read(iter, &len)) != 0)
+		func(len, s, data);
+	ti_iter_destroy(iter);
 	return 0;
 }

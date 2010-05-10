@@ -43,26 +43,62 @@ typedef int (*ti_fetch_f)(int l, const char *s, void *data);
 struct __ti_index_t;
 typedef struct __ti_index_t ti_index_t;
 
+struct __ti_iter_t;
+typedef struct __ti_iter_t *ti_iter_t;
+
 typedef struct {
 	int32_t preset;
-	int32_t sc, bc, ec;
+	int32_t sc, bc, ec; // seq col., beg col. and end col.
 	int32_t meta_char, line_skip;
 } ti_conf_t;
 
-extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam;
+extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-	int ti_readline(BGZF *fp, kstring_t *str);
-
+	/* Build the index for file <fn>. File <fn>.tbi will be generated
+	 * and overwrite the file of the same name. Return -1 on failure. */
 	int ti_index_build(const char *fn, const ti_conf_t *conf);
+
+	/* Load the index from file <fn>.tbi. If <fn> is a URL and the index
+	 * file is not in the working directory, <fn>.tbi will be
+	 * downloaded. Return NULL on failure. */
 	ti_index_t *ti_index_load(const char *fn);
-    int ti_list_chromosomes(const char *fn);
+
+	/* Destroy the index */
 	void ti_index_destroy(ti_index_t *idx);
+
+	/* Get the list of sequence names. Each "char*" pointer points to a
+	 * internal member of the index, so DO NOT modify the returned
+	 * pointer; otherwise the index will be corrupted. The returned
+	 * pointer should be freed by a single free() call by the routine
+	 * calling this function. The number of sequences is returned at *n. */
+	const char **ti_seqname(const ti_index_t *idx, int *n);
+
+	/* Parse a region like: chr2, chr2:100, chr2:100-200. Return -1 on failure. */
 	int ti_parse_region(ti_index_t *idx, const char *str, int *tid, int *begin, int *end);
+
+	/* Get the iterator pointing to the first record at the current file
+	 * position. If the file is just openned, the iterator points to the
+	 * first record in the file. */
+	ti_iter_t ti_first(BGZF *fp);
+
+	/* Get the iterator pointing to the first record in region tid:beg-end */
+	ti_iter_t ti_query(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end);
+
+	/* Get the data line pointed by the iterator and iterate to the next record. */
+	const char *ti_iter_read(ti_iter_t iter, int *len);
+
+	/* Destroy the iterator */
+	void ti_iter_destroy(ti_iter_t iter);
+
+	/* The callback version for random access */
 	int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *data, ti_fetch_f func);
+
+	/* Read one line. */
+	int ti_readline(BGZF *fp, kstring_t *str);
 
 #ifdef __cplusplus
 }
