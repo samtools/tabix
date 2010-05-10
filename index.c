@@ -252,7 +252,7 @@ static inline void insert_offset2(ti_lidx_t *index2, int _beg, int _end, uint64_
 		memset(index2->offset + old_m, 0, 8 * (index2->m - old_m));
 	}
 	if (beg == end) {
-		if (index2->offset[i] == 0) index2->offset[i] = offset;
+		if (index2->offset[beg] == 0) index2->offset[beg] = offset;
 	} else {
 		for (i = beg; i <= end; ++i)
 			if (index2->offset[i] == 0) index2->offset[i] = offset;
