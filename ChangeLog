@@ -1,4 +1,105 @@
 ------------------------------------------------------------------------
+r573 | lh3lh3 | 2010-05-11 12:08:30 -0400 (Tue, 11 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/Makefile
+
+Added -fPIC
+
+------------------------------------------------------------------------
+r572 | lh3lh3 | 2010-05-11 11:59:07 -0400 (Tue, 11 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/perl/MANIFEST
+
+update
+
+------------------------------------------------------------------------
+r571 | lh3lh3 | 2010-05-11 11:56:54 -0400 (Tue, 11 May 2010) | 4 lines
+Changed paths:
+   A /trunk/tabix/example.gtf.gz
+   A /trunk/tabix/example.gtf.gz.tbi
+   M /trunk/tabix/index.c
+   M /trunk/tabix/main.c
+   M /trunk/tabix/perl/MANIFEST
+   M /trunk/tabix/perl/Tabix.pm
+   M /trunk/tabix/perl/Tabix.xs
+   A /trunk/tabix/perl/TabixIterator.pm
+   A /trunk/tabix/perl/t
+   A /trunk/tabix/perl/t/01local.t
+   A /trunk/tabix/perl/t/02remote.t
+   M /trunk/tabix/tabix.1
+   M /trunk/tabix/tabix.h
+
+ * improved C/Perl APIs
+ * added test for Perl
+ * added an tiny example
+
+------------------------------------------------------------------------
+r570 | lh3lh3 | 2010-05-11 01:04:21 -0400 (Tue, 11 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/TabixReader.java
+
+fixed the same issue in java
+
+------------------------------------------------------------------------
+r569 | lh3lh3 | 2010-05-11 01:03:24 -0400 (Tue, 11 May 2010) | 3 lines
+Changed paths:
+   M /trunk/tabix/index.c
+   M /trunk/tabix/perl/Tabix.pm
+   M /trunk/tabix/perl/Tabix.xs
+
+ * fixed a potential issue in index.c
+ * improve perl APIs
+
+------------------------------------------------------------------------
+r568 | lh3lh3 | 2010-05-10 23:46:21 -0400 (Mon, 10 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/perl/Tabix.xs
+
+return an array from get_names()
+
+------------------------------------------------------------------------
+r567 | lh3lh3 | 2010-05-10 23:38:46 -0400 (Mon, 10 May 2010) | 4 lines
+Changed paths:
+   M /trunk/tabix/TabixReader.java
+   M /trunk/tabix/index.c
+   A /trunk/tabix/perl
+   A /trunk/tabix/perl/MANIFEST
+   A /trunk/tabix/perl/Makefile.PL
+   A /trunk/tabix/perl/Tabix.pm
+   A /trunk/tabix/perl/Tabix.xs
+   A /trunk/tabix/perl/typemap
+   M /trunk/tabix/tabix.h
+
+ * added the initial perl binding. The interface needs to be improved.
+ * added a new API for perl binding
+ * fixed a potential bug in java.
+
+------------------------------------------------------------------------
+r565 | lh3lh3 | 2010-05-09 23:24:35 -0400 (Sun, 09 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/main.c
+
+Release tabix-0.1.6
+
+------------------------------------------------------------------------
+r564 | lh3lh3 | 2010-05-09 23:01:49 -0400 (Sun, 09 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/index.c
+
+fixed a typo
+
+------------------------------------------------------------------------
+r563 | lh3lh3 | 2010-05-09 22:58:26 -0400 (Sun, 09 May 2010) | 2 lines
+Changed paths:
+   A /trunk/tabix/ChangeLog
+   M /trunk/tabix/NEWS
+   M /trunk/tabix/index.c
+   M /trunk/tabix/main.c
+   M /trunk/tabix/tabix.h
+
+If nothing bad happens, this will become 0.1.6
+
+------------------------------------------------------------------------
 r562 | lh3lh3 | 2010-05-09 19:43:56 -0400 (Sun, 09 May 2010) | 2 lines
 Changed paths:
    M /trunk/tabix/index.c

@@ -1,3 +1,21 @@
+Beta Release 0.2.0 (11 May, 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Notable changes:
+
+ * Fixed an issue for random access given an interval end larger than
+   2^29.
+
+ * Updated the Java binding.
+
+ * Added a Perl module using XS.
+
+ * Improved the C APIs.
+
+(0.2.0: 11 May 2010, r574)
+
+
+
 Beta Release 0.1.6 (9 May, 2010)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

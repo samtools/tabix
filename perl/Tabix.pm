@@ -11,7 +11,7 @@ require Exporter;
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/tabix_open tabix_close tabix_read tabix_query tabix_getnames tabix_iter_free/;
 
-our $VERSION = '0.1.7';
+our $VERSION = '0.2.0';
 
 require XSLoader;
 XSLoader::load('Tabix', $VERSION);
