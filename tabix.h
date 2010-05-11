@@ -47,6 +47,12 @@ struct __ti_iter_t;
 typedef struct __ti_iter_t *ti_iter_t;
 
 typedef struct {
+	BGZF *fp;
+	ti_index_t *idx;
+	char *fn, *fnidx;
+} tabix_t;
+
+typedef struct {
 	int32_t preset;
 	int32_t sc, bc, ec; // seq col., beg col. and end col.
 	int32_t meta_char, line_skip;
@@ -58,6 +64,31 @@ extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_
 extern "C" {
 #endif
 
+	/*******************
+	 * High-level APIs *
+	 *******************/
+
+	tabix_t *ti_open(const char *fn, const char *fnidx);
+	int ti_lazy_index_load(tabix_t *t);
+	void ti_close(tabix_t *t);
+	ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end);
+	ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end);
+	const char *ti_read(tabix_t *t, ti_iter_t iter, int *len);
+
+	/* Destroy the iterator */
+	void ti_iter_destroy(ti_iter_t iter);
+
+	/* Get the list of sequence names. Each "char*" pointer points to a
+	 * internal member of the index, so DO NOT modify the returned
+	 * pointer; otherwise the index will be corrupted. The returned
+	 * pointer should be freed by a single free() call by the routine
+	 * calling this function. The number of sequences is returned at *n. */
+	const char **ti_seqname(const ti_index_t *idx, int *n);
+
+	/******************
+	 * Low-level APIs *
+	 ******************/
+
 	/* Build the index for file <fn>. File <fn>.tbi will be generated
 	 * and overwrite the file of the same name. Return -1 on failure. */
 	int ti_index_build(const char *fn, const ti_conf_t *conf);
@@ -67,15 +98,10 @@ extern "C" {
 	 * downloaded. Return NULL on failure. */
 	ti_index_t *ti_index_load(const char *fn);
 
+	ti_index_t *ti_index_load_local(const char *fnidx);
+
 	/* Destroy the index */
 	void ti_index_destroy(ti_index_t *idx);
-
-	/* Get the list of sequence names. Each "char*" pointer points to a
-	 * internal member of the index, so DO NOT modify the returned
-	 * pointer; otherwise the index will be corrupted. The returned
-	 * pointer should be freed by a single free() call by the routine
-	 * calling this function. The number of sequences is returned at *n. */
-	const char **ti_seqname(const ti_index_t *idx, int *n);
 
 	/* Parse a region like: chr2, chr2:100, chr2:100-200. Return -1 on failure. */
 	int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end);
@@ -85,16 +111,17 @@ extern "C" {
 	/* Get the iterator pointing to the first record at the current file
 	 * position. If the file is just openned, the iterator points to the
 	 * first record in the file. */
-	ti_iter_t ti_first(BGZF *fp);
+	ti_iter_t ti_iter_first(void);
 
 	/* Get the iterator pointing to the first record in region tid:beg-end */
-	ti_iter_t ti_query(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end);
+	ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end);
 
 	/* Get the data line pointed by the iterator and iterate to the next record. */
-	const char *ti_iter_read(ti_iter_t iter, int *len);
+	const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len);
 
-	/* Destroy the iterator */
-	void ti_iter_destroy(ti_iter_t iter);
+	/*******************
+	 * Deprecated APIs *
+	 *******************/
 
 	/* The callback version for random access */
 	int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *data, ti_fetch_f func);

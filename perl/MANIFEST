@@ -2,4 +2,6 @@ MANIFEST
 typemap
 Tabix.xs
 Tabix.pm
+TabixIterator.pm
 Makefile.PL
+t/Tabix.t

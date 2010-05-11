@@ -4,12 +4,14 @@ use strict;
 use warnings;
 use Carp qw/croak/;
 
+use TabixIterator;
+
 require Exporter;
 
 our @ISA = qw/Exporter/;
-our @EXPORT = qw/tabix_open tabix_close tabix_read tabix_query tabix_getnames/;
+our @EXPORT = qw/tabix_open tabix_close tabix_read tabix_query tabix_getnames tabix_iter_free/;
 
-our $VERSION = '0.1.6';
+our $VERSION = '0.1.7';
 
 require XSLoader;
 XSLoader::load('Tabix', $VERSION);
@@ -17,26 +19,27 @@ XSLoader::load('Tabix', $VERSION);
 sub new {
   my $invocant = shift;
   my %args = @_;
-  my $fn = $args{-data} || croak("-data argument required");
+  $args{-data} || croak("-data argument required");
   my $class = ref($invocant) || $invocant;
   my $self = {};
   bless($self, $class);
-  $self->open($fn);
+  $self->open($args{-data}, $args{-index});
   return $self;
 }
 
 sub open {
-  my ($self, $fn) = @_;
+  my ($self, $fn, $fnidx) = @_;
   $self->close;
   $self->{_fn} = $fn;
-  $self->{_} = tabix_open($fn);
+  $self->{_fnidx} = $fnidx;
+  $self->{_} = $fnidx? tabix_open($fn, $fnidx) : tabix_open($fn);
 }
 
 sub close {
   my $self = shift;
   if ($self->{_}) {
 	tabix_close($self->{_});
-	delete($self->{_}); delete($self->{_fn});
+	delete($self->{_}); delete($self->{_fn}); delete($self->{_fnidx});
   }
 }
 
@@ -47,17 +50,21 @@ sub DESTROY {
 
 sub query {
   my $self = shift;
+  my $iter;
   if (@_) {
-	return tabix_query($self->{_}, @_);
+	$iter = tabix_query($self->{_}, @_);
   } else {
-	return tabix_query($self->{_});
+	$iter = tabix_query($self->{_});
   }
+  my $i = TabixIterator->new;
+  $i->set($iter);
+  return $i;
 }
 
 sub read {
   my $self = shift;
   my $iter = shift;
-  return tabix_read($iter);
+  return tabix_read($self->{_}, $iter->get);
 }
 
 sub getnames {
