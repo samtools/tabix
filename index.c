@@ -686,12 +686,19 @@ int ti_index_build(const char *fn, const ti_conf_t *conf)
  * parse a region in the format chr:beg-end *
  ********************************************/
 
-int ti_parse_region(ti_index_t *idx, const char *str, int *tid, int *begin, int *end)
+int ti_get_tid(const ti_index_t *idx, const char *name)
+{
+	khiter_t iter;
+	const khash_t(s) *h = idx->tname;
+	iter = kh_get(s, h, name); /* get the tid */
+	if (iter == kh_end(h)) return -1;
+	return kh_value(h, iter);
+}
+
+int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end)
 {
 	char *s, *p;
 	int i, l, k;
-	khiter_t iter;
-	khash_t(s) *h = idx->tname;
 	l = strlen(str);
 	p = s = (char*)malloc(l+1);
 	/* squeeze out "," */
@@ -700,12 +707,10 @@ int ti_parse_region(ti_index_t *idx, const char *str, int *tid, int *begin, int 
 	s[k] = 0;
 	for (i = 0; i != k; ++i) if (s[i] == ':') break;
 	s[i] = 0;
-	iter = kh_get(s, h, s); /* get the tid */
-	if (iter == kh_end(h)) { // name not found
-		*tid = -1; free(s);
+	if ((*tid = ti_get_tid(idx, s)) < 0) {
+		free(s);
 		return -1;
 	}
-	*tid = kh_value(h, iter);
 	if (i == k) { /* dump the whole sequence */
 		*begin = 0; *end = 1<<29; free(s);
 		return 0;

@@ -78,7 +78,9 @@ extern "C" {
 	const char **ti_seqname(const ti_index_t *idx, int *n);
 
 	/* Parse a region like: chr2, chr2:100, chr2:100-200. Return -1 on failure. */
-	int ti_parse_region(ti_index_t *idx, const char *str, int *tid, int *begin, int *end);
+	int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end);
+
+	int ti_get_tid(const ti_index_t *idx, const char *name);
 
 	/* Get the iterator pointing to the first record at the current file
 	 * position. If the file is just openned, the iterator points to the

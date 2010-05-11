@@ -320,7 +320,9 @@ public class TabixReader
 		TIndex idx = mIndex[tid];
 		int[] bins = new int[MAX_BIN];
 		int i, l, n_off, n_bins = reg2bins(beg, end, bins);
-		min_off = (beg>>TAD_LIDX_SHIFT >= idx.l.length)? idx.l[idx.l.length-1] : idx.l[beg>>TAD_LIDX_SHIFT];
+		if (idx.l.length > 0)
+			min_off = (beg>>TAD_LIDX_SHIFT >= idx.l.length)? idx.l[idx.l.length-1] : idx.l[beg>>TAD_LIDX_SHIFT];
+		else min_off = 0;
 		for (i = n_off = 0; i < n_bins; ++i) {
 			if ((chunks = idx.b.get(bins[i])) != null)
 				n_off += chunks.length;
