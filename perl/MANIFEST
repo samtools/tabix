@@ -4,4 +4,5 @@ Tabix.xs
 Tabix.pm
 TabixIterator.pm
 Makefile.PL
-t/Tabix.t
+t/01local.t
+t/02remote.t
