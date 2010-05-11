@@ -31,7 +31,7 @@ void _tabix_close(tabix_t *t)
 	}
 }
 
-MODULE = Tabix PACKAGE = Tabix PREFIX=tabix_
+MODULE = Tabix PACKAGE = Tabix
 
 tabix_t*
 tabix_open(fn)
@@ -57,7 +57,7 @@ tabix_DESTROY(t)
 	_tabix_close(t);
 
 ti_iter_t
-tabix_query(t, seq=0, beg=0, end=1)
+tabix_query(t, seq=0, beg=0, end=0x7fffffff)
 	tabix_t *t
 	const char *seq
 	int beg
@@ -91,7 +91,7 @@ tabix_read(iter)
 	RETVAL
 
 void
-tabix_get_names(t)
+tabix_getnames(t)
 	tabix_t *t
   PREINIT:
 	const char **names;
