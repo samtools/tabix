@@ -93,6 +93,8 @@ public class TabixReader
 
 	private static int reg2bins(final int beg, final int _end, final int[] list) {
 		int i = 0, k, end = _end;
+		if (beg >= end) return 0;
+		if (end >= 1<<29) end = 1<<29;
 		--end;
 		list[i++] = 0;
 		for (k =    1 + (beg>>26); k <=    1 + (end>>26); ++k) list[i++] = k;
