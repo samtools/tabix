@@ -90,19 +90,14 @@ tabix_read(iter)
   OUTPUT:
 	RETVAL
 
-AV*
+void
 tabix_get_names(t)
 	tabix_t *t
   PREINIT:
 	const char **names;
 	int i, n;
-	AV *a;
-  CODE:
+  PPCODE:
 	names = ti_seqname(t->idx, &n);
-	a = newAV();
-	av_extend(a, n);
 	for (i = 0; i < n; ++i)
-		av_store(a, i, newSVpv(names[i], 0));
-	RETVAL = a;
-  OUTPUT:
-	RETVAL
+		XPUSHs(sv_2mortal(newSVpv(names[i], 0)));
+	free(names);
