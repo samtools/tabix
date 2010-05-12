@@ -28,6 +28,12 @@ all:$(PROG)
 
 lib:libtabix.a
 
+libtabix.so.1:$(LOBJS)
+		$(CC) -shared -Wl,-soname,libtabix.so -o $@ $(LOBJS) -lc -lz
+
+libtabix.1.dylib:$(LOBJS)
+		libtool -dynamic $(LOBJS) -o $@ -lc -lz
+
 libtabix.a:$(LOBJS)
 		$(AR) -cru $@ $(LOBJS)
 
@@ -51,6 +57,6 @@ tabix.pdf:tabix.tex
 		pdflatex tabix.tex
 
 cleanlocal:
-		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class
+		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class libtabix.*.dylib libtabix.so*
 
 clean:cleanlocal-recur

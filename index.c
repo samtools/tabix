@@ -929,6 +929,15 @@ ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end)
 	return ti_iter_query(t->idx, tid, beg, end);	
 }
 
+ti_iter_t ti_querys(tabix_t *t, const char *reg)
+{
+	int tid, beg, end;
+	if (reg == 0) return ti_iter_first();
+	if (ti_lazy_index_load(t) != 0) return 0;
+	if (ti_parse_region(t->idx, reg, &tid, &beg, &end) < 0) return 0;
+	return ti_iter_query(t->idx, tid, beg, end);
+}
+
 ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end)
 {
 	int tid;
