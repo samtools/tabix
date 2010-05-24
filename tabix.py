@@ -25,7 +25,15 @@ def tabix_init():
     tabix = load_shared_library('tabix')
     if (tabix == None):
         return None
+    tabix.ti_open.restype = c_void_p
+    # on Mac OS X 10.6, the following declarations are required.
     tabix.ti_read.restype = c_char_p
+    tabix.ti_querys.argtypes = [c_void_p, c_char_p]
+    tabix.ti_querys.restype = c_void_p
+    tabix.ti_read.argtypes = [c_void_p, c_void_p, c_void_p]
+    tabix.ti_iter_destroy.argtypes = [c_void_p]
+    tabix.ti_close.argtypes = [c_void_p]
+    # FIXME: explicit declarations for APIs not used in this script
     return tabix
 
 # command-line interface
