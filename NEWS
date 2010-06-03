@@ -1,3 +1,15 @@
+Beta Release 0.2.1 (3 June, 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Notable changes:
+
+ * Allow shared library to be compiled. Added python binding to the
+   shared library.
+
+(0.2.1: 3 June 2010, r582)
+
+
+
 Beta Release 0.2.0 (11 May, 2010)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

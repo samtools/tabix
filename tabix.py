@@ -61,8 +61,8 @@ class Tabix:
         within the requested range from the requested file.
         """
         if (self.tabix == None): return
-        if (start < 0): iter = self.tabix.ti_querys(self.fp, chr)
-        else: iter = self.tabix.ti_query(self.fp, chr, start, end)
+        if (start < 0): iter = self.tabix.ti_querys(self.fp, chr) # chr looks like: "chr2:1,000-2,000" or "chr2"
+        else: iter = self.tabix.ti_query(self.fp, chr, start, end) # chr must be a sequence name
         if (iter == None):        
             sys.stderr.write("[Tabix] Malformatted query or wrong sequence name.\n")
             return
