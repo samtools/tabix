@@ -19,7 +19,7 @@ typedef struct {
 } pair64_t;
 
 #define pair64_lt(a,b) ((a).u < (b).u)
-KSORT_INIT(off, pair64_t, pair64_lt)
+KSORT_INIT(offt, pair64_t, pair64_lt)
 
 typedef struct {
 	uint32_t m, n;
@@ -804,7 +804,7 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end)
 	free(bins);
 	{
 		int l;
-		ks_introsort(off, n_off, off);
+		ks_introsort(offt, n_off, off);
 		// resolve completely contained adjacent blocks
 		for (i = 1, l = 0; i < n_off; ++i)
 			if (off[l].v < off[i].v)
