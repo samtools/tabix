@@ -192,17 +192,19 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 					}
 				} else if ((idx->conf.preset&0xffff) == TI_PRESET_VCF) {
 					// FIXME: the following is NOT tested and is likely to be buggy
-					if (id == 5) { // ALT
-						char *t;
-						int max = 1;
-						for (s = str->s + b; s < str->s + i;) {
-							if (s[i] == 'D') {
-								long x = strtol(s + 1, &t, 10);
-								if (x > max) max = x;
-								s = t + 1;
-							} else ++s;
+					if (id == 4) {
+						if (b < i) intv->end = intv->beg + (i - b);
+					} else if (id == 8) { // look for "END="
+						int c = str->s[i];
+						str->s[i] = 0;
+						s = strstr(str->s + b, "END=");
+						if (s == str->s + b) s += 4;
+						else if (s) {
+							s = strstr(str->s + b, ";END=");
+							if (s) s += 5;
 						}
-						intv->end = intv->beg + max;
+						if (s) intv->end = strtol(s, &s, 0);
+						str->s[i] = c;
 					}
 				}
 			}

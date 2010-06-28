@@ -226,7 +226,7 @@ public class TabixReader
 	private TIntv getIntv(final String s) {
 		TIntv intv = new TIntv();
 		int col = 0, end = 0, beg = 0;
-		while ((end = s.indexOf('\t', beg)) >= 0) {
+		while ((end = s.indexOf('\t', beg)) >= 0 || end == -1) {
 			++col;
 			if (col == mSc) {
 				intv.tid = chr2tid(s.substring(beg, end));
@@ -236,7 +236,7 @@ public class TabixReader
 				else --intv.beg;
 				if (intv.beg < 0) intv.beg = 0;
 				if (intv.end < 1) intv.end = 1;
-			} else { // FIXME: SAM/VCF supports are not tested yet
+			} else { // FIXME: SAM supports are not tested yet
 				if ((mPreset&0xffff) == 0) { // generic
 					if (col == mEc)
 						intv.end = Integer.parseInt(s.substring(beg, end));
@@ -254,22 +254,25 @@ public class TabixReader
 						intv.end = intv.beg + l;
 					}
 				} else if ((mPreset&0xffff) == 2) { // VCF
-					if (col == 5) {
-						String alt = s.substring(beg, end);
-						int i, max = 1;
-						for (i = 0; i < alt.length(); ++i) {
-							if (alt.charAt(i) == 'D') { // deletion
-								int j;
-							    for (j = i; j < alt.length() && alt.charAt(j) >= '0' && alt.charAt(j) <= '9'; ++j);
-								int l = Integer.parseInt(alt.substring(i, j));
-								if (max < l) max = l;
-								i = j - 1;
-							}
+					String alt;
+					alt = end >= 0? s.substring(beg, end) : s.substring(beg);
+					if (col == 4) { // REF
+						if (alt.length() > 0) intv.end = intv.beg + alt.length();
+					} else if (col == 8) { // INFO
+						int e_off = -1, i = alt.indexOf("END=");
+						if (i == 0) e_off = 4;
+						else if (i > 0) {
+							i = alt.indexOf(";END=");
+							if (i >= 0) e_off = i + 5;
 						}
-						intv.end = intv.beg + max;
+						if (e_off > 0) {
+							i = alt.indexOf(";", e_off);
+							intv.end = Integer.parseInt(i > e_off? alt.substring(e_off, i) : alt.substring(e_off));
+						}
 					}
 				}
 			}
+			if (end == -1) break;
 			beg = end + 1;
 		}
 		return intv;
