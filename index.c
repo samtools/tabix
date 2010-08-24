@@ -322,6 +322,11 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 		}
 		get_intv(idx, str, &intv);
 		if (last_tid != intv.tid) { // change of chromosomes
+            if (last_tid>intv.tid )
+            {
+                fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted?\n",(unsigned long long)lineno);
+                exit(1);
+            }
 			last_tid = intv.tid;
 			last_bin = 0xffffffffu;
 		} else if (last_coor > intv.beg) {
@@ -645,8 +650,8 @@ ti_index_t *ti_index_load(const char *fn)
     char *fname = get_local_version(fn);
 	if (fname == 0) return 0;
 	idx = ti_index_load_local(fname);
+	if (idx == 0) fprintf(stderr, "[ti_index_load] fail to load the index: %s\n", fname);
     free(fname);
-	if (idx == 0) fprintf(stderr, "[ti_index_load] fail to load BAM index.\n");
 	return idx;
 }
 
@@ -656,7 +661,7 @@ int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 	BGZF *fp, *fpidx;
 	ti_index_t *idx;
 	if ((fp = bgzf_open(fn, "r")) == 0) {
-		fprintf(stderr, "[ti_index_build2] fail to open the BAM file.\n");
+		fprintf(stderr, "[ti_index_build2] fail to open the file: %s\n", fn);
 		return -1;
 	}
 	idx = ti_index_core(fp, conf);
