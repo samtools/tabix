@@ -808,6 +808,9 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end)
 				if (p->list[j].v > min_off) off[n_off++] = p->list[j];
 		}
 	}
+	if (n_off == 0) {
+		free(bins); free(off); return iter;
+	}
 	free(bins);
 	{
 		int l;

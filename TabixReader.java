@@ -339,6 +339,7 @@ public class TabixReader
 				for (int j = 0; j < chunks.length; ++j)
 					if (less64(min_off, chunks[j].v))
 						off[n_off++] = new TPair64(chunks[j]);
+		if (n_off == 0) return null;
 		Arrays.sort(off, 0, n_off);
 		// resolve completely contained adjacent blocks
 		for (i = 1, l = 0; i < n_off; ++i) {
@@ -385,7 +386,7 @@ public class TabixReader
 					System.out.println(s);
 			} else { // a region is specified; random access
 				TabixReader.Iterator iter = tr.query(args[1]); // get the iterator
-				while ((s = iter.next()) != null)
+				while (iter != null && (s = iter.next()) != null)
 					System.out.println(s);
 			}
 		} catch (IOException e) {
