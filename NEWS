@@ -1,3 +1,25 @@
+Beta Release 0.2.3 (8 December, 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Notable changes:
+
+ * Fixed a minor bug where the first record in a headerless file may be
+   missed.
+
+ * Added an option to print header lines.
+
+ * Fixed a rare bug which may occasionally happen when retrieving data
+   from a region without any records.
+
+ * Enhanced error reporting.
+
+ * Fixed a bug in bgzip which may delete the original file even if not
+   intended.
+
+(0.2.3: 8 December 2010, r876)
+
+
+
 Beta Release 0.2.2 (28 June, 2010)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
