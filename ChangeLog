@@ -1,4 +1,132 @@
 ------------------------------------------------------------------------
+r855 | petulda | 2010-11-25 11:50:13 -0500 (Thu, 25 Nov 2010) | 1 line
+Changed paths:
+   M /trunk/tabix/main.c
+
+Disable "unknown target name or minus interval" warning.
+------------------------------------------------------------------------
+r775 | petulda | 2010-10-26 15:02:30 -0400 (Tue, 26 Oct 2010) | 1 line
+Changed paths:
+   M /trunk/tabix/main.c
+
+Added -h option to print header lines
+------------------------------------------------------------------------
+r742 | jmarshall | 2010-09-27 06:47:23 -0400 (Mon, 27 Sep 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix
+
+Add svn:ignore properties for intermediate and generated files.
+
+------------------------------------------------------------------------
+r725 | lh3lh3 | 2010-09-15 13:01:53 -0400 (Wed, 15 Sep 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/bgzip.c
+
+patches by Peter Chines
+
+------------------------------------------------------------------------
+r714 | lh3lh3 | 2010-09-07 10:13:25 -0400 (Tue, 07 Sep 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/TabixReader.java
+   M /trunk/tabix/index.c
+   M /trunk/tabix/main.c
+
+fixed a bug in C/Java when n_off == 0
+
+------------------------------------------------------------------------
+r712 | lh3lh3 | 2010-09-03 09:21:23 -0400 (Fri, 03 Sep 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/TabixReader.java
+
+fixed a bug in parsing region strings
+
+------------------------------------------------------------------------
+r700 | petulda | 2010-08-25 10:42:37 -0400 (Wed, 25 Aug 2010) | 1 line
+Changed paths:
+   M /trunk/tabix/main.c
+
+Fix: Exit with an error rather than segfault when index is not present and region is queried
+------------------------------------------------------------------------
+r696 | petulda | 2010-08-24 10:24:12 -0400 (Tue, 24 Aug 2010) | 1 line
+Changed paths:
+   M /trunk/tabix/bgzf.c
+   M /trunk/tabix/bgzf.h
+   M /trunk/tabix/index.c
+   M /trunk/tabix/main.c
+
+Complain about not-bgzipped files and check for noncontinuous chromosome blocks
+------------------------------------------------------------------------
+r603 | lh3lh3 | 2010-06-28 10:49:39 -0400 (Mon, 28 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/NEWS
+   M /trunk/tabix/TabixReader.java
+   M /trunk/tabix/index.c
+   M /trunk/tabix/main.c
+
+Release tabix-0.2.2
+
+------------------------------------------------------------------------
+r597 | lh3lh3 | 2010-06-13 21:08:29 -0400 (Sun, 13 Jun 2010) | 3 lines
+Changed paths:
+   M /trunk/tabix/index.c
+
+Change the namespace of sorting, to avoid function name collision with samtools.
+
+
+------------------------------------------------------------------------
+r582 | lh3lh3 | 2010-06-03 10:40:25 -0400 (Thu, 03 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/NEWS
+   M /trunk/tabix/main.c
+   M /trunk/tabix/tabix.py
+
+Release tabix-0.2.1
+
+------------------------------------------------------------------------
+r581 | lh3lh3 | 2010-05-24 14:24:24 -0400 (Mon, 24 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/tabix.py
+
+OOP interface with the help from Aaron Quinlan
+
+------------------------------------------------------------------------
+r580 | lh3lh3 | 2010-05-23 23:36:05 -0400 (Sun, 23 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/tabix.py
+
+minor change
+
+------------------------------------------------------------------------
+r579 | lh3lh3 | 2010-05-23 23:25:24 -0400 (Sun, 23 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/tabix.py
+
+For Snow Leopard compatibility
+
+------------------------------------------------------------------------
+r575 | lh3lh3 | 2010-05-12 19:31:27 -0400 (Wed, 12 May 2010) | 4 lines
+Changed paths:
+   M /trunk/tabix/Makefile
+   M /trunk/tabix/index.c
+   M /trunk/tabix/tabix.h
+   A /trunk/tabix/tabix.py
+
+ * optionally generate shared library for Mac and Linux
+ * added a python script that directly calls the shared library
+ * added a new API for easy python access
+
+------------------------------------------------------------------------
+r574 | lh3lh3 | 2010-05-11 12:14:27 -0400 (Tue, 11 May 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/ChangeLog
+   M /trunk/tabix/NEWS
+   M /trunk/tabix/perl/Tabix.pm
+   M /trunk/tabix/perl/TabixIterator.pm
+   M /trunk/tabix/tabix.1
+
+Release tabix-0.2.0
+
+------------------------------------------------------------------------
 r573 | lh3lh3 | 2010-05-11 12:08:30 -0400 (Tue, 11 May 2010) | 2 lines
 Changed paths:
    M /trunk/tabix/Makefile
