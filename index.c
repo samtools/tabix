@@ -158,11 +158,12 @@ static int get_tid(ti_index_t *idx, const char *ss)
 
 static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 {
-	int i, b = 0, id = 1;
+	int i, b = 0, id = 1, ncols=0;
 	char *s;
 	intv->tid = intv->beg = intv->end = intv->bin = -1;
 	for (i = 0; i <= str->l; ++i) {
 		if (str->s[i] == '\t' || str->s[i] == 0) {
+            ncols++;
 			if (id == idx->conf.sc) {
 				str->s[i] = 0;
 				intv->tid = get_tid(idx, str->s + b);
@@ -212,6 +213,14 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 			++id;
 		}
 	}
+    if ( ncols<idx->conf.sc || ncols<idx->conf.bc || ncols<idx->conf.ec )
+    {
+        if ( ncols==1 )
+            fprintf(stderr,"[get_intv] Is the file tab-delimited? The line has %d field only: %s\n",ncols,str->s);
+        else
+            fprintf(stderr,"[get_intv] The line has %d field(s) only: %s\n",ncols,str->s);
+        exit(1);
+    }
 	if (intv->tid < 0 || intv->beg < 0 || intv->end < 0) return -1;
 	intv->bin = ti_reg2bin(intv->beg, intv->end);
 	return 0;
@@ -322,6 +331,11 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 			continue;
 		}
 		get_intv(idx, str, &intv);
+        if ( intv.beg<0 || intv.end<0 )
+        {
+            fprintf(stderr,"[ti_index_core] the indexes overlap or are out of bounds\n");
+            exit(1);
+        }
 		if (last_tid != intv.tid) { // change of chromosomes
             if (last_tid>intv.tid )
             {
