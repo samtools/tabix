@@ -553,9 +553,8 @@ bgzf_read(BGZF* fp, void* data, int length)
     return bytes_read;
 }
 
-static
 int
-flush_block(BGZF* fp)
+bgzf_flush_block(BGZF* fp)
 {
     while (fp->block_offset > 0) {
         int block_length = deflate_block(fp, fp->block_offset);
@@ -599,7 +598,7 @@ bgzf_write(BGZF* fp, const void* data, int length)
         input += copy_length;
         bytes_written += copy_length;
         if (fp->block_offset == block_length) {
-            if (flush_block(fp) != 0) {
+            if (bgzf_flush_block(fp) != 0) {
                 break;
             }
         }
@@ -611,7 +610,7 @@ int
 bgzf_close(BGZF* fp)
 {
     if (fp->open_mode == 'w') {
-        if (flush_block(fp) != 0) {
+        if (bgzf_flush_block(fp) != 0) {
             return -1;
         }
 		{ // add an empty block

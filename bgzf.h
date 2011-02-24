@@ -136,6 +136,8 @@ int bgzf_check_EOF(BGZF *fp);
 
 int bgzf_read_block(BGZF* fp);
 
+int bgzf_flush_block(BGZF* fp);
+
 #ifdef __cplusplus
 }
 #endif

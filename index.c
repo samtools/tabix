@@ -339,7 +339,7 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 		if (last_tid != intv.tid) { // change of chromosomes
             if (last_tid>intv.tid )
             {
-                fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted?\n",(unsigned long long)lineno);
+                fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted? [pos %d]\n",(unsigned long long)lineno,intv.beg+1);
                 exit(1);
             }
 			last_tid = intv.tid;
