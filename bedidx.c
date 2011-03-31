@@ -26,7 +26,7 @@ int *bed_index_core(int n, uint64_t *a, int *n_idx)
 	m = *n_idx = 0; idx = 0;
 	for (i = 0; i < n; ++i) {
 		int beg, end;
-		beg = a[i]>>32; end = (uint32_t)a[i];
+		beg = a[i]>>32 >> LIDX_SHIFT; end = ((uint32_t)a[i]) >> LIDX_SHIFT;
 		if (m < end + 1) {
 			int oldm = m;
 			m = end + 1;
