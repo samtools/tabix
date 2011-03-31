@@ -1,7 +1,7 @@
 CC=			gcc
 CFLAGS=		-g -Wall -O2 -fPIC #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE
-LOBJS=		bgzf.o kstring.o knetfile.o index.o
+LOBJS=		bgzf.o kstring.o knetfile.o index.o bedidx.o
 AOBJS=		main.o
 PROG=		tabix bgzip
 INCLUDES=
@@ -52,6 +52,7 @@ bgzf.o:bgzf.h knetfile.h
 index.o:bgzf.h tabix.h khash.h ksort.h kstring.h
 main.o:tabix.h kstring.h bgzf.h
 bgzip.o:bgzf.h
+bedidx.o:kseq.h khash.h
 
 tabix.pdf:tabix.tex
 		pdflatex tabix.tex

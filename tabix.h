@@ -58,6 +58,11 @@ typedef struct {
 	int32_t meta_char, line_skip;
 } ti_conf_t;
 
+typedef struct {
+	int beg, end;
+	char *ss, *se;
+} ti_interval_t;
+
 extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
 
 #ifdef __cplusplus
