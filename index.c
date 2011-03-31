@@ -928,6 +928,8 @@ int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *d
 	return 0;
 }
 
+const ti_conf_t *ti_get_conf(ti_index_t *idx) { return idx? &idx->conf : 0; }
+
 /*******************
  * High-level APIs *
  *******************/

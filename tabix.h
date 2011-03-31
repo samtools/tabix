@@ -125,6 +125,9 @@ extern "C" {
 	/* Get the data line pointed by the iterator and iterate to the next record. */
 	const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len);
 
+	const ti_conf_t *ti_get_conf(ti_index_t *idx);
+	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
+
 	/*******************
 	 * Deprecated APIs *
 	 *******************/
