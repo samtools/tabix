@@ -1,4 +1,107 @@
 ------------------------------------------------------------------------
+r942 | lh3lh3 | 2011-03-31 16:39:50 -0400 (Thu, 31 Mar 2011) | 2 lines
+Changed paths:
+   M /trunk/tabix/main.c
+
+update version number
+
+------------------------------------------------------------------------
+r940 | lh3lh3 | 2011-03-31 16:38:03 -0400 (Thu, 31 Mar 2011) | 2 lines
+Changed paths:
+   M /trunk/tabix/bedidx.c
+   M /trunk/tabix/main.c
+
+fixed two bugs due to recent changes
+
+------------------------------------------------------------------------
+r939 | lh3lh3 | 2011-03-31 16:12:21 -0400 (Thu, 31 Mar 2011) | 2 lines
+Changed paths:
+   M /trunk/tabix/bgzf.c
+   M /trunk/tabix/bgzf.h
+   M /trunk/tabix/main.c
+
+update to the latest bgzf.*
+
+------------------------------------------------------------------------
+r938 | lh3lh3 | 2011-03-31 16:02:21 -0400 (Thu, 31 Mar 2011) | 2 lines
+Changed paths:
+   M /trunk/tabix/index.c
+   M /trunk/tabix/main.c
+   M /trunk/tabix/tabix.h
+
+BED support
+
+------------------------------------------------------------------------
+r937 | lh3lh3 | 2011-03-31 15:03:49 -0400 (Thu, 31 Mar 2011) | 2 lines
+Changed paths:
+   M /trunk/tabix/Makefile
+   A /trunk/tabix/bedidx.c
+   M /trunk/tabix/example.gtf.gz.tbi
+   M /trunk/tabix/index.c
+   A /trunk/tabix/kseq.h
+   M /trunk/tabix/tabix.h
+
+restructure get_intv() for BED support
+
+------------------------------------------------------------------------
+r919 | petulda | 2011-02-24 10:14:14 -0500 (Thu, 24 Feb 2011) | 1 line
+Changed paths:
+   M /trunk/tabix/bgzf.c
+   M /trunk/tabix/bgzf.h
+   M /trunk/tabix/index.c
+   M /trunk/tabix/main.c
+
+New -r (reheader) option for efficient header replacement.
+------------------------------------------------------------------------
+r915 | lh3lh3 | 2011-02-22 09:50:57 -0500 (Tue, 22 Feb 2011) | 2 lines
+Changed paths:
+   A /trunk/tabix/python
+   A /trunk/tabix/python/setup.py (from /trunk/tabix/setup.py:914)
+   A /trunk/tabix/python/tabixmodule.c (from /trunk/tabix/tabixmodule.c:914)
+   A /trunk/tabix/python/test.py (from /trunk/tabix/test.py:914)
+   D /trunk/tabix/setup.py
+   D /trunk/tabix/tabixmodule.c
+   D /trunk/tabix/test.py
+
+move to a new python/ directory
+
+------------------------------------------------------------------------
+r914 | lh3lh3 | 2011-02-22 09:49:35 -0500 (Tue, 22 Feb 2011) | 2 lines
+Changed paths:
+   A /trunk/tabix/setup.py
+   A /trunk/tabix/tabixmodule.c
+   A /trunk/tabix/test.py
+
+CPython C-API by Hyeshik Chang
+
+------------------------------------------------------------------------
+r904 | petulda | 2011-01-28 08:06:27 -0500 (Fri, 28 Jan 2011) | 1 line
+Changed paths:
+   M /trunk/tabix/index.c
+
+Check the number of fields on each line and exit nicely without segfault
+------------------------------------------------------------------------
+r901 | petulda | 2011-01-21 06:45:37 -0500 (Fri, 21 Jan 2011) | 1 line
+Changed paths:
+   M /trunk/tabix/main.c
+
+Fix: Complain only when VCF is newer, not newer or same mtime
+------------------------------------------------------------------------
+r900 | petulda | 2011-01-21 04:23:04 -0500 (Fri, 21 Jan 2011) | 1 line
+Changed paths:
+   M /trunk/tabix/main.c
+
+Prevent the common user mistake and check the timestamps of the vcf and index file
+------------------------------------------------------------------------
+r876 | lh3lh3 | 2010-12-08 12:38:45 -0500 (Wed, 08 Dec 2010) | 2 lines
+Changed paths:
+   M /trunk/tabix/ChangeLog
+   M /trunk/tabix/NEWS
+   M /trunk/tabix/main.c
+
+Release tabix-0.2.3
+
+------------------------------------------------------------------------
 r875 | lh3lh3 | 2010-12-08 12:28:35 -0500 (Wed, 08 Dec 2010) | 2 lines
 Changed paths:
    M /trunk/tabix/ChangeLog

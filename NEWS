@@ -1,3 +1,26 @@
+Release 0.2.4 (10 April, 2011)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Notable changes:
+
+ * Give an error if the index file is older than the data file.
+
+ * Avoid a segfault given flawed input.
+
+ * Added Python APIs contributed by Hyeshik Chang. The new APIs do not bind to
+   the dynamic library and are reported to be faster. Pysam also comes with a
+   tabix binding.
+
+ * Added option "-r" for efficient header replacement.
+
+ * Added BED support.
+
+ * Synchronized the BGZF library between tabix and samtools.
+
+(0.2.4: 10 April 2011, r949)
+
+
+
 Beta Release 0.2.3 (8 December, 2010)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
