@@ -35,10 +35,10 @@ libtabix.1.dylib:$(LOBJS)
 		libtool -dynamic $(LOBJS) -o $@ -lc -lz
 
 libtabix.a:$(LOBJS)
-		$(AR) -cru $@ $(LOBJS)
+		$(AR) -csru $@ $(LOBJS)
 
 tabix:lib $(AOBJS)
-		$(CC) $(CFLAGS) -o $@ $(AOBJS) -lm $(LIBPATH) -lz -L. -ltabix
+		$(CC) $(CFLAGS) -o $@ $(AOBJS) -L. -ltabix -lm $(LIBPATH) -lz
 
 bgzip:bgzip.o bgzf.o knetfile.o
 		$(CC) $(CFLAGS) -o $@ bgzip.o bgzf.o knetfile.o -lz
