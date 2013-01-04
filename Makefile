@@ -16,10 +16,12 @@ SOVERSION=1
 # Pick os
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
-LIBSUFFIX=$(SOVERSION).dylib
+LIBSUFFIX=dylib
+LIBNAME=libtabix.$(SOVERSION).$(LIBSUFFIX)
 CFLAGS +=
 else
 LIBSUFFIX=so
+LIBNAME=libtabix.$(LIBSUFFIX).$(SOVERSION)
 CFLAGS +=
 endif
 
@@ -34,6 +36,7 @@ ifdef SHARED
 CFLAGS += -fPIC
 else #static
 LIBSUFFIX=a
+LIBNAME=libtabix.$(LIBSUFFIX)
 endif
 
 .SUFFIXES:.c .o
@@ -43,8 +46,8 @@ endif
 
 all:$(PROG)
 
-libtabix.so: libtabix.so.$(SOVERSION)
-		$(LN) -s $^ libtabix.so
+libtabix.$(LIBSUFFIX): $(LIBNAME)
+		$(LN) -s $< $@
 
 libtabix.so.$(SOVERSION):$(LOBJS)
 		$(CC) -shared -Wl,-soname,libtabix.so -o $@ $(LOBJS) -lc -lz
