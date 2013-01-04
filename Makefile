@@ -19,12 +19,14 @@ ifeq ($(UNAME), Darwin)
 SOSUFFIX=dylib
 SONAME=libtabix.$(SOVERSION).$(SOSUFFIX)
 SOFLAGS=-dynamic
+LINK=libtool
 CFLAGS +=
 else
 SOSUFFIX=so
 SONAME=libtabix.$(SOSUFFIX).$(SOVERSION)
 SOFLAGS=-shared -Wl,-soname,libtabix.$(SOSUFFIX)
 CFLAGS +=
+LINK=gcc
 endif
 
 # Set architecture flags
@@ -49,7 +51,7 @@ endif
 all:$(PROG)
 
 $(SONAME): $(LOBJS)
-		$(CC) $(SOFLAGS) -o $@ $(LOBJS) -lc -lz
+		$(LINK) $(SOFLAGS) -o $@ $(LOBJS) -lc -lz
 
 libtabix.$(SOSUFFIX): $(SONAME)
 		$(LN) -s $^ $@
