@@ -16,12 +16,14 @@ SOVERSION=1
 # Pick os
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
-LIBSUFFIX=dylib
-LIBNAME=libtabix.$(SOVERSION).$(LIBSUFFIX)
+SOSUFFIX=dylib
+SONAME=libtabix.$(SOVERSION).$(SOSUFFIX)
+SOFLAGS=-dynamic
 CFLAGS +=
 else
-LIBSUFFIX=so
-LIBNAME=libtabix.$(LIBSUFFIX).$(SOVERSION)
+SOSUFFIX=so
+SONAME=libtabix.$(SOSUFFIX).$(SOVERSION)
+SOFLAGS=-shared -Wl,-soname,libtabix.$(SOSUFFIX)
 CFLAGS +=
 endif
 
@@ -34,9 +36,9 @@ endif
 
 ifdef SHARED
 CFLAGS += -fPIC
+LIBNAME=libtabix.$(SOSUFFIX)
 else #static
-LIBSUFFIX=a
-LIBNAME=libtabix.$(LIBSUFFIX)
+LIBNAME=libtabix.a
 endif
 
 .SUFFIXES:.c .o
@@ -46,26 +48,19 @@ endif
 
 all:$(PROG)
 
-libtabix.so.$(SOVERSION):$(LOBJS)
-		$(CC) -shared -Wl,-soname,libtabix.so -o $@ $(LOBJS) -lc -lz
+$(SONAME): $(LOBJS)
+		$(CC) $(SOFLAGS) -o $@ $(LOBJS) -lc -lz
 
-libtabix.so: libtabix.so.$(SOVERSION)
-		$(LN) -s $^ $@
-
-
-libtabix.$(SOVERSION).dylib:$(LOBJS)
-		libtool -dynamic $(LOBJS) -o $@ -lc -lz
-
-libtabix.dylib: libtabix.$(SOVERSION).dylib
+libtabix.$(SOSUFFIX): $(SONAME)
 		$(LN) -s $^ $@
 
 libtabix.a:$(LOBJS)
 		$(AR) -csru $@ $(LOBJS)
 
-tabix:$(AOBJS) libtabix.$(LIBSUFFIX)
+tabix:$(AOBJS) $(LIBNAME)
 		$(CC) $(CFLAGS) -o $@ $(AOBJS) -L. -ltabix -lm $(LIBPATH) -lz
 
-bgzip:$(BGZOBJS) libtabix.$(LIBSUFFIX)
+bgzip:$(BGZOBJS) $(LIBNAME)
 		$(CC) $(CFLAGS) -o $@ $(BGZOBJS) -L. -ltabix -lz
 
 TabixReader.class:TabixReader.java
@@ -83,4 +78,4 @@ tabix.pdf:tabix.tex
 		pdflatex tabix.tex
 
 clean:
-		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class libtabix.*.dylib libtabix.so*
+		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class $(SONAME) *.$(SOSUFFIX)
