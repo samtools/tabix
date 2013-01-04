@@ -46,14 +46,19 @@ endif
 
 all:$(PROG)
 
-libtabix.$(LIBSUFFIX): $(LIBNAME)
-		$(LN) -s $< $@
-
 libtabix.so.$(SOVERSION):$(LOBJS)
 		$(CC) -shared -Wl,-soname,libtabix.so -o $@ $(LOBJS) -lc -lz
 
+libtabix.so: libtabix.so.$(SOVERSION)
+		$(LN) -s $^ $@
+
+
 libtabix.$(SOVERSION).dylib:$(LOBJS)
 		libtool -dynamic $(LOBJS) -o $@ -lc -lz
+		$(LN) -s $< libtabix.dylib
+
+libtabix.dylib: libtabix.$(SOVERSION).dylib
+		$(LN) -s $^ $@
 
 libtabix.a:$(LOBJS)
 		$(AR) -csru $@ $(LOBJS)
