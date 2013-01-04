@@ -55,7 +55,6 @@ libtabix.so: libtabix.so.$(SOVERSION)
 
 libtabix.$(SOVERSION).dylib:$(LOBJS)
 		libtool -dynamic $(LOBJS) -o $@ -lc -lz
-		$(LN) -s $< libtabix.dylib
 
 libtabix.dylib: libtabix.$(SOVERSION).dylib
 		$(LN) -s $^ $@
