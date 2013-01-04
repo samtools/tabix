@@ -1,47 +1,65 @@
-CC=			gcc
-CFLAGS=		-g -Wall -O2 -fPIC #-m64 #-arch ppc
+CC=		gcc
+LN=		ln
+CFLAGS=		-g -Wall -O2
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE -DBGZF_CACHE
-LOBJS=		bgzf.o kstring.o knetfile.o index.o bedidx.o
+KLIBOBJ=	bgzf.o kstring.o knetfile.o
+LOBJS=		$(KLIBOBJ) index.o bedidx.o
+BGZOBJS=	bgzip.o bgzf.o
 AOBJS=		main.o
 PROG=		tabix bgzip
 INCLUDES=
 SUBDIRS=	.
 LIBPATH=
-LIBCURSES=	
+LIBCURSES=
+SOVERSION=1
+
+# Pick os
+UNAME := $(shell uname)
+ifeq ($(UNAME), Darwin)
+LIBSUFFIX=$(SOVERSION).dylib
+CFLAGS +=
+else
+LIBSUFFIX=so
+CFLAGS +=
+endif
+
+# Set architecture flags
+ARCH := $(shell uname -m)
+ifeq ($(ARCH), x86_64)
+CFLAGS += -m64 -fPIC
+#else ifeq ($(ARCH), ppc -m?)
+endif
+
+ifdef SHARED
+CFLAGS += -fPIC
+else #static
+LIBSUFFIX=a
+endif
 
 .SUFFIXES:.c .o
 
 .c.o:
 		$(CC) -c $(CFLAGS) $(DFLAGS) $(INCLUDES) $< -o $@
 
-all-recur lib-recur clean-recur cleanlocal-recur install-recur:
-		@target=`echo $@ | sed s/-recur//`; \
-		wdir=`pwd`; \
-		list='$(SUBDIRS)'; for subdir in $$list; do \
-			cd $$subdir; \
-			$(MAKE) CC="$(CC)" DFLAGS="$(DFLAGS)" CFLAGS="$(CFLAGS)" \
-				INCLUDES="$(INCLUDES)" LIBPATH="$(LIBPATH)" $$target || exit 1; \
-			cd $$wdir; \
-		done;
-
 all:$(PROG)
 
-lib:libtabix.a
+libtabix.so: libtabix.so.$(SOVERSION)
+		$(LN) -s $^ libtabix.so
 
-libtabix.so.1:$(LOBJS)
+libtabix.so.$(SOVERSION):$(LOBJS)
 		$(CC) -shared -Wl,-soname,libtabix.so -o $@ $(LOBJS) -lc -lz
 
-libtabix.1.dylib:$(LOBJS)
+libtabix.$(SOVERSION).dylib:$(LOBJS)
 		libtool -dynamic $(LOBJS) -o $@ -lc -lz
 
 libtabix.a:$(LOBJS)
 		$(AR) -csru $@ $(LOBJS)
 
-tabix:lib $(AOBJS)
+tabix:$(AOBJS) libtabix.$(LIBSUFFIX)
 		$(CC) $(CFLAGS) -o $@ $(AOBJS) -L. -ltabix -lm $(LIBPATH) -lz
 
-bgzip:bgzip.o bgzf.o knetfile.o
-		$(CC) $(CFLAGS) -o $@ bgzip.o bgzf.o knetfile.o -lz
+bgzip:$(BGZOBJS) libtabix.$(LIBSUFFIX)
+		$(CC) $(CFLAGS) -o $@ $(BGZOBJS) -L. -ltabix -lz
 
 TabixReader.class:TabixReader.java
 		javac -cp .:sam.jar TabixReader.java
@@ -57,7 +75,5 @@ bedidx.o:kseq.h khash.h
 tabix.pdf:tabix.tex
 		pdflatex tabix.tex
 
-cleanlocal:
+clean:
 		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class libtabix.*.dylib libtabix.so*
-
-clean:cleanlocal-recur
