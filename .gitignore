@@ -1,0 +1,7 @@
+*.o
+*.so.1
+*.a
+*~
+*.a
+bgzip
+tabix
