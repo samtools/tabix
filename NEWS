@@ -1,3 +1,12 @@
+Release x.x.x (24 Januaary 2014)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Transferred the code under htslib.
+
+* Support for both TBI and CSI indexes.
+
+
+
 Release 0.2.4 (10 April, 2011)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

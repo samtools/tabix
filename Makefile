@@ -1,63 +1,64 @@
+PROG=		bgzip tabix
+
+all: $(PROG)
+
+
+# Adjust $(HTSDIR) to point to your top-level htslib directory
+HTSDIR = ../htslib
+include $(HTSDIR)/htslib.mk
+HTSLIB = $(HTSDIR)/libhts.a
+
 CC=			gcc
 CFLAGS=		-g -Wall -O2 -fPIC #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE -DBGZF_CACHE
-LOBJS=		bgzf.o kstring.o knetfile.o index.o bedidx.o
-AOBJS=		main.o
-PROG=		tabix bgzip
-INCLUDES=
-SUBDIRS=	.
-LIBPATH=
-LIBCURSES=	
+OBJS=		tabix.o bgzip.o
+INCLUDES=   -I. -I$(HTSDIR)
+
+prefix      = /usr/local
+exec_prefix = $(prefix)
+bindir      = $(exec_prefix)/bin
+mandir      = $(prefix)/share/man
+man1dir     = $(mandir)/man1
+
+INSTALL = install -p
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA    = $(INSTALL) -m 644
+
+# See htslib/Makefile
+PACKAGE_VERSION  = 0.0.1
+ifneq "$(wildcard .git)" ""
+PACKAGE_VERSION := $(shell git describe --always --dirty)
+version.h: $(if $(wildcard version.h),$(if $(findstring "$(PACKAGE_VERSION)",$(shell cat version.h)),,force))
+endif
+version.h:
+	echo '#define VERSION "$(PACKAGE_VERSION)"' > $@
+
 
 .SUFFIXES:.c .o
+.PHONY:all install lib test force
+
+force:
 
 .c.o:
 		$(CC) -c $(CFLAGS) $(DFLAGS) $(INCLUDES) $< -o $@
 
-all-recur lib-recur clean-recur cleanlocal-recur install-recur:
-		@target=`echo $@ | sed s/-recur//`; \
-		wdir=`pwd`; \
-		list='$(SUBDIRS)'; for subdir in $$list; do \
-			cd $$subdir; \
-			$(MAKE) CC="$(CC)" DFLAGS="$(DFLAGS)" CFLAGS="$(CFLAGS)" \
-				INCLUDES="$(INCLUDES)" LIBPATH="$(LIBPATH)" $$target || exit 1; \
-			cd $$wdir; \
-		done;
+common.o: common.h common.c version.h $(HTSDIR)/version.h 
+tabix.o: common.h tabix.c $(HTSDIR)/htslib/hts.h $(HTSDIR)/htslib/tbx.h $(HTSDIR)/htslib/sam.h $(HTSDIR)/htslib/vcf.h $(HTSDIR)/htslib/kseq.h $(HTSDIR)/htslib/bgzf.h
+bgzip.o: common.h bgzip.c  $(HTSDIR)/htslib/bgzf.h
 
-all:$(PROG)
+tabix: $(HTSLIB) tabix.o common.o
+		$(CC) $(CFLAGS) -o $@ $^ $(HTSLIB) -lpthread -lz -lm -ldl
 
-lib:libtabix.a
+bgzip: $(HTSLIB) bgzip.o common.o
+		$(CC) $(CFLAGS) -o $@ $^ $(HTSLIB) -lpthread -lz -lm -ldl
 
-libtabix.so.1:$(LOBJS)
-		$(CC) -shared -Wl,-soname,libtabix.so -o $@ $(LOBJS) -lc -lz
 
-libtabix.1.dylib:$(LOBJS)
-		libtool -dynamic $(LOBJS) -o $@ -lc -lz
-
-libtabix.a:$(LOBJS)
-		$(AR) -csru $@ $(LOBJS)
-
-tabix:lib $(AOBJS)
-		$(CC) $(CFLAGS) -o $@ $(AOBJS) -L. -ltabix -lm $(LIBPATH) -lz
-
-bgzip:bgzip.o bgzf.o knetfile.o
-		$(CC) $(CFLAGS) -o $@ bgzip.o bgzf.o knetfile.o -lz
-
-TabixReader.class:TabixReader.java
-		javac -cp .:sam.jar TabixReader.java
-
-kstring.o:kstring.h
-knetfile.o:knetfile.h
-bgzf.o:bgzf.h knetfile.h
-index.o:bgzf.h tabix.h khash.h ksort.h kstring.h
-main.o:tabix.h kstring.h bgzf.h
-bgzip.o:bgzf.h
-bedidx.o:kseq.h khash.h
-
-tabix.pdf:tabix.tex
-		pdflatex tabix.tex
+install: $(PROG)
+		mkdir -p $(DESTDIR)$(bindir) $(DESTDIR)$(man1dir)
+		$(INSTALL_PROGRAM) $(PROG) plot-vcfstats $(DESTDIR)$(bindir)
+		$(INSTALL_DATA) bcftools.1 $(DESTDIR)$(man1dir)
 
 cleanlocal:
-		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class libtabix.*.dylib libtabix.so*
+		rm -fr gmon.out *.o a.out *.dSYM *~ $(PROG)
 
-clean:cleanlocal-recur
+clean:cleanlocal
