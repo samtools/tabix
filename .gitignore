@@ -1,0 +1,58 @@
+#### General stuff
+/tabix
+/bgzip
+/perl/Tabix*.c
+
+#### C stuff
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+#### Perl stuff
+/perl/blib/
+/perl/.build/
+/perl/_build/
+/perl/cover_db/
+/perl/inc/
+/perl/Build
+/perl/!Build/
+/perl/Build.bat
+/perl/.last_cover_stats
+/perl/Makefile
+/perl/Makefile.old
+/perl/MANIFEST.bak
+/perl/META.yml
+/perl/META.json
+/perl/MYMETA.*
+nytprof.out
+/perl/pm_to_blib
+*.o
+*.bs
+
+/.perl-version

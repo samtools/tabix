@@ -4,8 +4,6 @@ use strict;
 use warnings;
 use Carp qw/croak/;
 
-use TabixIterator;
-
 require Exporter;
 
 our @ISA = qw/Exporter/;
@@ -70,6 +68,34 @@ sub read {
 sub getnames {
   my $self = shift;
   return tabix_getnames($self->{_});
+}
+
+package TabixIterator;
+
+use strict;
+use warnings;
+
+sub new {
+  my $invocant = shift;
+  my $class = ref($invocant) || $invocant;
+  my $self = {};
+  bless($self, $class);
+  return $self;
+}
+
+sub set {
+  my ($self, $iter) = @_;
+  $self->{_} = $iter;
+}
+
+sub get {
+  my $self = shift;
+  return $self->{_};
+}
+
+sub DESTROY {
+  my $self = shift;
+  Tabix::tabix_iter_free($self->{_}) if ($self->{_});
 }
 
 1;
