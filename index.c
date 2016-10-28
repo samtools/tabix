@@ -55,11 +55,11 @@ typedef struct {
 	int tid, beg, end, bin;
 } ti_intv_t;
 
-ti_conf_t ti_conf_gff = { 0, 1, 4, 5, '#', 0 };
-ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2, 3, '#', 0 };
-ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, '#', 0 };
-ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, '@', 0 };
-ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, '#', 0 };
+ti_conf_t ti_conf_gff = { 0, 1, 0, 4, 5, '#', 0 };
+ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 0, 2,  3, '#', 0 };
+ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 0, 17, 18, '#', 0 };
+ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 0, 4, 0, '@', 0 };
+ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 0, 2, 0, '#', 0 };
 
 /***************
  * read a line *
