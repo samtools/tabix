@@ -54,7 +54,8 @@ typedef struct {
 
 typedef struct {
 	int32_t preset;
-	int32_t sc, bc, ec; // seq col., beg col. and end col.
+	//int32_t sc, bc, ec; // seq col., beg col. and end col.
+	int32_t sc, sc2, bc, ec; // seq col., beg col. and end col.
 	int32_t meta_char, line_skip;
 } ti_conf_t;
 
