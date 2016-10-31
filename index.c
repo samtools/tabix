@@ -13,6 +13,7 @@
 #define TAD_MIN_CHUNK_GAP 32768
 // 1<<14 is the size of minimum bin.
 #define TAD_LIDX_SHIFT    14
+#define SNAME_SPLIT_CHARACTER   '|'
 
 typedef struct {
 	uint64_t u, v;
@@ -129,12 +130,14 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 {
 	int i, b = 0, id = 1, ncols = 0;
 	char *s;
-	intv->ss = intv->se = 0; intv->beg = intv->end = -1;
+	intv->ss = intv->se = 0; intv->ss2 = intv->se2 = 0; intv->beg = intv->end = -1;
 	for (i = 0; i <= len; ++i) {
 		if (line[i] == '\t' || line[i] == 0) {
             ++ncols;
 			if (id == conf->sc) {
 				intv->ss = line + b; intv->se = line + i;
+                        } else if (conf->sc2 && id == conf->sc2) {
+				intv->ss2 = line + b; intv->se2 = line + i;
 			} else if (id == conf->bc) {
 				// here ->beg is 0-based.
 				intv->beg = intv->end = strtol(line + b, &s, 0);
@@ -194,12 +197,32 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 {
 	ti_interval_t x;
+        char *str_ptr;
+        char sname_double[strlen(str->s)+1];
 	intv->tid = intv->beg = intv->end = intv->bin = -1;
 	if (ti_get_intv(&idx->conf, str->l, str->s, &x) == 0) {
-		int c = *x.se;
-		*x.se = '\0'; intv->tid = get_tid(idx, x.ss); *x.se = c;
+
+		char c = *x.se;
+                *x.se = '\0';
+
+                if(!x.se2){ //single-chromosome  
+                  intv->tid = get_tid(idx, x.ss); 
+                } else { //double-chromosome
+		  char c2 = *x.se2;
+                  *x.se2 = '\0';  
+                  strcpy(sname_double,x.ss); 
+                  str_ptr = sname_double+strlen(sname_double);
+                  *str_ptr=SNAME_SPLIT_CHARACTER;
+                  str_ptr++;
+                  strcpy(str_ptr,x.ss2);
+                  intv->tid = get_tid(idx, sname_double);
+                  *x.se2=c2;
+                } 
+
+                *x.se = c; 
 		intv->beg = x.beg; intv->end = x.end;
 		intv->bin = ti_reg2bin(intv->beg, intv->end);
+ 
 		return (intv->tid >= 0 && intv->beg >= 0 && intv->end >= 0)? 0 : -1;
 	} else {
 		fprintf(stderr, "[%s] the following line cannot be parsed and skipped: %s\n", __func__, str->s);
@@ -401,10 +424,10 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
 	} else bgzf_write(fp, &idx->n, 4);
-	assert(sizeof(ti_conf_t) == 24);
+	assert(sizeof(ti_conf_t) == 28);
 	if (ti_is_be) { // write ti_conf_t;
 		uint32_t x[6];
-		memcpy(x, &idx->conf, 24);
+		memcpy(x, &idx->conf, 28);
 		for (i = 0; i < 6; ++i) bgzf_write(fp, bam_swap_endian_4p(&x[i]), 4);
 	} else bgzf_write(fp, &idx->conf, sizeof(ti_conf_t));
 	{ // write target names
