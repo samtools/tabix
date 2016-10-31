@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0;
 	ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
     const char *reheader = NULL;
-	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:2:")) >= 0) {
+	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:d:")) >= 0) {
 		switch (c) {
 		case 'B': bed_reg = 1; break;
 		case 'C': bed_comp = bed_reg = 1; break;
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 's': conf.sc = atoi(optarg); break;
-		case '2': conf.sc2 = atoi(optarg); break;
+		case 'd': conf.sc2 = atoi(optarg); break;
 		case 'b': conf.bc = atoi(optarg); break;
 		case 'e': conf.ec = atoi(optarg); break;
         case 'l': list_chrms = 1; break;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage:   tabix <in.tab.bgz> [region1 [region2 [...]]]\n\n");
 		fprintf(stderr, "Options: -p STR     preset: gff, bed, sam, vcf, psltbl [gff]\n");
 		fprintf(stderr, "         -s INT     sequence name column [1]\n");
-		fprintf(stderr, "         -2 INT     second sequence name column [null]\n");
+		fprintf(stderr, "         -d INT     second sequence name column [null]\n");
 		fprintf(stderr, "         -b INT     start column [4]\n");
 		fprintf(stderr, "         -e INT     end column; can be identical to '-b' [5]\n");
 		fprintf(stderr, "         -S INT     skip first INT lines [0]\n");
