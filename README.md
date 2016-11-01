@@ -6,7 +6,7 @@ This modification can do double-chromosome indexing/query as an option.
 git clone https://github.com/SooLee/tabix.git
 cd tabix
 make
-
+# add the current path to PATH
 ```
 
 
