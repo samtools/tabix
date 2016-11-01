@@ -806,52 +806,80 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 	return 0;
 }
 
-int ti_parse_region2(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2)
+int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2)
 {
-	char *s, *p;
+	char *s, *p, *sname;
 	int i, l, k, h;
+        int coord1s, coord1e, coord2s, coord2e, pos1s, pos2s;
+
+
 	l = strlen(str);
 	p = s = (char*)malloc(l+1);
 	/* squeeze out "," */
 	for (i = k = 0; i != l; ++i)
 		if (str[i] != ',' && !isspace(str[i])) s[k++] = str[i];
 	s[k] = 0;
-	for (i = 0; i != k; ++i) if (s[i] == ':') break;
-	s[i] = 0;
-	if ((*tid = ti_get_tid(idx, s)) < 0) {
-		free(s);
+
+        /* split by dimension */
+        coord1s=0;
+        for(i = coord1s; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
+        s[i]=0; coord1e=i; coord2s=i+1; coord2e=k;
+
+
+        /* split into chr and pos */
+        for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
+        s[i]=0; pos1s=i+1;
+        for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
+        s[i]=0; pos2s=i+1;
+
+        /* concatenate chromosomes */
+        sname = (char*)malloc(l+1);
+        strcpy(sname, s + coord1s);
+        h=strlen(sname);
+        sname[h]= REGION_SPLIT_CHARACTER;
+        strcpy(sname+h+1, s+coord2s);
+
+
+	if ((*tid = ti_get_tid(idx, sname)) < 0) {
+		free(s); free(sname);
 		return -1;
 	}
-	if (i == k) { /* dump the whole sequence */
-		*begin = 0; *end = 1<<29; free(s);
-		return 0;
-	}
-        h=i;
-        for (p = s + h + 1; h != k; ++h) if (s[h] == REGION_SPLIT_CHARACTER) break;
-        s[h]=0;
-	for (p = s + i + 1; i != h; ++i) if (s[i] == '-') break;
-	*begin = atoi(p);
-	if (i < h) {
+
+
+        /* parsing pos1 */
+	if (pos1s-1 == coord1e) { /* dump the whole sequence */
+		*begin = 0; *end = 1<<29; 
+	} else {
+	for (p = s + pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
+	  *begin = atoi(p);
+	  if (i < coord1e) {
 		p = s + i + 1;
 		*end = atoi(p);
-	} else *end = 1<<29;
-	if (*begin > 0) --*begin;
+	  } else *end = 1<<29;
+  	  if (*begin > 0) --*begin;
+        }
 
-        *begin2=-1; *end2=-1;
-        if(h<k){
-	  for (p = s + h + 1; h != k; ++h) if (s[h] == '-') break;
+        /* parsing pos2 */
+	if (pos2s-1 == coord2e) { /* dump the whole sequence */
+		*begin2 = 0; *end2 = 1<<29; 
+	} else{
+	  for (p = s + pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
 	  *begin2 = atoi(p);
-	  if (h < k) {
-		p = s + h + 1;
+	  if (i < coord2e) {
+		p = s + i + 1;
 		*end2 = atoi(p);
 	  } else *end2 = 1<<29;
 	  if (*begin2 > 0) --*begin2;
         }
-	free(s);
+
+	free(s); free(sname);
 	if (*begin > *end) return -1;
    	if (*begin2!=-1 && *begin2 > *end2) return -1;
 	return 0;
 }
+
+
+
 
 /*******************************
  * retrieve a specified region *
@@ -1062,10 +1090,10 @@ ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end)
 
 ti_iter_t ti_querys(tabix_t *t, const char *reg)
 {
-	int tid, beg, end, beg2, end2;
+	int tid, beg, end;
 	if (reg == 0) return ti_iter_first();
 	if (ti_lazy_index_load(t) != 0) return 0;
-	if (ti_parse_region2(t->idx, reg, &tid, &beg, &end, &beg2, &end2) < 0) return 0;
+	if (ti_parse_region(t->idx, reg, &tid, &beg, &end) < 0) return 0;
 	return ti_iter_query(t->idx, tid, beg, end);
 }
 

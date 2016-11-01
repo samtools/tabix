@@ -114,7 +114,7 @@ extern "C" {
 
 	/* Parse a region like: chr2, chr2:100, chr2:100-200. Return -1 on failure. */
 	int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end);
-	int ti_parse_region2(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2);
+	int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2);
 
 	int ti_get_tid(const ti_index_t *idx, const char *name);
 

@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 				const ti_conf_t *conf_ = idxconf? idxconf : &conf; // use the index file if available
 				for (i = optind + 1; i < argc; ++i) {
 					int tid, beg, end, beg2, end2;
-					if (ti_parse_region2(t->idx, argv[i], &tid, &beg, &end, &beg2, &end2) == 0) {
+					if (ti_parse_region2d(t->idx, argv[i], &tid, &beg, &end, &beg2, &end2) == 0) {
 						iter = ti_queryi(t, tid, beg, end);
 						while ((s = ti_read(t, iter, &len)) != 0) {
                                                         ti_get_intv(conf_, len, (char*)s, &intv);
