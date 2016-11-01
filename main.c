@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0;
 	ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
     const char *reheader = NULL;
-	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:d:")) >= 0) {
+	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:d:u:v:")) >= 0) {
 		switch (c) {
 		case 'B': bed_reg = 1; break;
 		case 'C': bed_comp = bed_reg = 1; break;
@@ -122,6 +122,8 @@ int main(int argc, char *argv[])
 		case 'd': conf.sc2 = atoi(optarg); break;
 		case 'b': conf.bc = atoi(optarg); break;
 		case 'e': conf.ec = atoi(optarg); break;
+		case 'u': conf.bc2 = atoi(optarg); break;
+		case 'v': conf.ec2 = atoi(optarg); break;
         case 'l': list_chrms = 1; break;
         case 'h': print_header = 1; break;
         case 'H': print_only_header = 1; break;
@@ -137,8 +139,10 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Options: -p STR     preset: gff, bed, sam, vcf, psltbl [gff]\n");
 		fprintf(stderr, "         -s INT     sequence name column [1]\n");
 		fprintf(stderr, "         -d INT     second sequence name column [null]\n");
-		fprintf(stderr, "         -b INT     start column [4]\n");
-		fprintf(stderr, "         -e INT     end column; can be identical to '-b' [5]\n");
+		fprintf(stderr, "         -b INT     start1 column [4]\n");
+		fprintf(stderr, "         -e INT     end1 column; can be identical to '-b' [5]\n");
+		fprintf(stderr, "         -u INT     start2 column [null]\n");
+		fprintf(stderr, "         -v INT     end2 column; can be identical to '-u' [null]\n");
 		fprintf(stderr, "         -S INT     skip first INT lines [0]\n");
 		fprintf(stderr, "         -c CHAR    symbol for comment/meta lines [#]\n");
 	    fprintf(stderr, "         -r FILE    replace the header with the content of FILE [null]\n");
@@ -321,15 +325,20 @@ int main(int argc, char *argv[])
 					}
 					*intv.se = c;
 				}
-                ti_iter_destroy(iter);
+                                ti_iter_destroy(iter);
 				bed_destroy(bed);
 			} else {
+                                ti_interval_t intv;
+				const ti_conf_t *conf_ = idxconf? idxconf : &conf; // use the index file if available
 				for (i = optind + 1; i < argc; ++i) {
-					int tid, beg, end;
-					if (ti_parse_region(t->idx, argv[i], &tid, &beg, &end) == 0) {
+					int tid, beg, end, beg2, end2;
+					if (ti_parse_region2(t->idx, argv[i], &tid, &beg, &end, &beg2, &end2) == 0) {
 						iter = ti_queryi(t, tid, beg, end);
-							while ((s = ti_read(t, iter, &len)) != 0) {
-							fputs(s, stdout); fputc('\n', stdout);
+						while ((s = ti_read(t, iter, &len)) != 0) {
+                                                        ti_get_intv(conf_, len, (char*)s, &intv);
+                                                        if((beg2==-1 && end2==-1) || (intv.beg2 >= beg2 && intv.end2 <= end2)){
+							   fputs(s, stdout); fputc('\n', stdout);
+                                                        }
 						}
 						ti_iter_destroy(iter);
 					} 

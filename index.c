@@ -13,7 +13,7 @@
 #define TAD_MIN_CHUNK_GAP 32768
 // 1<<14 is the size of minimum bin.
 #define TAD_LIDX_SHIFT    14
-#define SNAME_SPLIT_CHARACTER   '|'
+#define REGION_SPLIT_CHARACTER   '|'
 
 typedef struct {
 	uint64_t u, v;
@@ -53,14 +53,14 @@ struct __ti_iter_t {
 };
 
 typedef struct {
-	int tid, beg, end, bin;
+	int tid, beg, end, bin, beg2, end2, bin2;
 } ti_intv_t;
 
-ti_conf_t ti_conf_gff = { 0, 1, 0, 4, 5, '#', 0 };
-ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 0, 2,  3, '#', 0 };
-ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 0, 17, 18, '#', 0 };
-ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 0, 4, 0, '@', 0 };
-ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 0, 2, 0, '#', 0 };
+ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '#', 0 };
+ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '#', 0 };
+ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '#', 0 };
+ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '@', 0 };
+ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '#', 0 };
 
 /***************
  * read a line *
@@ -130,7 +130,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 {
 	int i, b = 0, id = 1, ncols = 0;
 	char *s;
-	intv->ss = intv->se = 0; intv->ss2 = intv->se2 = 0; intv->beg = intv->end = -1;
+	intv->ss = intv->se = 0; intv->ss2 = intv->se2 = 0; intv->beg = intv->end = -1; intv->beg2 = intv->end2 = -1;
 	for (i = 0; i <= len; ++i) {
 		if (line[i] == '\t' || line[i] == 0) {
             ++ncols;
@@ -145,7 +145,14 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 				else ++intv->end;
 				if (intv->beg < 0) intv->beg = 0;
 				if (intv->end < 1) intv->end = 1;
-			} else {
+			} else if (conf->bc2 && id == conf->bc2) {
+				// here ->beg is 0-based.
+				intv->beg2 = intv->end2 = strtol(line + b, &s, 0);
+				if (!(conf->preset&TI_FLAG_UCSC)) --intv->beg2;
+				else ++intv->end2;
+				if (intv->beg2 < 0) intv->beg2 = 0;
+				if (intv->end2 < 1) intv->end2 = 1;
+			} else if(id == conf->ec) {
 				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
 					if (id == conf->ec) intv->end = strtol(line + b, &s, 0);
 				} else if ((conf->preset&0xffff) == TI_PRESET_SAM) {
@@ -178,7 +185,43 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 						line[i] = c;
 					}
 				}
-			}
+			} else if(conf->ec2 && id == conf->ec2) {
+				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
+					if (id == conf->ec2) intv->end2 = strtol(line + b, &s, 0);
+                                }
+			} else {
+				if ((conf->preset&0xffff) == TI_PRESET_SAM) {
+					if (id == 6) { // CIGAR
+						int l = 0, op;
+						char *t;
+						for (s = line + b; s < line + i;) {
+							long x = strtol(s, &t, 10);
+							op = toupper(*t);
+							if (op == 'M' || op == 'D' || op == 'N') l += x;
+							s = t + 1;
+						}
+						if (l == 0) l = 1;
+						intv->end = intv->beg + l;
+					}
+				} else if ((conf->preset&0xffff) == TI_PRESET_VCF) {
+					// FIXME: the following is NOT tested and is likely to be buggy
+					if (id == 4) {
+						if (b < i) intv->end = intv->beg + (i - b);
+					} else if (id == 8) { // look for "END="
+						int c = line[i];
+						line[i] = 0;
+						s = strstr(line + b, "END=");
+						if (s == line + b) s += 4;
+						else if (s) {
+							s = strstr(line + b, ";END=");
+							if (s) s += 5;
+						}
+						if (s) intv->end = strtol(s, &s, 0);
+						line[i] = c;
+					}
+				}
+
+                        }
 			b = i + 1;
 			++id;
 		}
@@ -190,7 +233,10 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 		exit(1);
 	}
 */
-	if (intv->ss == 0 || intv->se == 0 || intv->beg < 0 || intv->end < 0) return -1;
+	if (intv->ss == 0 || intv->se == 0 || intv->beg < 0 || intv->end < 0 ) return -1;
+        if(conf->sc2 && (intv->ss2 == 0 || intv->se2 == 0)) return -1;
+        if(conf->bc2 && (intv->beg2 < 0 || intv->end2 < 0)) return -1;
+        if(conf->ec2 && (intv->beg2 < 0 || intv->end2 < 0)) return -1;
 	return 0;
 }
 
@@ -199,7 +245,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 	ti_interval_t x;
         char *str_ptr;
         char sname_double[strlen(str->s)+1];
-	intv->tid = intv->beg = intv->end = intv->bin = -1;
+	intv->tid = intv->beg = intv->end = intv->beg2 = intv->end2 = intv->bin = intv->bin2 =  -1;
 	if (ti_get_intv(&idx->conf, str->l, str->s, &x) == 0) {
 
 		char c = *x.se;
@@ -212,7 +258,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
                   *x.se2 = '\0';  
                   strcpy(sname_double,x.ss); 
                   str_ptr = sname_double+strlen(sname_double);
-                  *str_ptr=SNAME_SPLIT_CHARACTER;
+                  *str_ptr=REGION_SPLIT_CHARACTER;
                   str_ptr++;
                   strcpy(str_ptr,x.ss2);
                   intv->tid = get_tid(idx, sname_double);
@@ -221,9 +267,11 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 
                 *x.se = c; 
 		intv->beg = x.beg; intv->end = x.end;
+		intv->beg2 = x.beg2; intv->end2 = x.end2;
 		intv->bin = ti_reg2bin(intv->beg, intv->end);
+		intv->bin2 = ti_reg2bin(intv->beg2, intv->end2);
  
-		return (intv->tid >= 0 && intv->beg >= 0 && intv->end >= 0)? 0 : -1;
+		return (intv->tid >= 0 && intv->beg >= 0 && intv->end >= 0 && ((!idx->conf.bc2 && !idx->conf.ec2) || (intv->beg2 >=0 && intv->end2 >=0))  )? 0 : -1;
 	} else {
 		fprintf(stderr, "[%s] the following line cannot be parsed and skipped: %s\n", __func__, str->s);
 		return -1;
@@ -424,10 +472,10 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
 	} else bgzf_write(fp, &idx->n, 4);
-	assert(sizeof(ti_conf_t) == 28);
+	assert(sizeof(ti_conf_t) == 36);
 	if (ti_is_be) { // write ti_conf_t;
 		uint32_t x[6];
-		memcpy(x, &idx->conf, 28);
+		memcpy(x, &idx->conf, 36);
 		for (i = 0; i < 6; ++i) bgzf_write(fp, bam_swap_endian_4p(&x[i]), 4);
 	} else bgzf_write(fp, &idx->conf, sizeof(ti_conf_t));
 	{ // write target names
@@ -754,6 +802,54 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 	if (*begin > 0) --*begin;
 	free(s);
 	if (*begin > *end) return -1;
+
+	return 0;
+}
+
+int ti_parse_region2(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2)
+{
+	char *s, *p;
+	int i, l, k, h;
+	l = strlen(str);
+	p = s = (char*)malloc(l+1);
+	/* squeeze out "," */
+	for (i = k = 0; i != l; ++i)
+		if (str[i] != ',' && !isspace(str[i])) s[k++] = str[i];
+	s[k] = 0;
+	for (i = 0; i != k; ++i) if (s[i] == ':') break;
+	s[i] = 0;
+	if ((*tid = ti_get_tid(idx, s)) < 0) {
+		free(s);
+		return -1;
+	}
+	if (i == k) { /* dump the whole sequence */
+		*begin = 0; *end = 1<<29; free(s);
+		return 0;
+	}
+        h=i;
+        for (p = s + h + 1; h != k; ++h) if (s[h] == REGION_SPLIT_CHARACTER) break;
+        s[h]=0;
+	for (p = s + i + 1; i != h; ++i) if (s[i] == '-') break;
+	*begin = atoi(p);
+	if (i < h) {
+		p = s + i + 1;
+		*end = atoi(p);
+	} else *end = 1<<29;
+	if (*begin > 0) --*begin;
+
+        *begin2=-1; *end2=-1;
+        if(h<k){
+	  for (p = s + h + 1; h != k; ++h) if (s[h] == '-') break;
+	  *begin2 = atoi(p);
+	  if (h < k) {
+		p = s + h + 1;
+		*end2 = atoi(p);
+	  } else *end2 = 1<<29;
+	  if (*begin2 > 0) --*begin2;
+        }
+	free(s);
+	if (*begin > *end) return -1;
+   	if (*begin2!=-1 && *begin2 > *end2) return -1;
 	return 0;
 }
 
@@ -786,8 +882,7 @@ ti_iter_t ti_iter_first()
 	return iter;
 }
 
-ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end)
-{
+ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end ){
 	uint16_t *bins;
 	int i, n_bins, n_off;
 	pair64_t *off;
@@ -800,7 +895,7 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end)
 	if (end < beg) return 0;
 	// initialize the iterator
 	iter = calloc(1, sizeof(struct __ti_iter_t));
-	iter->idx = idx; iter->tid = tid; iter->beg = beg; iter->end = end; iter->i = -1;
+	iter->idx = idx; iter->tid = tid; iter->beg = beg; iter->end = end;  iter->i = -1;
 	// random access
 	bins = (uint16_t*)calloc(MAX_BIN, 2);
 	n_bins = reg2bins(beg, end, bins);
@@ -889,7 +984,7 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len)
 			iter->curr_off = bgzf_tell(fp);
 			if (iter->str.s[0] == iter->idx->conf.meta_char) continue;
 			get_intv((ti_index_t*)iter->idx, &iter->str, &intv);
-			if (intv.tid != iter->tid || intv.beg >= iter->end) break; // no need to proceed
+			if (intv.tid != iter->tid || intv.beg >= iter->end ) break; // no need to proceed
 			else if (intv.end > iter->beg && iter->end > intv.beg) {
 				if (len) *len = iter->str.l;
 				return iter->str.s;
@@ -967,10 +1062,10 @@ ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end)
 
 ti_iter_t ti_querys(tabix_t *t, const char *reg)
 {
-	int tid, beg, end;
+	int tid, beg, end, beg2, end2;
 	if (reg == 0) return ti_iter_first();
 	if (ti_lazy_index_load(t) != 0) return 0;
-	if (ti_parse_region(t->idx, reg, &tid, &beg, &end) < 0) return 0;
+	if (ti_parse_region2(t->idx, reg, &tid, &beg, &end, &beg2, &end2) < 0) return 0;
 	return ti_iter_query(t->idx, tid, beg, end);
 }
 
