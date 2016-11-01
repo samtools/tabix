@@ -54,7 +54,7 @@ bgzip merged_nodup.tab.chrblock_sorted.txt
 ```
 
 ### 2D indexing & query on the above file
-2D indexing with tabix on chromosome pair (-s2 -d6) and the position of the first chromosome (b3). For full 2D query, also add -u7 and -v7, the start and end positions of the second coordinate. They are not used for indexing par se, but the column index is stored as part of the index, which allows full 2D query through individual comparisons.
+2D indexing with tabix on chromosome pair (-s2 -d6) and the position of the first chromosome (b3). For full 2D query, also add -u7 and -v7, the start and end positions of the second coordinate. They are not used for indexing per se, but the column index is stored as part of the index, which allows full 2D query through individual comparisons.
 ```
 ./tabix -f -s2 -d6 -b3 -e3 -u7 -v7 merged_nodup.tab.chrblock_sorted.txt.gz
 ```
