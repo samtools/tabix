@@ -1,6 +1,7 @@
 # pairix
 This modification can do double-chromosome indexing/query as an option.
 The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip.
+The index has an extension .px2.
 
 ## installation
 ```
