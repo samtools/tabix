@@ -7,10 +7,10 @@ This modification can do double-chromosome indexing as an option.
 bgzip textfile
 
 # indexing
-tabix -s<chr1_colume> [-d<chr2_colume>] -b<pos1_start_column> -e<pos1_end_column>  testfile.gz
+tabix -s<chr1_colume> [-d<chr2_colume>] -b<pos1_start_column> -e<pos1_end_column>  textfile.gz
 
 # querying
-tabix testfile.gz '<chr1>[|<chr2>]:<start>-<end>[|<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
+tabix textfile.gz '<chr1>[|<chr2>]:<start>-<end>[|<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
 
 ## Note
