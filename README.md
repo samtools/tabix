@@ -10,7 +10,7 @@ bgzip textfile
 tabix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_column> [-u<pos2_start_column> -v<pos2_end_column>] textfile.gz    # u, v is required for full 2d query.
 
 # querying
-tabix textfile.gz '<chr1>[|<chr2>]:<start>-<end>[|<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
+tabix textfile.gz '<chr1>[|<chr2>]:<start1>-<end1>[|<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
 
 ## Note
