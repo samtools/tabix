@@ -1,5 +1,5 @@
 # tabix
-This modification can do double-chromosome indexing as an option.
+This modification can do double-chromosome indexing/query as an option.
 
 ## Usage 
 ```
