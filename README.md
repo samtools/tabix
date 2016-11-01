@@ -10,7 +10,7 @@ bgzip textfile
 tabix -s<chr1_colume> [-d<chr2_colume>] -b<pos1_start_column> -e<pos1_end_column>  testfile.gz
 
 # querying
-tabix testfile.gz '<chr1>[|<chr2>]:<start>-<end>'    # make sure to quote, so '|' is not interpreted as a pipe.
+tabix testfile.gz '<chr1>[|<chr2>]:<start>-<end>[|<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
 
 ## Note
@@ -44,14 +44,19 @@ bgzip merged_nodup.tab.chrblock_sorted.txt
 ```
 
 ### 2D indexing & query on the above file
-2D indexing with tabix on chromosome pair (-s2 -d6) and the position of the first chromosome (b3)
+2D indexing with tabix on chromosome pair (-s2 -d6) and the position of the first chromosome (b3). For full 2D query, also add -u7 and -v7, the start and end positions of the second coordinate.
 ```
-./tabix -f -s2 -d6 -b3 -e3 merged_nodup.tab.chrblock_sorted.txt.gz
+./tabix -f -s2 -d6 -b3 -e3 -u7 -v7 merged_nodup.tab.chrblock_sorted.txt.gz
 ```
-2D query (chr10:1-1000000 x chr20)
+semi 2D query (chr10:1-1000000 x chr20)
 ```
 ./tabix merged_nodup.tab.chrblock_sorted.txt.gz '10|20:1-1000000'
 0	10	624779	1361	0	20	40941397	97868
+16	10	948577	2120	16	20	59816485	148396
+```
+full 2D query (chr10:1-1000000 x chr20:50000000-60000000)
+```
+./tabix merged_nodup.tab.chrblock_sorted.txt.gz '10|20:1-1000000|50000000-60000000'
 16	10	948577	2120	16	20	59816485	148396
 ```
 
