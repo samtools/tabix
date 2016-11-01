@@ -27,6 +27,8 @@ tabix textfile.gz '<chr1>[|<chr2>]:<start1>-<end1>[|<start2>-<end2>]'    # make 
 ## Note
 * Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
 * The index produced by this modified tabix is not compatible with the original tabix index. They are based on different structures.
+* Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric.
+
 
 ## Example
 ### Preparing a double-chromosome-block sorted text file 
