@@ -10,6 +10,7 @@ bgzip textfile
 tabix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_column> [-u<pos2_start_column> -v<pos2_end_column>] textfile.gz    # u, v is required for full 2d query.
 
 # querying
+tabix textfile.gz region1 [region2 [...]]  ## region is in the following format.
 tabix textfile.gz '<chr1>[|<chr2>]:<start1>-<end1>[|<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
 
@@ -59,6 +60,20 @@ full 2D query (chr10:1-1000000 x chr20:50000000-60000000)
 ./tabix merged_nodup.tab.chrblock_sorted.txt.gz '10|20:1-1000000|50000000-60000000'
 16	10	948577	2120	16	20	59816485	148396
 ```
+full 2D multi-query (chr1:1-10000000 x chr20:50000000-60000000 AND 3:5000000-9000000 x X:70000000-90000000)
+```
+./tabix merged_nodup.tab.chrblock_sorted.txt.gz '1|20:1-10000000|50000000-60000000' '3|X:5000000-9000000|70000000-90000000'
+16	1	4717358	10139	16	20	55598650	138321
+0	1	5649238	12370	16	20	59660150	148059
+16	1	6651242	15069	0	20	50444303	124692
+0	1	6930805	15906	16	20	50655496	125483
+0	1	8555535	20339	0	20	55253919	137318
+16	3	5025392	11911	16	X	86766531	207787
+0	3	5298790	12678	0	X	84731179	203102
+0	3	7272964	17297	0	X	88560374	211726
+16	3	8402388	19935	16	X	77717595	187377
+```
+
 
 ### 1D indexing on a regular vcf file, bgzipped.
 1D indexing
