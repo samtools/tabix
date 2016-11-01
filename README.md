@@ -90,7 +90,7 @@ full 2D multi-query (chr1:1-10000000 x chr20:50000000-60000000 AND 3:5000000-900
 ### 1D indexing on a regular vcf file, bgzipped.
 1D indexing
 ```
-./pairix -s1 -b2 -e2 -f SRR1171591.variants.snp.vqsr.p.vcf.gz
+./pairix -s1 -b2 -e2 -f samples/SRR1171591.variants.snp.vqsr.p.vcf.gz
 ```
 1D query
 ```
