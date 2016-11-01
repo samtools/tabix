@@ -35,7 +35,7 @@ tabix textfile.gz '<chr1>[|<chr2>]:<start1>-<end1>[|<start2>-<end2>]'    # make 
 (column 2 and 6 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
 ```
 cut -d' ' -f1-8 /n/data1/hms/dbmi/park/sl325/juicer/SRR1658832/aligned.20160803/merged_nodups.txt | sort -t' ' -k2,2 -k6,6 -k3,3g - > merged_nodup.chrblock_sorted.txt
-sed 's/ /\t/g' merged_nodup.chrblock_sorted.txt > merged_nodup.tab.chrblock_sorted.txt
+sed 's/ /\t/g' merged_nodup.chrblock_sorted.txt > merged_nodup.tab.chrblock_sorted.txt   ## note that sed may not work for every implementation.
 head merged_nodup.tab.chrblock_sorted.txt
 
 0	1	49819	93	0	1	16858344	44945
