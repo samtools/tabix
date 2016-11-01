@@ -15,9 +15,8 @@ tabix textfile.gz '<chr1>[|<chr2>]:<start1>-<end1>[|<start2>-<end2>]'    # make 
 ```
 
 ## Note
-Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. 
-Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
-
+* Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
+* The index produced by this modified tabix is not compatible with the original tabix index. They are based on different structures.
 
 ## Example
 ### Preparing a double-chromosome-block sorted text file 
