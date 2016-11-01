@@ -5,7 +5,7 @@ The index has an extension .px2.
 
 ## installation
 ```
-git clone https://github.com/SooLepairix.git
+git clone https://github.com/SooLee/pairix
 cd pairix
 make
 # add the bin path to PATH
