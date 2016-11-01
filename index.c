@@ -817,65 +817,73 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	p = s = (char*)malloc(l+1);
 	/* squeeze out "," */
 	for (i = k = 0; i != l; ++i)
-		if (str[i] != ',' && !isspace(str[i])) s[k++] = str[i];
+	  if (str[i] != ',' && !isspace(str[i])) s[k++] = str[i];
 	s[k] = 0;
 
         /* split by dimension */
-        coord1s=0;
-        for(i = coord1s; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
-        s[i]=0; coord1e=i; coord2s=i+1; coord2e=k;
+        for(i = 0; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
+        s[i]=0; 
 
-
-        /* split into chr and pos */
-        for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
-        s[i]=0; pos1s=i+1;
-        for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
-        s[i]=0; pos2s=i+1;
-
-        /* concatenate chromosomes */
-        sname = (char*)malloc(l+1);
-        strcpy(sname, s + coord1s);
-        h=strlen(sname);
-        sname[h]= REGION_SPLIT_CHARACTER;
-        strcpy(sname+h+1, s+coord2s);
-
-
-	if ((*tid = ti_get_tid(idx, sname)) < 0) {
-		free(s); free(sname);
-		return -1;
-	}
-
-
-        /* parsing pos1 */
-	if (pos1s-1 == coord1e) { /* dump the whole sequence */
-		*begin = 0; *end = 1<<29; 
-	} else {
-	for (p = s + pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
-	  *begin = atoi(p);
-	  if (i < coord1e) {
-		p = s + i + 1;
-		*end = atoi(p);
-	  } else *end = 1<<29;
-  	  if (*begin > 0) --*begin;
+        if(i == k) { //1d query
+          *begin2=-1; *end2=-1;
+          if(ti_parse_region(idx,str,tid,begin,end)==0) {  free(s); return 0; }
+          else {free(s); return -1; }
+ 
+        }else{ //2d query
+          coord1s=0; coord1e=i; coord2s=i+1; coord2e=k;
+  
+          /* split into chr and pos */
+          for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
+          s[i]=0; pos1s=i+1;
+          for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
+          s[i]=0; pos2s=i+1;
+  
+          /* concatenate chromosomes */
+          sname = (char*)malloc(l+1);
+          strcpy(sname, s + coord1s);
+          h=strlen(sname);
+          sname[h]= REGION_SPLIT_CHARACTER;
+          strcpy(sname+h+1, s+coord2s);
+  
+  
+  	  if ((*tid = ti_get_tid(idx, sname)) < 0) {
+  		free(s); free(sname);
+  		return -1;
+  	  }
+  
+          /* parsing pos1 */
+  	  if (pos1s-1 == coord1e) { /* dump the whole sequence */
+  		*begin = 0; *end = 1<<29; 
+    	  } else {
+            p = s + pos1s;
+  	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
+  	    *begin = atoi(p);
+  	    if (i < coord1e) {
+  		p = s + i + 1;
+  		*end = atoi(p);
+    	    } else *end = 1<<29;
+    	    if (*begin > 0) --*begin;
+          }
+  
+          /* parsing pos2 */
+  	  if (pos2s-1 == coord2e) { /* dump the whole sequence */
+  		*begin2 = 0; *end2 = 1<<29; 
+  	  } else{
+            p = s + pos2s; 
+  	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
+  	    *begin2 = atoi(p);
+  	    if (i < coord2e) {
+  		p = s + i + 1;
+  		*end2 = atoi(p);
+  	    } else *end2 = 1<<29;
+  	    if (*begin2 > 0) --*begin2;
+          }
+  
+  	  free(s); free(sname);
+  	  if (*begin > *end) return -1;
+     	  if (*begin2!=-1 && *begin2 > *end2) return -1;
+   	  return 0;
         }
-
-        /* parsing pos2 */
-	if (pos2s-1 == coord2e) { /* dump the whole sequence */
-		*begin2 = 0; *end2 = 1<<29; 
-	} else{
-	  for (p = s + pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
-	  *begin2 = atoi(p);
-	  if (i < coord2e) {
-		p = s + i + 1;
-		*end2 = atoi(p);
-	  } else *end2 = 1<<29;
-	  if (*begin2 > 0) --*begin2;
-        }
-
-	free(s); free(sname);
-	if (*begin > *end) return -1;
-   	if (*begin2!=-1 && *begin2 > *end2) return -1;
-	return 0;
 }
 
 

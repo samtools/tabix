@@ -21,7 +21,7 @@ tabix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_column
 
 # querying
 tabix textfile.gz region1 [region2 [...]]  ## region is in the following format.
-tabix textfile.gz '<chr1>[|<chr2>]:<start1>-<end1>[|<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
+tabix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
 
 ## Note
@@ -36,8 +36,8 @@ tabix textfile.gz '<chr1>[|<chr2>]:<start1>-<end1>[|<start2>-<end2>]'    # make 
 ```
 # the following has already be done and the final merged_nodup.tab.chrblock_sorted.txt.gz is already in the samples folder.
 cut -d' ' -f1-8 /n/data1/hms/dbmi/park/sl325/juicer/SRR1658832/aligned.20160803/merged_nodups.txt | sort -t' ' -k2,2 -k6,6 -k3,3g - > merged_nodup.chrblock_sorted.txt
-sed 's/ /\t/g' merged_nodup.chrblock_sorted.txt > merged_nodup.tab.chrblock_sorted.txt   ## note that sed may not work for every implementation.
-head merged_nodup.tab.chrblock_sorted.txt
+sed 's/ /\t/g' merged_nodup.chrblock_sorted.txt > samples/merged_nodup.tab.chrblock_sorted.txt   ## note that sed may not work for every implementation.
+head samples/merged_nodup.tab.chrblock_sorted.txt
 
 0	1	49819	93	0	1	16858344	44945
 0	1	108364	242	16	1	255090	508
@@ -53,28 +53,28 @@ head merged_nodup.tab.chrblock_sorted.txt
 
 bgzipping
 ```
-bgzip merged_nodup.tab.chrblock_sorted.txt
+bgzip samples/merged_nodup.tab.chrblock_sorted.txt
 ```
 
 ### 2D indexing & query on the above file
 2D indexing with tabix on chromosome pair (-s2 -d6) and the position of the first chromosome (b3). For full 2D query, also add -u7 and -v7, the start and end positions of the second coordinate. They are not used for indexing per se, but the column index is stored as part of the index, which allows full 2D query through individual comparisons.
 ```
-./tabix -f -s2 -d6 -b3 -e3 -u7 -v7 merged_nodup.tab.chrblock_sorted.txt.gz
+./tabix -f -s2 -d6 -b3 -e3 -u7 samples/merged_nodup.tab.chrblock_sorted.txt.gz
 ```
 semi 2D query (chr10:1-1000000 x chr20)
 ```
-./tabix merged_nodup.tab.chrblock_sorted.txt.gz '10|20:1-1000000'
+./tabix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20'
 0	10	624779	1361	0	20	40941397	97868
 16	10	948577	2120	16	20	59816485	148396
 ```
 full 2D query (chr10:1-1000000 x chr20:50000000-60000000)
 ```
-./tabix merged_nodup.tab.chrblock_sorted.txt.gz '10|20:1-1000000|50000000-60000000'
+./tabix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20:50000000-60000000'
 16	10	948577	2120	16	20	59816485	148396
 ```
 full 2D multi-query (chr1:1-10000000 x chr20:50000000-60000000 AND 3:5000000-9000000 x X:70000000-90000000)
 ```
-./tabix merged_nodup.tab.chrblock_sorted.txt.gz '1|20:1-10000000|50000000-60000000' '3|X:5000000-9000000|70000000-90000000'
+./tabix samples/merged_nodup.tab.chrblock_sorted.txt.gz '1:1-10000000|20:50000000-60000000' '3:5000000-9000000|X:70000000-90000000'
 16	1	4717358	10139	16	20	55598650	138321
 0	1	5649238	12370	16	20	59660150	148059
 16	1	6651242	15069	0	20	50444303	124692
