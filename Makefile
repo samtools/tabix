@@ -3,7 +3,7 @@ CFLAGS=		-g -Wall -O2 -fPIC #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE -DBGZF_CACHE
 LOBJS=		bgzf.o kstring.o knetfile.o index.o bedidx.o
 AOBJS=		main.o
-PROG=		bin/pairix bin/bgzip
+PROG=		pairix bgzip
 INCLUDES=
 SUBDIRS=	.
 LIBPATH=
@@ -25,6 +25,7 @@ all-recur lib-recur clean-recur cleanlocal-recur install-recur:
 		done;
 
 all:$(PROG)
+		mkdir -p bin; mv pairix bgzip bin
 
 lib:libtabix.a
 
@@ -37,10 +38,10 @@ libtabix.1.dylib:$(LOBJS)
 libtabix.a:$(LOBJS)
 		$(AR) -csru $@ $(LOBJS)
 
-bin/pairix:lib $(AOBJS)
+pairix:lib $(AOBJS)
 		$(CC) $(CFLAGS) -o $@ $(AOBJS) -L. -ltabix -lm $(LIBPATH) -lz
 
-bin/bgzip:bgzip.o bgzf.o knetfile.o
+bgzip:bgzip.o bgzf.o knetfile.o
 		$(CC) $(CFLAGS) -o $@ bgzip.o bgzf.o knetfile.o -lz
 
 TabixReader.class:TabixReader.java
