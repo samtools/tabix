@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
         case 'r': reheader = optarg; break;
 		}
 	}
+        if(conf.bc2 && !conf.ec2) conf.ec2=conf.bc2;
 	if (optind == argc) {
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Program: tabix (TAB-delimited file InderXer)\n");
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "         -b INT     start1 column [4]\n");
 		fprintf(stderr, "         -e INT     end1 column; can be identical to '-b' [5]\n");
 		fprintf(stderr, "         -u INT     start2 column [null]\n");
-		fprintf(stderr, "         -v INT     end2 column; can be identical to '-u' [null]\n");
+		fprintf(stderr, "         -v INT     end2 column; can be identical to '-u' [null or identical to the start2 specified by -u]\n");
 		fprintf(stderr, "         -S INT     skip first INT lines [0]\n");
 		fprintf(stderr, "         -c CHAR    symbol for comment/meta lines [#]\n");
 	    fprintf(stderr, "         -r FILE    replace the header with the content of FILE [null]\n");
