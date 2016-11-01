@@ -8,7 +8,7 @@
 #ifdef _USE_KNETFILE
 #include "knetfile.h"
 #endif
-#include "tabix.h"
+#include "pairix.h"
 
 #define TAD_MIN_CHUNK_GAP 32768
 // 1<<14 is the size of minimum bin.
@@ -685,7 +685,7 @@ static char *get_local_version(const char *fn)
 {
     struct stat sbuf;
 	char *fnidx = (char*)calloc(strlen(fn) + 5, 1);
-	strcat(strcpy(fnidx, fn), ".tbi");
+	strcat(strcpy(fnidx, fn), ".px2");
 	if ((strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx)) {
 		char *p, *url;
 		int l = strlen(fnidx);
@@ -740,7 +740,7 @@ int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 	bgzf_close(fp);
 	if (_fnidx == 0) {
 		fnidx = (char*)calloc(strlen(fn) + 5, 1);
-		strcpy(fnidx, fn); strcat(fnidx, ".tbi");
+		strcpy(fnidx, fn); strcat(fnidx, ".px2");
 	} else fnidx = strdup(_fnidx);
 	fpidx = bgzf_open(fnidx, "w");
 	if (fpidx == 0) {

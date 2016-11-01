@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "bgzf.h"
-#include "tabix.h"
+#include "pairix.h"
 #include "knetfile.h"
 
 #define PACKAGE_VERSION "0.2.5 (r1005)"
@@ -189,18 +189,18 @@ int main(int argc, char *argv[])
     if (reheader)
         return reheader_file(reheader,argv[optind],conf.meta_char);
 
-	struct stat stat_tbi,stat_vcf;
+	struct stat stat_px2,stat_vcf;
     char *fnidx = calloc(strlen(argv[optind]) + 5, 1);
-   	strcat(strcpy(fnidx, argv[optind]), ".tbi");
+   	strcat(strcpy(fnidx, argv[optind]), ".px2");
 
 	if (optind + 1 == argc && !print_only_header) {
 		if (force == 0) {
-			if (stat(fnidx, &stat_tbi) == 0) 
+			if (stat(fnidx, &stat_px2) == 0) 
             {
                 // Before complaining, check if the VCF file isn't newer. This is a common source of errors,
                 //  people tend not to notice that tabix failed
                 stat(argv[optind], &stat_vcf);
-                if ( stat_vcf.st_mtime <= stat_tbi.st_mtime )
+                if ( stat_vcf.st_mtime <= stat_px2.st_mtime )
                 {
                     fprintf(stderr, "[tabix] the index file exists. Please use '-f' to overwrite.\n");
                     free(fnidx);
@@ -235,9 +235,9 @@ int main(int argc, char *argv[])
         if ( !is_remote )
         {
             // Common source of errors: new VCF is used with an old index
-            stat(fnidx, &stat_tbi);
+            stat(fnidx, &stat_px2);
             stat(argv[optind], &stat_vcf);
-            if ( force==0 && stat_vcf.st_mtime > stat_tbi.st_mtime )
+            if ( force==0 && stat_vcf.st_mtime > stat_px2.st_mtime )
             {
                 fprintf(stderr, "[tabix] the index file either does not exist or is older than the vcf file. Please reindex.\n");
                 free(fnidx);
