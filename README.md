@@ -1,6 +1,15 @@
 # tabix
 This modification can do double-chromosome indexing/query as an option.
 
+## installation
+```
+git clone https://github.com/SooLee/tabix.git
+cd tabix
+make
+
+```
+
+
 ## Usage 
 ```
 # compression
