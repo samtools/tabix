@@ -5,10 +5,10 @@ The index has an extension .px2.
 
 ## installation
 ```
-git clone https://github.com/SooLee/pairix.git
+git clone https://github.com/SooLepairix.git
 cd pairix
 make
-# add the current path to PATH
+# add the bin path to PATH
 ```
 
 
@@ -60,22 +60,22 @@ bgzip samples/merged_nodup.tab.chrblock_sorted.txt
 ### 2D indexing & query on the above file
 2D indexing with pairix on chromosome pair (-s2 -d6) and the position of the first chromosome (b3). For full 2D query, also add -u7 and -v7, the start and end positions of the second coordinate. They are not used for indexing per se, but the column index is stored as part of the index, which allows full 2D query through individual comparisons.
 ```
-./pairix -f -s2 -d6 -b3 -e3 -u7 samples/merged_nodup.tab.chrblock_sorted.txt.gz
+pairix -f -s2 -d6 -b3 -e3 -u7 samples/merged_nodup.tab.chrblock_sorted.txt.gz
 ```
 semi 2D query (chr10:1-1000000 x chr20)
 ```
-./pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20'
+pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20'
 0	10	624779	1361	0	20	40941397	97868
 16	10	948577	2120	16	20	59816485	148396
 ```
 full 2D query (chr10:1-1000000 x chr20:50000000-60000000)
 ```
-./pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20:50000000-60000000'
+pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20:50000000-60000000'
 16	10	948577	2120	16	20	59816485	148396
 ```
 full 2D multi-query (chr1:1-10000000 x chr20:50000000-60000000 AND 3:5000000-9000000 x X:70000000-90000000)
 ```
-./pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '1:1-10000000|20:50000000-60000000' '3:5000000-9000000|X:70000000-90000000'
+pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '1:1-10000000|20:50000000-60000000' '3:5000000-9000000|X:70000000-90000000'
 16	1	4717358	10139	16	20	55598650	138321
 0	1	5649238	12370	16	20	59660150	148059
 16	1	6651242	15069	0	20	50444303	124692
@@ -91,11 +91,11 @@ full 2D multi-query (chr1:1-10000000 x chr20:50000000-60000000 AND 3:5000000-900
 ### 1D indexing on a regular vcf file, bgzipped.
 1D indexing
 ```
-./pairix -s1 -b2 -e2 -f samples/SRR1171591.variants.snp.vqsr.p.vcf.gz
+pairix -s1 -b2 -e2 -f samples/SRR1171591.variants.snp.vqsr.p.vcf.gz
 ```
 1D query
 ```
-./pairix samples/SRR1171591.variants.snp.vqsr.p.vcf.gz chr10:1-4000000
+pairix samples/SRR1171591.variants.snp.vqsr.p.vcf.gz chr10:1-4000000
 chr10	3463966	.	C	T	51.74	PASS	AC=2;AF=1.00;AN=2;DB;DP=2;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=2;MLEAF=1.00;MQ=50.00;MQ0=0;POSITIVE_TRAIN_SITE;QD=25.87;VQSLOD=7.88;culprit=FS	GT:AD:DP:GQ:PL	1/1:0,2:2:6:79,6,0
 chr10	3978708	rs29320259	T	C	1916.77	PASS	AC=2;AF=1.00;AN=2;BaseQRankSum=1.016;DB;DP=67;Dels=0.00;FS=0.000;HaplotypeScore=629.1968;MLEAC=2;MLEAF=1.00;MQ=50.00;MQ0=0;MQRankSum=0.773;POSITIVE_TRAIN_SITE;QD=28.61;ReadPosRankSum=0.500;VQSLOD=3.29;culprit=FS	GT:AD:DP:GQ:PL	1/1:3,64:67:70:1945,70,0
 chr10	3978709	.	G	A	1901.77	PASS	AC=2;AF=1.00;AN=2;BaseQRankSum=0.677;DB;DP=66;Dels=0.00;FS=0.000;HaplotypeScore=579.9049;MLEAC=2;MLEAF=1.00;MQ=50.00;MQ0=0;MQRankSum=0.308;POSITIVE_TRAIN_SITE;QD=28.81;ReadPosRankSum=0.585;VQSLOD=3.24;culprit=FS	GT:AD:DP:GQ:PL	1/1:3,63:66:73:1930,73,0
