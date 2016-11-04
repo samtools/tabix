@@ -2,6 +2,14 @@
 
 This script converts a paired-end bam file to a pairs file.
 
+
+## Installation
+```
+git clone https://github.com/4dn-dcic/bam2pairs
+## add bam2pairs to PATH.
+```
+
+
 ## Input
 The input bam file is paired-end and it doesn't have to be sorted or indexed.
 
