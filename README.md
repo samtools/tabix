@@ -9,6 +9,11 @@ git clone https://github.com/4dn-dcic/bam2pairs
 ## add bam2pairs to PATH.
 ```
 
+## Requirements
+* samtools (https://github.com/samtools/samtools)
+* bgzip (https://github.com/hms-dbmi/pairix or https://github.com/samtools/tabix)
+* pairix (https://github.com/hms-dbmi/pairix)
+
 
 ## Input
 The input bam file is paired-end and it doesn't have to be sorted or indexed.
