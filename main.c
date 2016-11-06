@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "bgzf.h"
-#include "tabix.h"
+#include "pairix.h"
 #include "knetfile.h"
 
 #define PACKAGE_VERSION "0.2.5 (r1005)"
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0;
 	ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
     const char *reheader = NULL;
-	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:")) >= 0) {
+	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:d:u:v:")) >= 0) {
 		switch (c) {
 		case 'B': bed_reg = 1; break;
 		case 'C': bed_comp = bed_reg = 1; break;
@@ -119,8 +119,11 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 's': conf.sc = atoi(optarg); break;
+		case 'd': conf.sc2 = atoi(optarg); break;
 		case 'b': conf.bc = atoi(optarg); break;
 		case 'e': conf.ec = atoi(optarg); break;
+		case 'u': conf.bc2 = atoi(optarg); break;
+		case 'v': conf.ec2 = atoi(optarg); break;
         case 'l': list_chrms = 1; break;
         case 'h': print_header = 1; break;
         case 'H': print_only_header = 1; break;
@@ -128,6 +131,7 @@ int main(int argc, char *argv[])
         case 'r': reheader = optarg; break;
 		}
 	}
+        if(conf.bc2 && !conf.ec2) conf.ec2=conf.bc2;
 	if (optind == argc) {
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Program: tabix (TAB-delimited file InderXer)\n");
@@ -135,8 +139,11 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage:   tabix <in.tab.bgz> [region1 [region2 [...]]]\n\n");
 		fprintf(stderr, "Options: -p STR     preset: gff, bed, sam, vcf, psltbl [gff]\n");
 		fprintf(stderr, "         -s INT     sequence name column [1]\n");
-		fprintf(stderr, "         -b INT     start column [4]\n");
-		fprintf(stderr, "         -e INT     end column; can be identical to '-b' [5]\n");
+		fprintf(stderr, "         -d INT     second sequence name column [null]\n");
+		fprintf(stderr, "         -b INT     start1 column [4]\n");
+		fprintf(stderr, "         -e INT     end1 column; can be identical to '-b' [5]\n");
+		fprintf(stderr, "         -u INT     start2 column [null]\n");
+		fprintf(stderr, "         -v INT     end2 column; can be identical to '-u' [null or identical to the start2 specified by -u]\n");
 		fprintf(stderr, "         -S INT     skip first INT lines [0]\n");
 		fprintf(stderr, "         -c CHAR    symbol for comment/meta lines [#]\n");
 	    fprintf(stderr, "         -r FILE    replace the header with the content of FILE [null]\n");
@@ -182,18 +189,18 @@ int main(int argc, char *argv[])
     if (reheader)
         return reheader_file(reheader,argv[optind],conf.meta_char);
 
-	struct stat stat_tbi,stat_vcf;
+	struct stat stat_px2,stat_vcf;
     char *fnidx = calloc(strlen(argv[optind]) + 5, 1);
-   	strcat(strcpy(fnidx, argv[optind]), ".tbi");
+   	strcat(strcpy(fnidx, argv[optind]), ".px2");
 
 	if (optind + 1 == argc && !print_only_header) {
 		if (force == 0) {
-			if (stat(fnidx, &stat_tbi) == 0) 
+			if (stat(fnidx, &stat_px2) == 0) 
             {
                 // Before complaining, check if the VCF file isn't newer. This is a common source of errors,
                 //  people tend not to notice that tabix failed
                 stat(argv[optind], &stat_vcf);
-                if ( stat_vcf.st_mtime <= stat_tbi.st_mtime )
+                if ( stat_vcf.st_mtime <= stat_px2.st_mtime )
                 {
                     fprintf(stderr, "[tabix] the index file exists. Please use '-f' to overwrite.\n");
                     free(fnidx);
@@ -228,9 +235,9 @@ int main(int argc, char *argv[])
         if ( !is_remote )
         {
             // Common source of errors: new VCF is used with an old index
-            stat(fnidx, &stat_tbi);
+            stat(fnidx, &stat_px2);
             stat(argv[optind], &stat_vcf);
-            if ( force==0 && stat_vcf.st_mtime > stat_tbi.st_mtime )
+            if ( force==0 && stat_vcf.st_mtime > stat_px2.st_mtime )
             {
                 fprintf(stderr, "[tabix] the index file either does not exist or is older than the vcf file. Please reindex.\n");
                 free(fnidx);
@@ -319,15 +326,20 @@ int main(int argc, char *argv[])
 					}
 					*intv.se = c;
 				}
-                ti_iter_destroy(iter);
+                                ti_iter_destroy(iter);
 				bed_destroy(bed);
 			} else {
+                                ti_interval_t intv;
+				const ti_conf_t *conf_ = idxconf? idxconf : &conf; // use the index file if available
 				for (i = optind + 1; i < argc; ++i) {
-					int tid, beg, end;
-					if (ti_parse_region(t->idx, argv[i], &tid, &beg, &end) == 0) {
+					int tid, beg, end, beg2, end2;
+					if (ti_parse_region2d(t->idx, argv[i], &tid, &beg, &end, &beg2, &end2) == 0) {
 						iter = ti_queryi(t, tid, beg, end);
-							while ((s = ti_read(t, iter, &len)) != 0) {
-							fputs(s, stdout); fputc('\n', stdout);
+						while ((s = ti_read(t, iter, &len)) != 0) {
+                                                        ti_get_intv(conf_, len, (char*)s, &intv);
+                                                        if((beg2==-1 && end2==-1) || (intv.beg2 >= beg2 && intv.end2 <= end2)){
+							   fputs(s, stdout); fputc('\n', stdout);
+                                                        }
 						}
 						ti_iter_destroy(iter);
 					} 
