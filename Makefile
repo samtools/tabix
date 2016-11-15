@@ -25,7 +25,7 @@ all-recur lib-recur clean-recur cleanlocal-recur install-recur:
 		done;
 
 all:$(PROG)
-		mkdir -p bin; mv pairix bgzip bin; . install_utils.sh
+		mkdir -p bin; mv pairix bgzip bin; cp merge-pairs/merge-pairs bin; chmod +x bin/*
 
 lib:libtabix.a
 
