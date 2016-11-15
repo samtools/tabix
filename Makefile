@@ -3,7 +3,7 @@ CFLAGS=		-g -Wall -O2 -fPIC #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE -DBGZF_CACHE
 LOBJS=		bgzf.o kstring.o knetfile.o index.o bedidx.o
 AOBJS=		main.o
-PROG=		pairix bgzip
+PROG=		pairix bgzip merge-pairs
 INCLUDES=
 SUBDIRS=	.
 LIBPATH=
@@ -25,7 +25,7 @@ all-recur lib-recur clean-recur cleanlocal-recur install-recur:
 		done;
 
 all:$(PROG)
-		mkdir -p bin; mv pairix bgzip bin
+		mkdir -p bin; mv pairix bgzip bin; . install_utils.sh
 
 lib:libtabix.a
 

@@ -12,7 +12,6 @@ The repo contains bgzip (cloned), pairix, merge-pairs. For details about merge-p
 git clone https://github.com/SooLee/pairix
 cd pairix
 make
-. install_utils.sh
 # add the bin path to PATH
 ```
 
