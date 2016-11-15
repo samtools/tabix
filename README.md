@@ -3,6 +3,10 @@ This modification can do 2D indexing/query as an option.
 The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip.
 The index has an extension .px2.
 
+## utils
+The repo contains bgzip (cloned), pairix, merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
+
+
 ## installation
 ```
 git clone https://github.com/SooLee/pairix
