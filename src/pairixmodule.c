@@ -30,7 +30,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-#include "tabix.h"
+#include "pairix.h"
 
 static PyObject *TabixError;
 
@@ -138,7 +138,7 @@ static PyMethodDef tabixiter_methods[] = {
 
 static PyTypeObject TabixIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "tabix.TabixIterator",      /*tp_name*/
+    "tabix.iter",      /*tp_name*/
     sizeof(TabixIteratorObject), /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
@@ -191,7 +191,7 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     static char *kwnames[]={"fn", "fnidx", NULL};
     tabix_t *tb;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|z:Tabix",
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|z:open",
                                      kwnames, &fn, &fnidx))
         return NULL;
 
@@ -229,7 +229,7 @@ tabix_query(TabixObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end))
         return NULL;
 
-    result = ti_query(self->tb, name, begin, end);
+    result = ti_query(self->tb, name, begin - 1, end);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -247,7 +247,7 @@ tabix_queryi(TabixObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end))
         return NULL;
 
-    result = ti_queryi(self->tb, tid, begin, end);
+    result = ti_queryi(self->tb, tid, begin - 1, end);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -278,27 +278,79 @@ static PyObject *
 tabix_repr(TabixObject *self)
 {
 #if PY_MAJOR_VERSION < 3
-    return PyString_FromFormat("<Tabix fn=\"%s\">", self->fn);
+    return PyString_FromFormat("<tabix fn=\"%s\">", self->fn);
 #else
-    return PyUnicode_FromFormat("<Tabix fn=\"%s\">", self->fn);
+    return PyUnicode_FromFormat("<tabix fn=\"%s\">", self->fn);
 #endif
 }
 
 static PyMethodDef tabix_methods[] = {
-    {"query",           (PyCFunction)tabix_query, METH_VARARGS,
-        PyDoc_STR("T.query(name, begin, end) -> iterator")},
-    {"queryi",          (PyCFunction)tabix_queryi, METH_VARARGS,
-        PyDoc_STR("T.queryi(tid, begin, id) -> iterator")},
-    {"querys",          (PyCFunction)tabix_querys, METH_VARARGS,
-        PyDoc_STR("T.querys(region) -> iterator")},
-    {NULL,              NULL}           /* sentinel */
+    {
+        "query",
+        (PyCFunction)tabix_query,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.query(\"chr1\", 1000, 2000)\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "name : str\n"
+                  "    Name of the sequence in the file.\n"
+                  "start : int\n"
+                  "    Start of the query region.\n"
+                  "end : int\n"
+                  "    End of the query region.\n")
+    },
+    {
+        "queryi",
+        (PyCFunction)tabix_queryi,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.queryi(0, 1000, 2000)\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "tid : int\n"
+                  "    Index of the sequence in the file (first is 0).\n"
+                  "start : int\n"
+                  "    Start of the query region.\n"
+                  "end : int\n"
+                  "    End of the query region.\n")
+    },
+    {
+        "querys",
+        (PyCFunction)tabix_querys,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.querys(\"chr1:1000-2000\")\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "region : str\n"
+                  "    Query string like \"seq:start-end\".\n")
+    },
+    /*
+    {
+        "header",
+        (PyCFunction)tabix_header,
+        METH_VARARGS,
+        PyDoc_STR("Get the header for a file (VCF, SAM, GTF, etc.).\n\n"
+                  "    >>> tb.header()\n")
+    },
+    */
+    {NULL, NULL}           /* sentinel */
 };
+/*
+	ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end);
+	ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end);
+	ti_iter_t ti_querys(tabix_t *t, const char *reg);
+*/
 
 static PyTypeObject Tabix_Type = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
-    "tabix.Tabix",              /*tp_name*/
+    "tabix.open",              /*tp_name*/
     sizeof(TabixObject),        /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
@@ -350,11 +402,11 @@ PyDoc_STRVAR(module_doc,
 "genome position filesThis is a template module just for instruction.");
 
 #if PY_MAJOR_VERSION >= 3
-static struct PyModuleDef tabixmodule = { 
+static struct PyModuleDef tabixmodule = {
     PyModuleDef_HEAD_INIT,
     "tabix",
     module_doc,
-    -1, 
+    -1,
     tabix_functions,
     NULL,
     NULL,
@@ -385,15 +437,15 @@ PyMODINIT_FUNC PyInit_tabix(void)
         goto fail;
 
     if (TabixError == NULL) {
-        TabixError = PyErr_NewException("tabix.error", NULL, NULL);
+        TabixError = PyErr_NewException("tabix.TabixError", NULL, NULL);
         if (TabixError == NULL)
             goto fail;
     }
     Py_INCREF(TabixError);
-    PyModule_AddObject(m, "error", TabixError);
+    PyModule_AddObject(m, "TabixError", TabixError);
 
-    PyModule_AddObject(m, "Tabix", (PyObject *)&Tabix_Type);
-    PyModule_AddObject(m, "TabixIterator", (PyObject *)&TabixIterator_Type);
+    PyModule_AddObject(m, "open", (PyObject *)&Tabix_Type);
+    PyModule_AddObject(m, "iter", (PyObject *)&TabixIterator_Type);
 
 #if PY_MAJOR_VERSION >= 3
     return m;

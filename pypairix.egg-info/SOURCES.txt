@@ -1,0 +1,12 @@
+setup.py
+pypairix.egg-info/PKG-INFO
+pypairix.egg-info/SOURCES.txt
+pypairix.egg-info/dependency_links.txt
+pypairix.egg-info/top_level.txt
+src/bgzf.c
+src/bgzip.c
+src/index.c
+src/knetfile.c
+src/kstring.c
+src/tabixmodule.c
+test/test.py
