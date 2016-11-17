@@ -37,10 +37,10 @@ setup(
     test_suite = "test",
     classifiers = [
         "Programming Language :: Python",
-        "Development Status :: Beta",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
-        "License :: MIT License",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: C",
         "Topic :: Software Development :: Libraries :: Python Modules",
