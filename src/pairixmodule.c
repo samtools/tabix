@@ -138,7 +138,7 @@ static PyMethodDef tabixiter_methods[] = {
 
 static PyTypeObject TabixIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "tabix.iter",      /*tp_name*/
+    "pairix.iter",      /*tp_name*/
     sizeof(TabixIteratorObject), /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
@@ -451,7 +451,7 @@ static PyTypeObject Tabix_Type = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
-    "tabix.open",              /*tp_name*/
+    "pairix.open",              /*tp_name*/
     sizeof(TabixObject),        /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
@@ -505,7 +505,7 @@ PyDoc_STRVAR(module_doc,
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef tabixmodule = {
     PyModuleDef_HEAD_INIT,
-    "tabix",
+    "pairix",
     module_doc,
     -1,
     tabix_functions,
@@ -517,9 +517,9 @@ static struct PyModuleDef tabixmodule = {
 #endif
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC inittabix(void)
+PyMODINIT_FUNC initpairix(void)
 #else
-PyMODINIT_FUNC PyInit_tabix(void)
+PyMODINIT_FUNC PyInit_pairix(void)
 #endif
 {
     PyObject *m;
@@ -530,7 +530,7 @@ PyMODINIT_FUNC PyInit_tabix(void)
         goto fail;
 
 #if PY_MAJOR_VERSION < 3
-    m = Py_InitModule3("tabix", tabix_functions, module_doc);
+    m = Py_InitModule3("pairix", tabix_functions, module_doc);
 #else
     m = PyModule_Create(&tabixmodule);
 #endif
@@ -538,7 +538,7 @@ PyMODINIT_FUNC PyInit_tabix(void)
         goto fail;
 
     if (TabixError == NULL) {
-        TabixError = PyErr_NewException("tabix.TabixError", NULL, NULL);
+        TabixError = PyErr_NewException("pairix.TabixError", NULL, NULL);
         if (TabixError == NULL)
             goto fail;
     }

@@ -28,7 +28,7 @@ SOFTWARE.
 
 import unittest
 import gzip
-import tabix
+import pairix
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE = 'test/example.gtf.gz'
@@ -65,7 +65,8 @@ class TabixTest(unittest.TestCase):
     start = 25944
     end = 27000
     result = get_result(regions, chrom, start, end)
-    tb = tabix.open(TEST_FILE)
+    tb = pairix.open(TEST_FILE)
+    import pdb; pdb.set_trace()
 
     def test_query(self):
         it = self.tb.query2D(self.chrom, self.start, self.end)

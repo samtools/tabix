@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages, Extension
 
 EXT_MODULES = [
-    Extension("tabix",
+    Extension("pairix",
         sources=[
             "src/bgzf.c", "src/bgzip.c", "src/index.c",
             "src/knetfile.c", "src/kstring.c",
