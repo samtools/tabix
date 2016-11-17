@@ -23,10 +23,10 @@ EXT_MODULES = [
 
 setup(
     name = "pypairix",
-    version = "0.0.1",
+    version = "0.0.2",
     description = "Python interface for pairix",
     url = "https://github.com/4dn-dcic/pairix",
-    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.0.1",
+    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.0.2",
     author = "Soo Lee, Carl Vitzthum",
     author_email = "duplexa@gmail.com",
     license = "MIT",
