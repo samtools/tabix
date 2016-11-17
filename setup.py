@@ -26,6 +26,7 @@ setup(
     version = "0.0.1",
     description = "Python interface for pairix",
     url = "https://github.com/4dn-dcic/pairix",
+    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.0.1",
     author = "Soo Lee",
     author_email = "duplexa@gmail.com",
     license = "...",
