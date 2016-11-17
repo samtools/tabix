@@ -82,6 +82,9 @@ extern "C" {
 	ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end);
 	ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end);
 	ti_iter_t ti_querys(tabix_t *t, const char *reg);
+	ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
+	ti_iter_t ti_queryi_2d(tabix_t *t, int tid, int beg, int end, int beg2, int end2);
+	ti_iter_t ti_querys_2d(tabix_t *t, const char *reg);
 	const char *ti_read(tabix_t *t, ti_iter_t iter, int *len);
 
 	/* Destroy the iterator */
@@ -124,7 +127,7 @@ extern "C" {
 	ti_iter_t ti_iter_first(void);
 
 	/* Get the iterator pointing to the first record in region tid:beg-end */
-	ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end);
+	ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int beg2, int end2);
 
 	/* Get the data line pointed by the iterator and iterate to the next record. */
 	const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len);
@@ -138,6 +141,7 @@ extern "C" {
 
 	/* The callback version for random access */
 	int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *data, ti_fetch_f func);
+	int ti_fetch_2d(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, int beg2, int end2, void *data, ti_fetch_f func);
 
 	/* Read one line. */
 	int ti_readline(BGZF *fp, kstring_t *str);
