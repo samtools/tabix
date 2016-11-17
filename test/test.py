@@ -40,8 +40,8 @@ def read_gtf(filename):
     for line in gzip.open(filename):
         fields = line.rstrip().split('\t')
         chrom = fields[0]
-        start = fields[3]
-        end = fields[4]
+        start = fields[1]
+        end = fields[1]
         retval.append([chrom, start, end])
     return retval
 
