@@ -16,12 +16,12 @@ make
 # add the bin path to PATH
 ```
 ```
-# to install and test python module pairix,
+# to install and test python module pypairix,
 sudo python setup.py install
 python test/test.py
 ```
 
-## Usage 
+## Usage for pairix
 ```
 # compression
 bgzip textfile
@@ -33,9 +33,25 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
 pairix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
+
+## Usage for pypairix
 ```
-# to import python module pairix, add the following in your python script.
+# to import and use python module pypairix, add the following in your python script.
 import pairix
+
+# 2D query usage example 1
+tb=pairix.open("textfile.gz")
+it = tb.query2D(chrom, start, end, chrom2, start2, end2)
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+print tb_result
+
+# 2D query usage example 2
+tb=pairix.open("textfile.gz")
+querystr='{}:{}-{}|{}:{}-{}'.format(chrom, start, end, chrom2, start2, end2)
+it = tb.querys2D(querystr) 
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+print tb_result
+
 ```
 
 
