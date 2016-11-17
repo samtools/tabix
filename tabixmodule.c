@@ -30,8 +30,8 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "tabix.h"
+#include <Python/Python.h>
+#include "../tabix.h"
 
 static PyObject *TabixError;
 
