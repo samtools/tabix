@@ -30,7 +30,7 @@ import unittest
 import gzip
 import pairix
 
-TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
+TEST_FILE_2D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 TEST_FILE = 'test/example.gtf.gz'
 
 
@@ -47,7 +47,6 @@ def read_gtf(filename):
 
 
 def overlap1(a0, a1, b0, b1):
-    """Check if two 1-based intervals overlap."""
     return int(a0) <= int(b1) and int(a1) >= int(b0)
 
 
@@ -65,11 +64,10 @@ class TabixTest(unittest.TestCase):
     start = 25944
     end = 27000
     result = get_result(regions, chrom, start, end)
-    tb = pairix.open(TEST_FILE)
-    import pdb; pdb.set_trace()
+    tb = pairix.open(TEST_FILE_2D)
 
     def test_query(self):
-        it = self.tb.query2D(self.chrom, self.start, self.end)
+        it = self.tb.query(self.chrom, self.start, self.end)
         tb_result = [ [x[0], x[3], x[4]] for x in it ]
         self.assertEqual(self.result, tb_result)
 
@@ -82,12 +80,12 @@ class TabixTest(unittest.TestCase):
     def test_remote_file(self):
         file1 = "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20100804/" \
                 "ALL.2of4intersection.20100804.genotypes.vcf.gz"
-        tabix.open(file1)
+        pairix.open(file1)
 
     def test_remote_file_bad_url(self):
         file1 = "ftp://badurl"
-        with self.assertRaises(tabix.TabixError):
-            tabix.open(file1)
+        with self.assertRaises(pairix.TabixError):
+            pairix.open(file1)
 
 
 class TabixTest2D(unittest.TestCase):
@@ -99,8 +97,7 @@ class TabixTest2D(unittest.TestCase):
     start = 50000000
     end = 60000000
     result = get_result(regions, chrom, start, end)
-    tb = tabix.open(TEST_FILE_2D)
-    # query = tb.query()
+    tb = pairix.open(TEST_FILE_2D)
 
     def test_query(self):
         # it = self.tb.query(self.chrom, self.start, self.end)
