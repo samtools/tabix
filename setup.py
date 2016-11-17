@@ -7,7 +7,7 @@ EXT_MODULES = [
         sources=[
             "src/bgzf.c", "src/bgzip.c", "src/index.c",
             "src/knetfile.c", "src/kstring.c",
-            "src/tabixmodule.c"
+            "src/pairixmodule.c"
         ],
         include_dirs=["src"],
         libraries=["z"],
@@ -17,12 +17,12 @@ EXT_MODULES = [
 
 setup(
     name = "pypairix",
-    version = "0.0.2",
+    version = "0.0.1",
     description = "Python interface for pairix",
     url = "https://github.com/4dn-dcic/pairix",
-    author = "Hyeshik Chang, Kamil Slowikowski",
-    author_email = "hyeshik@snu.ac.kr, slowikow@broadinstitute.org",
-    license = "MIT",
+    author = "...",
+    author_email = "...",
+    license = "...",
     keywords = ["tabix", "bgzip", "bioinformatics", "genomics"],
     packages = find_packages(),
     package_data = { "": ["*.gz", "*.gz.tbi"] },

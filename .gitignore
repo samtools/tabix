@@ -2,3 +2,4 @@
 *.a
 tabix.1
 bin/
+pypairix.egg-info/

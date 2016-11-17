@@ -8,5 +8,6 @@ src/bgzip.c
 src/index.c
 src/knetfile.c
 src/kstring.c
+src/pairixmodule.c
 src/tabixmodule.c
 test/test.py

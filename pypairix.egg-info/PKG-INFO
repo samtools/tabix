@@ -1,11 +1,11 @@
 Metadata-Version: 1.1
 Name: pypairix
-Version: 0.0.2
+Version: 0.0.1
 Summary: Python interface for pairix
 Home-page: https://github.com/4dn-dcic/pairix
-Author: Hyeshik Chang, Kamil Slowikowski
-Author-email: hyeshik@snu.ac.kr, slowikow@broadinstitute.org
-License: MIT
+Author: ...
+Author-email: ...
+License: ...
 Description: April 16, 2014
         
         This module allows fast random access to files compressed with bgzip_ and

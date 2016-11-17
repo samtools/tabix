@@ -29,7 +29,7 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
+#include <Python/Python.h>
 #include "pairix.h"
 
 static PyObject *TabixError;
@@ -229,7 +229,7 @@ tabix_query(TabixObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end))
         return NULL;
 
-    result = ti_query(self->tb, name, begin - 1, end);
+    result = ti_query(self->tb, name, begin, end);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -247,7 +247,7 @@ tabix_queryi(TabixObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end))
         return NULL;
 
-    result = ti_queryi(self->tb, tid, begin - 1, end);
+    result = ti_queryi(self->tb, tid, begin, end);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -258,6 +258,63 @@ tabix_queryi(TabixObject *self, PyObject *args)
 
 static PyObject *
 tabix_querys(TabixObject *self, PyObject *args)
+{
+    const char *reg;
+    ti_iter_t result;
+
+    if (!PyArg_ParseTuple(args, "s:querys", &reg))
+        return NULL;
+
+    result = ti_querys(self->tb, reg);
+    if (result == NULL) {
+        PyErr_SetString(TabixError, "query failed");
+        return NULL;
+    }
+
+    return tabixiter_create(self, result);
+}
+
+/* ------- PAIRIX 2D QUERYING METHODS ------- */
+
+static PyObject *
+tabix_query_2D(TabixObject *self, PyObject *args)
+{
+    char *name;
+    int begin, end;
+    ti_iter_t result;
+
+    if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end))
+        return NULL;
+
+    result = ti_query(self->tb, name, begin, end);
+    if (result == NULL) {
+        PyErr_SetString(TabixError, "query failed");
+        return NULL;
+    }
+
+    return tabixiter_create(self, result);
+}
+
+static PyObject *
+tabix_queryi_2D(TabixObject *self, PyObject *args)
+{
+    int tid, begin, end;
+    ti_iter_t result;
+
+    if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end))
+        return NULL;
+
+    result = ti_queryi(self->tb, tid, begin, end);
+    if (result == NULL) {
+        PyErr_SetString(TabixError, "query failed");
+        return NULL;
+    }
+
+    return tabixiter_create(self, result);
+}
+
+static PyObject *
+tabix_querys_2D(TabixObject *self, PyObject *args)
 {
     const char *reg;
     ti_iter_t result;
@@ -320,6 +377,50 @@ static PyMethodDef tabix_methods[] = {
     {
         "querys",
         (PyCFunction)tabix_querys,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.querys(\"chr1:1000-2000\")\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "region : str\n"
+                  "    Query string like \"seq:start-end\".\n")
+    },
+    {
+        "query2D",
+        (PyCFunction)tabix_query_2D,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.query(\"chr1\", 1000, 2000)\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "name : str\n"
+                  "    Name of the sequence in the file.\n"
+                  "start : int\n"
+                  "    Start of the query region.\n"
+                  "end : int\n"
+                  "    End of the query region.\n")
+    },
+    {
+        "queryi2D",
+        (PyCFunction)tabix_queryi_2D,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.queryi(0, 1000, 2000)\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "tid : int\n"
+                  "    Index of the sequence in the file (first is 0).\n"
+                  "start : int\n"
+                  "    Start of the query region.\n"
+                  "end : int\n"
+                  "    End of the query region.\n")
+    },
+    {
+        "querys2D",
+        (PyCFunction)tabix_querys_2D,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
                   "    >>> tb.querys(\"chr1:1000-2000\")\n"

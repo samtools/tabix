@@ -27,11 +27,10 @@ SOFTWARE.
 
 
 import unittest
-import random
 import gzip
 import tabix
 
-# TEST_FILE = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
+TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE = 'test/example.gtf.gz'
 
 
@@ -67,9 +66,10 @@ class TabixTest(unittest.TestCase):
     end = 27000
     result = get_result(regions, chrom, start, end)
     tb = tabix.open(TEST_FILE)
+    ti = tabix.iter(TEST_FILE)
 
     def test_query(self):
-        it = self.tb.query(self.chrom, self.start, self.end)
+        it = self.tb.query2D(self.chrom, self.start, self.end)
         tb_result = [ [x[0], x[3], x[4]] for x in it ]
         self.assertEqual(self.result, tb_result)
 
@@ -89,6 +89,25 @@ class TabixTest(unittest.TestCase):
         with self.assertRaises(tabix.TabixError):
             tabix.open(file1)
 
+
+class TabixTest2D(unittest.TestCase):
+    regions = read_gtf(TEST_FILE_2D)
+    chrom = 'chr10'
+    start = 1000000
+    end = 2000000
+    chrom2 = 'chr20'
+    start = 50000000
+    end = 60000000
+    result = get_result(regions, chrom, start, end)
+    tb = tabix.open(TEST_FILE_2D)
+    # query = tb.query()
+
+    def test_query(self):
+        # it = self.tb.query(self.chrom, self.start, self.end)
+        # print it
+        # tb_result = [ [x[0], x[3], x[4]] for x in it ]
+        # self.assertEqual(self.result, tb_result)
+        self.assertEqual(1, 1)
 
 if __name__ == '__main__':
     unittest.main()

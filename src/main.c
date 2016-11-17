@@ -17,7 +17,7 @@ int reheader_file(const char *header, const char *file, int meta)
     BGZF *fp = bgzf_open(file,"r");
     if (bgzf_read_block(fp) != 0 || !fp->block_length)
         return -1;
-    
+
     char *buffer = fp->uncompressed_block;
     int skip_until = 0;
 
@@ -67,10 +67,10 @@ int reheader_file(const char *header, const char *file, int meta)
 
     if ( fp->block_length - skip_until > 0 )
     {
-        if (bgzf_write(bgzf_out, buffer+skip_until, fp->block_length-skip_until) < 0) 
+        if (bgzf_write(bgzf_out, buffer+skip_until, fp->block_length-skip_until) < 0)
             error("Error: %d\n",fp->errcode);
     }
-    if (bgzf_flush(bgzf_out) < 0) 
+    if (bgzf_flush(bgzf_out) < 0)
         error("Error: %d\n",bgzf_out->errcode);
 
     while (1)
@@ -80,7 +80,7 @@ int reheader_file(const char *header, const char *file, int meta)
 #else
         nread = fread(buf, 1, page_size, fp->fp);
 #endif
-        if ( nread<=0 ) 
+        if ( nread<=0 )
             break;
 
         int count = fwrite(buf, 1, nread, bgzf_out->fp);
@@ -88,16 +88,16 @@ int reheader_file(const char *header, const char *file, int meta)
             error("Write failed, wrote %d instead of %d bytes.\n", count,(int)nread);
     }
 
-    if (bgzf_close(bgzf_out) < 0) 
+    if (bgzf_close(bgzf_out) < 0)
         error("Error: %d\n",bgzf_out->errcode);
-   
+
     return 0;
 }
 
 
 int main(int argc, char *argv[])
 {
-	int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0;
+    int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0;
 	ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
     const char *reheader = NULL;
 	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:d:u:v:")) >= 0) {
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 
 	if (optind + 1 == argc && !print_only_header) {
 		if (force == 0) {
-			if (stat(fnidx, &stat_px2) == 0) 
+			if (stat(fnidx, &stat_px2) == 0)
             {
                 // Before complaining, check if the VCF file isn't newer. This is a common source of errors,
                 //  people tend not to notice that tabix failed
@@ -217,12 +217,12 @@ int main(int argc, char *argv[])
         if ( !conf_ptr )
         {
             // Building the index but the file type was neither recognised nor given. If no custom change
-            //  has been made, warn the user that GFF is used 
-            if ( conf.preset==ti_conf_gff.preset 
-                && conf.sc==ti_conf_gff.sc 
-                && conf.bc==ti_conf_gff.bc 
-                && conf.ec==ti_conf_gff.ec 
-                && conf.meta_char==ti_conf_gff.meta_char 
+            //  has been made, warn the user that GFF is used
+            if ( conf.preset==ti_conf_gff.preset
+                && conf.sc==ti_conf_gff.sc
+                && conf.bc==ti_conf_gff.bc
+                && conf.ec==ti_conf_gff.ec
+                && conf.meta_char==ti_conf_gff.meta_char
                 && conf.line_skip==ti_conf_gff.line_skip )
                 fprintf(stderr,"[tabix] The file type not recognised and -p not given, using the preset [gff].\n");
         }
@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
                                                         }
 						}
 						ti_iter_destroy(iter);
-					} 
+					}
             	    // else fprintf(stderr, "[main] invalid region: unknown target name or minus interval.\n");
 				}
 			}
