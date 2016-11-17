@@ -111,11 +111,11 @@ class TabixTest(unittest.TestCase):
 class TabixTest2D(unittest.TestCase):
     regions = read_pairs(TEST_FILE_2D)
     chrom = '10'
-    start = 25944
-    end = 27000000
+    start = 1
+    end = 1000000
     chrom2 = '20'
-    start2 = 1000
-    end2 = 1000000
+    start2 = 50000000
+    end2 = 60000000
     result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
     tb = pairix.open(TEST_FILE_2D)
 

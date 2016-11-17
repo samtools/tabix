@@ -45,7 +45,7 @@ struct __ti_index_t {
 
 struct __ti_iter_t {
 	int from_first; // read from the first record; no random access
-	int tid, beg, end, n_off, i, finished;
+	int tid, beg, end, beg2, end2, n_off, i, finished;
 	uint64_t curr_off;
 	kstring_t str;
 	const ti_index_t *idx;
@@ -806,6 +806,9 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 	return 0;
 }
 
+
+// thie function can handle both 1d and 2d query automatically
+// if 1d, begin2 and end2 will have value -1.
 int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2)
 {
 	char *s, *p, *sname;
@@ -918,7 +921,7 @@ ti_iter_t ti_iter_first()
 	return iter;
 }
 
-ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end ){
+ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int beg2, int end2 ){ //beg2, end2 should be -1 for 1d query.
 	uint16_t *bins;
 	int i, n_bins, n_off;
 	pair64_t *off;
@@ -931,7 +934,7 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end ){
 	if (end < beg) return 0;
 	// initialize the iterator
 	iter = calloc(1, sizeof(struct __ti_iter_t));
-	iter->idx = idx; iter->tid = tid; iter->beg = beg; iter->end = end;  iter->i = -1;
+	iter->idx = idx; iter->tid = tid; iter->beg = beg; iter->end = end; iter->beg2 = beg2; iter->end2 = end2;  iter->i = -1;
 	// random access
 	bins = (uint16_t*)calloc(MAX_BIN, 2);
 	n_bins = reg2bins(beg, end, bins);
@@ -990,6 +993,7 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end ){
 	return iter;
 }
 
+
 const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len)
 {
 	if (iter->finished) return 0;
@@ -1021,10 +1025,10 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len)
 			if (iter->str.s[0] == iter->idx->conf.meta_char) continue;
 			get_intv((ti_index_t*)iter->idx, &iter->str, &intv);
 			if (intv.tid != iter->tid || intv.beg >= iter->end ) break; // no need to proceed
-			else if (intv.end > iter->beg && iter->end > intv.beg) {
+			else if (intv.end > iter->beg && iter->end > intv.beg && ( iter->beg2==-1 || iter->end2==-1 || (intv.end2 > iter->beg2 && iter->end2 > intv.beg2) )) {
 				if (len) *len = iter->str.l;
 				return iter->str.s;
-			}
+			} else continue; 
 		} else break; // end of file
 	}
 	iter->finished = 1;
@@ -1044,7 +1048,19 @@ int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *d
 	ti_iter_t iter;
 	const char *s;
 	int len;
-	iter = ti_iter_query(idx, tid, beg, end);
+	iter = ti_iter_query(idx, tid, beg, end, -1, -1);
+	while ((s = ti_iter_read(fp, iter, &len)) != 0)
+		func(len, s, data);
+	ti_iter_destroy(iter);
+	return 0;
+}
+
+int ti_fetch_2d(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, int beg2, int end2, void *data, ti_fetch_f func)
+{
+	ti_iter_t iter;
+	const char *s;
+	int len;
+	iter = ti_iter_query(idx, tid, beg, end, beg2, end2);
 	while ((s = ti_iter_read(fp, iter, &len)) != 0)
 		func(len, s, data);
 	ti_iter_destroy(iter);
@@ -1091,25 +1107,19 @@ int ti_lazy_index_load(tabix_t *t)
 
 ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end)
 {
-	if (tid < 0) return ti_iter_first();
-	if (ti_lazy_index_load(t) != 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);
+        return ti_queryi_2d(t,tid,beg,end,-1,-1);
 }
 
 ti_iter_t ti_queryi_2d(tabix_t *t, int tid, int beg, int end, int beg2, int end2)
 {
 	if (tid < 0) return ti_iter_first();
 	if (ti_lazy_index_load(t) != 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);
+	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
 ti_iter_t ti_querys(tabix_t *t, const char *reg)
 {
-	int tid, beg, end;
-	if (reg == 0) return ti_iter_first();
-	if (ti_lazy_index_load(t) != 0) return 0;
-	if (ti_parse_region(t->idx, reg, &tid, &beg, &end) < 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);
+        return ti_querys_2d(t,reg);
 }
 
 ti_iter_t ti_querys_2d(tabix_t *t, const char *reg)
@@ -1118,7 +1128,7 @@ ti_iter_t ti_querys_2d(tabix_t *t, const char *reg)
 	if (reg == 0) return ti_iter_first();
 	if (ti_lazy_index_load(t) != 0) return 0;
 	if (ti_parse_region2d(t->idx, reg, &tid, &beg, &end, &beg2, &end2) < 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);
+	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
 ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end)
@@ -1128,7 +1138,7 @@ ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end)
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return 0;
 	if ((tid = ti_get_tid(t->idx, name)) < 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);
+	return ti_iter_query(t->idx, tid, beg, end, -1, -1);
 }
 
 ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
@@ -1145,7 +1155,7 @@ ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return 0;
 	if ((tid = ti_get_tid(t->idx, namepair)) < 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);
+	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
 const char *ti_read(tabix_t *t, ti_iter_t iter, int *len)

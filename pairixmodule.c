@@ -94,6 +94,7 @@ tabixiter_iternext(TabixIteratorObject *self)
     int len, i;
 
     chunk = ti_read(self->tbobj->tb, self->iter, &len);
+
     if (chunk != NULL) {
         PyObject *ret, *column;
         Py_ssize_t colidx;

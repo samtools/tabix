@@ -334,13 +334,10 @@ int main(int argc, char *argv[])
 				for (i = optind + 1; i < argc; ++i) {
 					int tid, beg, end, beg2, end2;
 					if (ti_parse_region2d(t->idx, argv[i], &tid, &beg, &end, &beg2, &end2) == 0) {
-						iter = ti_queryi(t, tid, beg, end);
-						while ((s = ti_read(t, iter, &len)) != 0) {
-                                                        ti_get_intv(conf_, len, (char*)s, &intv);
-                                                        if((beg2==-1 && end2==-1) || (intv.beg2 >= beg2 && intv.end2 <= end2)){
-							   fputs(s, stdout); fputc('\n', stdout);
-                                                        }
-						}
+						iter = ti_queryi_2d(t, tid, beg, end, beg2, end2);
+						while ((s = ti_read(t, iter, &len)) != 0){
+						   fputs(s, stdout); fputc('\n', stdout);
+                                                }
 						ti_iter_destroy(iter);
 					}
             	    // else fprintf(stderr, "[main] invalid region: unknown target name or minus interval.\n");
