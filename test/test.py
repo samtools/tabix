@@ -30,12 +30,13 @@ import unittest
 import gzip
 import pairix
 
+TEST_FILE_2D_B = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_2D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 TEST_FILE = 'test/example.gtf.gz'
 
 
-def read_gtf(filename):
-    """Read a GTF file and return a list of [chrom, start, end] items."""
+def read_vcf(filename):
+    """Read a VCF file and return a list of [chrom, start, end] items."""
     retval = []
     for line in gzip.open(filename):
         fields = line.rstrip().split('\t')
@@ -43,6 +44,21 @@ def read_gtf(filename):
         start = fields[1]
         end = fields[1]
         retval.append([chrom, start, end])
+    return retval
+
+
+def read_pairs(filename):
+    """Read a pairs file and return a list of [chrom1, start1, end1, chrom2, start2, end2] items."""
+    retval = []
+    for line in gzip.open(filename):
+        fields = line.rstrip().split('\t')
+        chrom1 = fields[1]
+        start1 = fields[2]
+        end1 = fields[2]
+        chrom2 = fields[5]
+        start2 = fields[6]
+        end2 = fields[7]
+        retval.append([chrom1, start1, end1, chrom2, start2, end2])
     return retval
 
 
@@ -62,7 +78,7 @@ def get_result(regions, chrom, start, end):
 
 
 class TabixTest(unittest.TestCase):
-    regions = read_gtf(TEST_FILE)
+    regions = read_vcf(TEST_FILE)
     chrom = 'chr1'
     start = 25944
     end = 27000
@@ -93,7 +109,7 @@ class TabixTest(unittest.TestCase):
 
 
 class TabixTest2D(unittest.TestCase):
-    regions = read_gtf(TEST_FILE_2D)
+    regions = read_vcf(TEST_FILE_2D)
     chrom = 'chr10'
     start = 1000000
     end = 2000000
