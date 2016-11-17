@@ -20,10 +20,6 @@ make
 sudo python setup.py install
 python test/test.py
 ```
-```
-# to import python module pairix,
-import pairix
-```
 
 ## Usage 
 ```
@@ -37,6 +33,11 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
 pairix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
+```
+# to import python module pairix, add the following in your python script.
+import pairix
+```
+
 
 ## Note
 * Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
