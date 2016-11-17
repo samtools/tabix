@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright (c) 2011 Seoul National University.
+ *               2016 Soo Lee
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -30,7 +31,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python/Python.h>
-#include "../pairix.h"
+#include "pairix.h"
 
 static PyObject *TabixError;
 

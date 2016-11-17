@@ -7,7 +7,7 @@ PROG=		pairix bgzip merge-pairs
 INCLUDES=
 SUBDIRS=	.
 LIBPATH=
-LIBCURSES=	
+LIBCURSES=
 
 .SUFFIXES:.c .o
 

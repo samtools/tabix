@@ -11,11 +11,11 @@ from setuptools import setup, find_packages, Extension
 EXT_MODULES = [
     Extension("pairix",
         sources=[
-            "bgzf.c", "bgzip.c", "index.c",
-            "knetfile.c", "kstring.c",
-            "python/pairixmodule.c"
+            "src/bgzf.c", "src/bgzip.c", "src/index.c",
+            "src/knetfile.c", "src/kstring.c",
+            "src/pairixmodule.c"
         ],
-        include_dirs=["python"],
+        include_dirs=["src"],
         libraries=["z"],
         define_macros=[("_FILE_OFFSET_BITS", 64), ("_USE_KNETFILE", 1)]
     )
@@ -27,9 +27,9 @@ setup(
     description = "Python interface for pairix",
     url = "https://github.com/4dn-dcic/pairix",
     download_url = "https://github.com/4dn-dcic/pairix/tarball/0.0.1",
-    author = "Soo Lee",
+    author = "Soo Lee, Carl Vitzthum",
     author_email = "duplexa@gmail.com",
-    license = "...",
+    license = "MIT",
     keywords = ["pairix","tabix", "bgzip", "bioinformatics", "genomics","hi-c"],
     packages = find_packages(),
     package_data = { "": ["*.gz", "*.gz.px2"] },
