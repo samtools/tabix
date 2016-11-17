@@ -66,7 +66,6 @@ class TabixTest(unittest.TestCase):
     end = 27000
     result = get_result(regions, chrom, start, end)
     tb = tabix.open(TEST_FILE)
-    ti = tabix.iter(TEST_FILE)
 
     def test_query(self):
         it = self.tb.query2D(self.chrom, self.start, self.end)
