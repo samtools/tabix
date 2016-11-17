@@ -78,17 +78,17 @@ def get_result(regions, chrom, start, end):
 
 
 class TabixTest(unittest.TestCase):
-    regions = read_vcf(TEST_FILE)
-    chrom = 'chr1'
+    regions = read_vcf(TEST_FILE_2D)
+    chrom = 'chr10'
     start = 25944
-    end = 27000
+    end = 27000000
     result = get_result(regions, chrom, start, end)
     tb = pairix.open(TEST_FILE_2D)
 
     def test_query(self):
         it = self.tb.query(self.chrom, self.start, self.end)
-        tb_result = [ [x[0], x[3], x[4]] for x in it ]
-        print ('>>  ', tb_result)
+        tb_result = [[x[0], x[1], x[1]] for x in it]
+        print tb_result
         self.assertEqual(self.result, tb_result)
 
     def test_querys(self):
