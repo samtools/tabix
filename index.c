@@ -1134,11 +1134,12 @@ ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end)
 ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
 	int tid;
-        char namepair[1000];
+        char namepair[1000], *str_ptr;
         strcpy(namepair,name);
-        namepair[strlen(namepair)]=REGION_SPLIT_CHARACTER;
-        namepair[strlen(namepair)]=0;
-        strcpy(namepair + strlen(namepair), name2);
+        str_ptr = namepair + strlen(namepair);
+        *str_ptr = REGION_SPLIT_CHARACTER;
+        str_ptr++;
+        strcpy(str_ptr,name2);
 
 	if (name == 0) return ti_iter_first();
 	// then need to load the index
