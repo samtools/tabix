@@ -3,12 +3,24 @@ This modification can do 2D indexing/query as an option.
 The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip.
 The index has an extension .px2.
 
-## utils & libraries
+## Table of contents
+* [Utils](#utils)
+* [Libraries](#libraries)
+* [Installation](#installation)
+* [Usage for pairix](#usage-for-pairix)
+* [Note](#notes)
+* [Examples](#examples)
+* [Usage example for pypairix](#usage-example-for-pypairix)
+
+
+## Utils
 * The repo contains bgzip (cloned), pairix, merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
+
+## Libraries
 * The repo also contains python module pypairix.
 
 
-## installation
+## Installation
 ```
 git clone https://github.com/SooLee/pairix
 cd pairix
@@ -34,25 +46,6 @@ pairix textfile.gz region1 [region2 [...]]  ## region is in the following format
 pairix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
 
-## Usage for pypairix
-```
-# to import and use python module pypairix, add the following in your python script.
-import pairix
-
-# 2D query usage example 1
-tb=pairix.open("textfile.gz")
-it = tb.query2D(chrom, start, end, chrom2, start2, end2)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
-
-# 2D query usage example 2
-tb=pairix.open("textfile.gz")
-querystr='{}:{}-{}|{}:{}-{}'.format(chrom, start, end, chrom2, start2, end2)
-it = tb.querys2D(querystr) 
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
-
-```
 
 
 ## Note
@@ -132,3 +125,35 @@ chr10	3978709	.	G	A	1901.77	PASS	AC=2;AF=1.00;AN=2;BaseQRankSum=0.677;DB;DP=66;D
 ```
 
 
+## Usage example for pypairix
+```
+# to import and use python module pypairix, add the following in your python script.
+import pairix
+
+# 2D query usage example 1
+tb=pairix.open("textfile.gz")
+it = tb.query2D(chrom, start, end, chrom2, start2, end2)
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+print tb_result
+
+# 2D query usage example 2
+tb=pairix.open("textfile.gz")
+querystr='{}:{}-{}|{}:{}-{}'.format(chrom, start, end, chrom2, start2, end2)
+it = tb.querys2D(querystr) 
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+print tb_result
+
+# 1D query usage example 1
+tb=pairix.open("textfile.gz")
+it = tb.query(chrom, start, end)
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+print tb_result
+
+# 1D query usage example 2
+tb=pairix.open("textfile.gz")
+querystr='{}:{}-{}'.format(chrom, start, end)
+it = tb.querys2D(querystr) 
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+print tb_result
+
+```
