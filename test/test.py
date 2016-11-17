@@ -125,6 +125,11 @@ class TabixTest2D(unittest.TestCase):
         print tb_result
         self.assertEqual(self.result, tb_result)
 
+    def test_querys_2(self):
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it = self.tb.querys2D(query)
+        tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        self.assertEqual(self.result, tb_result)
 
 if __name__ == '__main__':
     unittest.main()
