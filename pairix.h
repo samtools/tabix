@@ -82,7 +82,7 @@ extern "C" {
 	ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end);
 	ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end);
 	ti_iter_t ti_querys(tabix_t *t, const char *reg);
-	ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name, int beg2, int end2);
+	ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	ti_iter_t ti_queryi_2d(tabix_t *t, int tid, int beg, int end, int beg2, int end2);
 	ti_iter_t ti_querys_2d(tabix_t *t, const char *reg);
 	const char *ti_read(tabix_t *t, ti_iter_t iter, int *len);
