@@ -5,11 +5,10 @@ from setuptools import setup, find_packages, Extension
 EXT_MODULES = [
     Extension("pairix",
         sources=[
-            "src/bgzf.c", "src/bgzip.c", "src/index.c",
-            "src/knetfile.c", "src/kstring.c",
-            "src/pairixmodule.c"
+            "bgzf.c", "bgzip.c", "index.c",
+            "knetfile.c", "kstring.c",
+            "pairixmodule.c"
         ],
-        include_dirs=["src"],
         libraries=["z"],
         define_macros=[("_FILE_OFFSET_BITS", 64), ("_USE_KNETFILE", 1)]
     )

@@ -47,6 +47,9 @@ def read_gtf(filename):
 
 
 def overlap1(a0, a1, b0, b1):
+    for x in [a0, a1, b0, b1]:
+        if isinstance(x, basestring):
+            return True
     return int(a0) <= int(b1) and int(a1) >= int(b0)
 
 
@@ -69,6 +72,7 @@ class TabixTest(unittest.TestCase):
     def test_query(self):
         it = self.tb.query(self.chrom, self.start, self.end)
         tb_result = [ [x[0], x[3], x[4]] for x in it ]
+        print ('>>  ', tb_result)
         self.assertEqual(self.result, tb_result)
 
     def test_querys(self):
