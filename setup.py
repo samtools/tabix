@@ -15,6 +15,7 @@ EXT_MODULES = [
             "knetfile.c", "kstring.c",
             "python/pairixmodule.c"
         ],
+        include_dirs=["python"],
         libraries=["z"],
         define_macros=[("_FILE_OFFSET_BITS", 64), ("_USE_KNETFILE", 1)]
     )
@@ -35,10 +36,10 @@ setup(
     test_suite = "test",
     classifiers = [
         "Programming Language :: Python",
-        "Development Status :: 4 - Beta",
+        "Development Status :: Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
+        "License :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: C",
         "Topic :: Software Development :: Libraries :: Python Modules",
