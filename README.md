@@ -5,7 +5,7 @@ The index has an extension .px2.
 
 ## utils & libraries
 * The repo contains bgzip (cloned), pairix, merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
-* The repo also contains python module pairix.
+* The repo also contains python module pypairix.
 
 
 ## installation
