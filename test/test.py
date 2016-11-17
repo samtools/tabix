@@ -28,6 +28,7 @@ SOFTWARE.
 
 import unittest
 import gzip
+import sys
 import pairix
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
@@ -78,6 +79,7 @@ def get_result_2D(regions, chrom, start, end, chrom2, start2, end2):
     return retval
 
 
+## 1D query on 1D indexed file
 class TabixTest(unittest.TestCase):
     regions = read_vcf(TEST_FILE_1D)
     chrom = 'chr10'
@@ -108,6 +110,24 @@ class TabixTest(unittest.TestCase):
             pairix.open(file1)
 
 
+## semi-2D query on 2D indexed file
+class TabixTest_2(unittest.TestCase):
+    regions = read_pairs(TEST_FILE_2D)
+    chrom = '10'
+    start = 25944
+    end = 27000000
+    chrom2 = '20'
+    result = get_result_2D(regions, chrom, start, end, chrom2, 0, sys.maxint)
+    tb = pairix.open(TEST_FILE_2D)
+
+    def test_querys(self):
+        query = '{}:{}-{}|{}'.format(self.chrom, self.start, self.end, self.chrom2)
+        it = self.tb.querys2D(query)
+        tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        self.assertEqual(self.result, tb_result)
+
+
+## 2D query on 2D indexed file
 class TabixTest2D(unittest.TestCase):
     regions = read_pairs(TEST_FILE_2D)
     chrom = '10'
@@ -122,7 +142,6 @@ class TabixTest2D(unittest.TestCase):
     def test_query2(self):
         it = self.tb.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
         tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-        print tb_result
         self.assertEqual(self.result, tb_result)
 
     def test_querys_2(self):
