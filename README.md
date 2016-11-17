@@ -4,8 +4,8 @@ The text file must be first sorted by two chromosome columns and then by the fir
 The index has an extension .px2.
 
 ## utils & libraries
-The repo contains bgzip (cloned), pairix, merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
-The repo also contains python module pairix.
+* The repo contains bgzip (cloned), pairix, merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
+* The repo also contains python module pairix.
 
 
 ## installation
@@ -14,15 +14,15 @@ git clone https://github.com/SooLee/pairix
 cd pairix
 make
 # add the bin path to PATH
-
-
+```
+```
 # to install and test python module pairix,
 sudo python setup.py install
 python test/test.py
-
+```
+```
 # to import python module pairix,
 import pairix
-
 ```
 
 ## Usage 
