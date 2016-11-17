@@ -27,7 +27,7 @@ setup(
     description = "Python interface for pairix",
     url = "https://github.com/4dn-dcic/pairix",
     download_url = "https://github.com/4dn-dcic/pairix/tarball/0.0.1",
-    author = "Soo Lee (primary), Carl Vitzthum",
+    author = "Soo Lee, Carl Vitzthum",
     author_email = "duplexa@gmail.com",
     license = "MIT",
     keywords = ["pairix","tabix", "bgzip", "bioinformatics", "genomics","hi-c"],
