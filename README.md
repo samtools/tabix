@@ -28,8 +28,14 @@ make
 # add the bin path to PATH
 ```
 ```
-# to install and test python module pypairix,
-sudo python setup.py install
+# to install the python module pypairix,
+pip install pypairix
+
+# or
+cd pairix
+python setup.py install
+
+# testing the python module
 python test/test.py
 ```
 
