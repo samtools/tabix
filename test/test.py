@@ -30,9 +30,8 @@ import unittest
 import gzip
 import pairix
 
-TEST_FILE_2D_B = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
-TEST_FILE_2D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
-TEST_FILE = 'test/example.gtf.gz'
+TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
+TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 
 
 def read_vcf(filename):
@@ -76,55 +75,61 @@ def get_result(regions, chrom, start, end):
             retval.append(r)
     return retval
 
+def get_result_2D(regions, chrom, start, end):
+    retval = []
+    for r in regions:
+        if r[0] == chrom and overlap1(r[1], r[2], start, end):
+            retval.append(r)
+    return retval
+
 
 class TabixTest(unittest.TestCase):
-    regions = read_vcf(TEST_FILE_2D)
+    regions = read_vcf(TEST_FILE_1D)
     chrom = 'chr10'
     start = 25944
     end = 27000000
     result = get_result(regions, chrom, start, end)
-    tb = pairix.open(TEST_FILE_2D)
+    tb = pairix.open(TEST_FILE_1D)
 
-    def test_query(self):
-        it = self.tb.query(self.chrom, self.start, self.end)
-        tb_result = [[x[0], x[1], x[1]] for x in it]
-        print tb_result
-        self.assertEqual(self.result, tb_result)
-
-    def test_querys(self):
-        query = '{}:{}-{}'.format(self.chrom, self.start, self.end)
-        it = self.tb.querys(query)
-        tb_result = [ [x[0], x[3], x[4]] for x in it ]
-        self.assertEqual(self.result, tb_result)
-
-    def test_remote_file(self):
-        file1 = "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20100804/" \
-                "ALL.2of4intersection.20100804.genotypes.vcf.gz"
-        pairix.open(file1)
-
-    def test_remote_file_bad_url(self):
-        file1 = "ftp://badurl"
-        with self.assertRaises(pairix.TabixError):
-            pairix.open(file1)
+    # def test_query(self):
+    #     it = self.tb.query(self.chrom, self.start, self.end)
+    #     tb_result = [[x[0], x[1], x[1]] for x in it]
+    #     self.assertEqual(self.result, tb_result)
+    #
+    # def test_querys(self):
+    #     query = '{}:{}-{}'.format(self.chrom, self.start, self.end)
+    #     it = self.tb.querys(query)
+    #     tb_result = [ [x[0], x[3], x[4]] for x in it ]
+    #     self.assertEqual(self.result, tb_result)
+    #
+    # def test_remote_file(self):
+    #     file1 = "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20100804/" \
+    #             "ALL.2of4intersection.20100804.genotypes.vcf.gz"
+    #     pairix.open(file1)
+    #
+    # def test_remote_file_bad_url(self):
+    #     file1 = "ftp://badurl"
+    #     with self.assertRaises(pairix.TabixError):
+    #         pairix.open(file1)
 
 
 class TabixTest2D(unittest.TestCase):
-    regions = read_vcf(TEST_FILE_2D)
+    regions = read_pairs(TEST_FILE_2D)
     chrom = 'chr10'
-    start = 1000000
-    end = 2000000
+    start = 25944
+    end = 27000000
     chrom2 = 'chr20'
-    start = 50000000
-    end = 60000000
+    start2 = 1000
+    end2 = 1000000
     result = get_result(regions, chrom, start, end)
     tb = pairix.open(TEST_FILE_2D)
 
     def test_query(self):
-        # it = self.tb.query(self.chrom, self.start, self.end)
-        # print it
-        # tb_result = [ [x[0], x[3], x[4]] for x in it ]
-        # self.assertEqual(self.result, tb_result)
-        self.assertEqual(1, 1)
+        it = self.tb.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        tb_result = [[x[0], x[1], x[1]] for x in it]
+        print tb_result
+        self.assertEqual(self.result, tb_result)
+
 
 if __name__ == '__main__':
     unittest.main()

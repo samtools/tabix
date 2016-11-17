@@ -279,14 +279,14 @@ tabix_querys(TabixObject *self, PyObject *args)
 static PyObject *
 tabix_query_2D(TabixObject *self, PyObject *args)
 {
-    char *name;
-    int begin, end;
+    char *name, *name2;
+    int begin, end, begin2, end2;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end))
+    if (!PyArg_ParseTuple(args, "siisii:query_2D", &name, &begin, &end, &name2, &begin2, &end2))
         return NULL;
 
-    result = ti_query(self->tb, name, begin, end);
+    result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -298,13 +298,13 @@ tabix_query_2D(TabixObject *self, PyObject *args)
 static PyObject *
 tabix_queryi_2D(TabixObject *self, PyObject *args)
 {
-    int tid, begin, end;
+    int tid, begin, end, begin2, end2;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end))
+    if (!PyArg_ParseTuple(args, "iiiii:queryi_2D", &tid, &begin, &end, &begin2, &end2))
         return NULL;
 
-    result = ti_queryi(self->tb, tid, begin, end);
+    result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -319,10 +319,10 @@ tabix_querys_2D(TabixObject *self, PyObject *args)
     const char *reg;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "s:querys", &reg))
+    if (!PyArg_ParseTuple(args, "s:querys_2D", &reg))
         return NULL;
 
-    result = ti_querys(self->tb, reg);
+    result = ti_querys_2d(self->tb, reg);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;

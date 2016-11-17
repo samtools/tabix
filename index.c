@@ -251,26 +251,26 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 		char c = *x.se;
                 *x.se = '\0';
 
-                if(!x.se2){ //single-chromosome  
-                  intv->tid = get_tid(idx, x.ss); 
+                if(!x.se2){ //single-chromosome
+                  intv->tid = get_tid(idx, x.ss);
                 } else { //double-chromosome
 		  char c2 = *x.se2;
-                  *x.se2 = '\0';  
-                  strcpy(sname_double,x.ss); 
+                  *x.se2 = '\0';
+                  strcpy(sname_double,x.ss);
                   str_ptr = sname_double+strlen(sname_double);
                   *str_ptr=REGION_SPLIT_CHARACTER;
                   str_ptr++;
                   strcpy(str_ptr,x.ss2);
                   intv->tid = get_tid(idx, sname_double);
                   *x.se2=c2;
-                } 
+                }
 
-                *x.se = c; 
+                *x.se = c;
 		intv->beg = x.beg; intv->end = x.end;
 		intv->beg2 = x.beg2; intv->end2 = x.end2;
 		intv->bin = ti_reg2bin(intv->beg, intv->end);
 		intv->bin2 = ti_reg2bin(intv->beg2, intv->end2);
- 
+
 		return (intv->tid >= 0 && intv->beg >= 0 && intv->end >= 0 && ((!idx->conf.bc2 && !idx->conf.ec2) || (intv->beg2 >=0 && intv->end2 >=0))  )? 0 : -1;
 	} else {
 		fprintf(stderr, "[%s] the following line cannot be parsed and skipped: %s\n", __func__, str->s);
@@ -556,7 +556,7 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 		fprintf(stderr, "[ti_index_load] wrong magic number.\n");
 		return 0;
 	}
-	idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));	
+	idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));
 	bgzf_read(fp, &idx->n, 4);
 	if (ti_is_be) bam_swap_endian_4p(&idx->n);
 	idx->tname = kh_init(s);
@@ -822,38 +822,38 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 
         /* split by dimension */
         for(i = 0; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
-        s[i]=0; 
+        s[i]=0;
 
         if(i == k) { //1d query
           *begin2=-1; *end2=-1;
           if(ti_parse_region(idx,str,tid,begin,end)==0) {  free(s); return 0; }
           else {free(s); return -1; }
- 
+
         }else{ //2d query
           coord1s=0; coord1e=i; coord2s=i+1; coord2e=k;
-  
+
           /* split into chr and pos */
           for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
           s[i]=0; pos1s=i+1;
           for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
           s[i]=0; pos2s=i+1;
-  
+
           /* concatenate chromosomes */
           sname = (char*)malloc(l+1);
           strcpy(sname, s + coord1s);
           h=strlen(sname);
           sname[h]= REGION_SPLIT_CHARACTER;
           strcpy(sname+h+1, s+coord2s);
-  
-  
+
+
   	  if ((*tid = ti_get_tid(idx, sname)) < 0) {
   		free(s); free(sname);
   		return -1;
   	  }
-  
+
           /* parsing pos1 */
   	  if (pos1s-1 == coord1e) { /* dump the whole sequence */
-  		*begin = 0; *end = 1<<29; 
+  		*begin = 0; *end = 1<<29;
     	  } else {
             p = s + pos1s;
   	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
@@ -864,12 +864,12 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
     	    } else *end = 1<<29;
     	    if (*begin > 0) --*begin;
           }
-  
+
           /* parsing pos2 */
   	  if (pos2s-1 == coord2e) { /* dump the whole sequence */
-  		*begin2 = 0; *end2 = 1<<29; 
+  		*begin2 = 0; *end2 = 1<<29;
   	  } else{
-            p = s + pos2s; 
+            p = s + pos2s;
   	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
   	    *begin2 = atoi(p);
   	    if (i < coord2e) {
@@ -878,7 +878,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
   	    } else *end2 = 1<<29;
   	    if (*begin2 > 0) --*begin2;
           }
-  
+
   	  free(s); free(sname);
   	  if (*begin > *end) return -1;
      	  if (*begin2!=-1 && *begin2 > *end2) return -1;
@@ -1093,14 +1093,14 @@ ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end)
 {
 	if (tid < 0) return ti_iter_first();
 	if (ti_lazy_index_load(t) != 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);	
+	return ti_iter_query(t->idx, tid, beg, end);
 }
 
 ti_iter_t ti_queryi_2d(tabix_t *t, int tid, int beg, int end, int beg2, int end2)
 {
 	if (tid < 0) return ti_iter_first();
 	if (ti_lazy_index_load(t) != 0) return 0;
-	return ti_iter_query(t->idx, tid, beg, end);	
+	return ti_iter_query(t->idx, tid, beg, end);
 }
 
 ti_iter_t ti_querys(tabix_t *t, const char *reg)
