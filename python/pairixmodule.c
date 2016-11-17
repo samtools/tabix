@@ -30,7 +30,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python/Python.h>
-#include "pairix.h"
+#include "../pairix.h"
 
 static PyObject *TabixError;
 

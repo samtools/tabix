@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Adapted from pytabix and pysam
+# Adapted from pypairix and pysam
 from setuptools import setup, find_packages, Extension
 
 EXT_MODULES = [
@@ -7,7 +7,7 @@ EXT_MODULES = [
         sources=[
             "bgzf.c", "bgzip.c", "index.c",
             "knetfile.c", "kstring.c",
-            "pairixmodule.c"
+            "python/pairixmodule.c"
         ],
         libraries=["z"],
         define_macros=[("_FILE_OFFSET_BITS", 64), ("_USE_KNETFILE", 1)]
@@ -22,9 +22,9 @@ setup(
     author = "...",
     author_email = "...",
     license = "...",
-    keywords = ["tabix", "bgzip", "bioinformatics", "genomics"],
+    keywords = ["pairix","pairix", "bgzip", "bioinformatics", "genomics","hi-c"],
     packages = find_packages(),
-    package_data = { "": ["*.gz", "*.gz.tbi"] },
+    package_data = { "": ["*.gz", "*.gz.px2"] },
     ext_modules = EXT_MODULES,
     test_suite = "test",
     classifiers = [
@@ -42,8 +42,8 @@ setup(
 April 16, 2014
 
 This module allows fast random access to files compressed with bgzip_ and
-indexed by tabix_. It includes a C extension with code from klib_. The bgzip
-and tabix programs are available here_.
+indexed by pairix_. It includes a C extension with code from klib_. The bgzip
+and pairix programs are available here_.
 
 
 Installation
@@ -51,7 +51,7 @@ Installation
 
 ::
 
-    pip install --user pytabix
+    pip install --user pypairix
 
 
 Synopsis
@@ -71,25 +71,23 @@ region (start, end) or a position:
     1      1001256  rs78650406
 
 
-With tabix_, you can quickly retrieve all rows in a genomic region by
+With pairix_, you can quickly retrieve all rows in a genomic region by
 specifying a query with a sequence name, start, and end:
 
 
 ::
 
-    import tabix
+    import pairix
 
     # Open a remote or local file.
     url = "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20100804/"
     url += "ALL.2of4intersection.20100804.genotypes.vcf.gz"
 
-    tb = tabix.open(url)
+    tb = pairix.open(url)
 
-    # These queries are identical. A query returns an iterator over the results.
+    # These 1D queries are identical. A query returns an iterator over the results.
     records = tb.query("1", 1000000, 1250000)
-
     records = tb.queryi(0, 1000000, 1250000)
-
     records = tb.querys("1:1000000-1250000")
 
     # Each record is a list of strings.
@@ -103,10 +101,10 @@ specifying a query with a sequence name, start, and end:
     ['1', '1000071', '.', 'C', 'T']
 
 
-.. _bgzip: http://samtools.sourceforge.net/tabix.shtml
-.. _tabix: http://samtools.sourceforge.net/tabix.shtml
+.. _bgzip: http://samtools.sourceforge.net/pairix.shtml
+.. _pairix: http://samtools.sourceforge.net/pairix.shtml
 .. _klib: https://github.com/jmarshall/klib
-.. _here: http://sourceforge.net/projects/samtools/files/tabix/
+.. _here: http://sourceforge.net/projects/samtools/files/pairix/
 
 """
 )
