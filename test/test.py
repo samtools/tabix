@@ -150,5 +150,12 @@ class TabixTest2D(unittest.TestCase):
         tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
         self.assertEqual(self.result, tb_result)
 
+
+class TabixTestBlocknames(unittest.TestCase):
+    tb = pairix.open(TEST_FILE_2D)
+    def test_blocknames(self):
+        print (self.tb.blocknames)
+
+
 if __name__ == '__main__':
     unittest.main()

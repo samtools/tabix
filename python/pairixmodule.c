@@ -38,6 +38,8 @@ typedef struct {
     PyObject_HEAD
     tabix_t *tb;
     char *fn;
+    char **blocknames;
+    int nblocks;
 } TabixObject;
 
 typedef struct {
@@ -191,6 +193,7 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     const char *fn, *fnidx=NULL;
     static char *kwnames[]={"fn", "fnidx", NULL};
     tabix_t *tb;
+    int n;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|z:open",
                                      kwnames, &fn, &fnidx))
@@ -208,7 +211,8 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     self->tb = tb;
     self->fn = strdup(fn);
-
+    self->blocknames = ti_seqname(self->tb->idx, &n);
+    self->nblocks = n;
     return (PyObject *)self;
 }
 
@@ -331,6 +335,7 @@ tabix_querys_2D(TabixObject *self, PyObject *args)
 
     return tabixiter_create(self, result);
 }
+
 
 static PyObject *
 tabix_repr(TabixObject *self)
