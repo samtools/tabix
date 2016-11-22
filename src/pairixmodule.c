@@ -199,7 +199,6 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                                      kwnames, &fn, &fnidx))
         return NULL;
 
-    fprintf(stdout,"fnidx=%s\n",fnidx); //debugging 
     tb = ti_open(fn, fnidx);
     if (tb == NULL) {
         PyErr_SetString(TabixError, "Can't open the index file.");
@@ -214,7 +213,6 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->fn = strdup(fn);
     self->tb->idx = ti_index_load(self->fn);
     self->blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
-    fprintf(stdout,"%s\n",self->blocknames[0]);  //debugging
     return (PyObject *)self;
 }
 
@@ -341,6 +339,13 @@ tabix_querys_2D(TabixObject *self, PyObject *args)
 }
 
 
+static char**
+tabix_get_blocknames(TabixObject *self)
+{
+  return self->blocknames;
+}
+
+
 static PyObject *
 tabix_repr(TabixObject *self)
 {
@@ -439,6 +444,12 @@ static PyMethodDef tabix_methods[] = {
                   "----------\n"
                   "region : str\n"
                   "    Query string like \"seq:start-end\".\n")
+    },
+    {
+       "get_blocknames",
+       (PyCFunction)tabix_get_blocknames,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve list of keys (either chromosomes(1D-indexed) or chromosome pairs(2D-indexed)).\n\n")
     },
     /*
     {

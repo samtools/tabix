@@ -49,6 +49,7 @@ typedef struct {
     ti_iter_t iter;
 } TabixIteratorObject;
 
+
 static PyTypeObject Tabix_Type, TabixIterator_Type;
 
 /* --- TabixIterator --------------------------------------------------- */
@@ -339,6 +340,13 @@ tabix_querys_2D(TabixObject *self, PyObject *args)
 }
 
 
+static char**
+tabix_get_blocknames(TabixObject *self)
+{
+  return self->blocknames;
+}
+
+
 static PyObject *
 tabix_repr(TabixObject *self)
 {
@@ -437,6 +445,12 @@ static PyMethodDef tabix_methods[] = {
                   "----------\n"
                   "region : str\n"
                   "    Query string like \"seq:start-end\".\n")
+    },
+    {
+       "get_blocknames",
+       (PyCFunction)tabix_get_blocknames,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve list of keys (either chromosomes(1D-indexed) or chromosome pairs(2D-indexed)).\n\n")
     },
     /*
     {

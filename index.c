@@ -686,7 +686,6 @@ static char *get_local_version(const char *fn)
     struct stat sbuf;
 	char *fnidx = (char*)calloc(strlen(fn) + 5, 1);
 	strcat(strcpy(fnidx, fn), ".px2");
-        fprintf(stdout,"fnidx=%s\n",fnidx); // debugging
 	if ((strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx)) {
 		char *p, *url;
 		int l = strlen(fnidx);
