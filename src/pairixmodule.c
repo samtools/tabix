@@ -1,8 +1,8 @@
 /*-
  * The MIT License
  *
- * Copyright (c) 2011 by Seoul National University.
- *               2014 by Kamil Slowikowski <slowikow@broadinstitute.org>
+ * Copyright (c) 2011 Seoul National University.
+ *               2016 Soo Lee
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -31,7 +31,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python/Python.h>
-#include "../tabix.h"
+#include "pairix.h"
 
 static PyObject *TabixError;
 
@@ -95,6 +95,7 @@ tabixiter_iternext(TabixIteratorObject *self)
     int len, i;
 
     chunk = ti_read(self->tbobj->tb, self->iter, &len);
+
     if (chunk != NULL) {
         PyObject *ret, *column;
         Py_ssize_t colidx;
@@ -139,7 +140,7 @@ static PyMethodDef tabixiter_methods[] = {
 
 static PyTypeObject TabixIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "tabix.iter",      /*tp_name*/
+    "pairix.iter",      /*tp_name*/
     sizeof(TabixIteratorObject), /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
@@ -159,9 +160,7 @@ static PyTypeObject TabixIterator_Type = {
     0,                          /*tp_setattro*/
     0,                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT,         /*tp_flags*/
-    "An iterator for records returned by tabix.query().\n\n"
-    "    >>> tb = tabix.open(\"http://localhost/file.bgz\")\n"
-    "    >>> records = list(tb.query(\"1\", 1000, 2000))\n",                          /*tp_doc*/
+    0,                          /*tp_doc*/
     0,                          /*tp_traverse*/
     0,                          /*tp_clear*/
     0,                          /*tp_richcompare*/
@@ -232,7 +231,7 @@ tabix_query(TabixObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end))
         return NULL;
 
-    result = ti_query(self->tb, name, begin - 1, end);
+    result = ti_query(self->tb, name, begin, end);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -250,7 +249,7 @@ tabix_queryi(TabixObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end))
         return NULL;
 
-    result = ti_queryi(self->tb, tid, begin - 1, end);
+    result = ti_queryi(self->tb, tid, begin, end);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -269,6 +268,63 @@ tabix_querys(TabixObject *self, PyObject *args)
         return NULL;
 
     result = ti_querys(self->tb, reg);
+    if (result == NULL) {
+        PyErr_SetString(TabixError, "query failed");
+        return NULL;
+    }
+
+    return tabixiter_create(self, result);
+}
+
+/* ------- PAIRIX 2D QUERYING METHODS ------- */
+
+static PyObject *
+tabix_query_2D(TabixObject *self, PyObject *args)
+{
+    char *name, *name2;
+    int begin, end, begin2, end2;
+    ti_iter_t result;
+
+    if (!PyArg_ParseTuple(args, "siisii:query_2D", &name, &begin, &end, &name2, &begin2, &end2))
+        return NULL;
+
+    result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
+    if (result == NULL) {
+        PyErr_SetString(TabixError, "query failed");
+        return NULL;
+    }
+
+    return tabixiter_create(self, result);
+}
+
+static PyObject *
+tabix_queryi_2D(TabixObject *self, PyObject *args)
+{
+    int tid, begin, end, begin2, end2;
+    ti_iter_t result;
+
+    if (!PyArg_ParseTuple(args, "iiiii:queryi_2D", &tid, &begin, &end, &begin2, &end2))
+        return NULL;
+
+    result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
+    if (result == NULL) {
+        PyErr_SetString(TabixError, "query failed");
+        return NULL;
+    }
+
+    return tabixiter_create(self, result);
+}
+
+static PyObject *
+tabix_querys_2D(TabixObject *self, PyObject *args)
+{
+    const char *reg;
+    ti_iter_t result;
+
+    if (!PyArg_ParseTuple(args, "s:querys_2D", &reg))
+        return NULL;
+
+    result = ti_querys_2d(self->tb, reg);
     if (result == NULL) {
         PyErr_SetString(TabixError, "query failed");
         return NULL;
@@ -332,6 +388,50 @@ static PyMethodDef tabix_methods[] = {
                   "region : str\n"
                   "    Query string like \"seq:start-end\".\n")
     },
+    {
+        "query2D",
+        (PyCFunction)tabix_query_2D,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.query(\"chr1\", 1000, 2000)\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "name : str\n"
+                  "    Name of the sequence in the file.\n"
+                  "start : int\n"
+                  "    Start of the query region.\n"
+                  "end : int\n"
+                  "    End of the query region.\n")
+    },
+    {
+        "queryi2D",
+        (PyCFunction)tabix_queryi_2D,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.queryi(0, 1000, 2000)\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "tid : int\n"
+                  "    Index of the sequence in the file (first is 0).\n"
+                  "start : int\n"
+                  "    Start of the query region.\n"
+                  "end : int\n"
+                  "    End of the query region.\n")
+    },
+    {
+        "querys2D",
+        (PyCFunction)tabix_querys_2D,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve items within a region.\n\n"
+                  "    >>> tb.querys(\"chr1:1000-2000\")\n"
+                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "Parameters\n"
+                  "----------\n"
+                  "region : str\n"
+                  "    Query string like \"seq:start-end\".\n")
+    },
     /*
     {
         "header",
@@ -353,7 +453,7 @@ static PyTypeObject Tabix_Type = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
-    "tabix.open",              /*tp_name*/
+    "pairix.open",              /*tp_name*/
     sizeof(TabixObject),        /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
@@ -373,10 +473,7 @@ static PyTypeObject Tabix_Type = {
     0,                          /*tp_setattro*/
     0,                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT,         /*tp_flags*/
-    "Open a local or remote file compressed with bgzip and indexed with tabix.\n\n"
-    "    >>> tb = tabix.open(\"http://localhost/file.bgz\")\n"
-    "    >>> tb.query(\"1\", 1000, 2000)\n"
-    "    <tabix.iter at 0x17b86e50>",                          /*tp_doc*/
+    0,                          /*tp_doc*/
     0,                          /*tp_traverse*/
     0,                          /*tp_clear*/
     0,                          /*tp_richcompare*/
@@ -404,52 +501,13 @@ static PyMethodDef tabix_functions[] = {
 };
 
 PyDoc_STRVAR(module_doc,
-"This module allows fast random access to files compressed with ``bgzip`` and\n"
-"indexed by ``tabix``. It includes a C extension with code from klib_.\n"
-"\n"
-"Genomics data is often in a table where each row corresponds to a genomic\n"
-"region::\n"
-"\n"
-"    chrom  pos      snp\n"
-"    1      1000760  rs75316104\n"
-"    1      1000894  rs114006445\n"
-"    1      1000910  rs79750022\n"
-"    1      1001177  rs4970401\n"
-"    1      1001256  rs78650406\n"
-"\n"
-"With ``tabix``, you can quickly retrieve all rows in a genomic region by\n"
-"specifying a query with a sequence name, start, and end::\n"
-"\n"
-"    import tabix\n"
-"\n"
-"    # Open a remote or local file.\n"
-"    url = \"ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20100804/\"\n"
-"    url += \"ALL.2of4intersection.20100804.genotypes.vcf.gz\"\n"
-"\n"
-"    tb = tabix.open(url)\n"
-"\n"
-"    # These queries are identical. A query returns an iterator over the\n"
-"    # results.\n"
-"    records = tb.query(\"1\", 1000000, 1250000)\n"
-"\n"
-"    records = tb.queryi(0, 1000000, 1250000)\n"
-"\n"
-"    records = tb.querys(\"1:1000000-1250000\")\n"
-"\n"
-"    # Each record is a list of strings.\n"
-"    for record in records:\n"
-"        print record[:5]\n"
-"            break\n"
-"\n"
-"The ``bgzip`` and ``tabix`` programs are provided in samtools_.\n"
-"\n"
-".. _klib: https://github.com/jmarshall/klib\n"
-".. _samtools: http://samtools.sourceforge.net\n");
+"Python interface to tabix, Heng Li's generic indexer for TAB-delimited "
+"genome position filesThis is a template module just for instruction.");
 
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef tabixmodule = {
     PyModuleDef_HEAD_INIT,
-    "tabix",
+    "pairix",
     module_doc,
     -1,
     tabix_functions,
@@ -461,9 +519,9 @@ static struct PyModuleDef tabixmodule = {
 #endif
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC inittabix(void)
+PyMODINIT_FUNC initpairix(void)
 #else
-PyMODINIT_FUNC PyInit_tabix(void)
+PyMODINIT_FUNC PyInit_pairix(void)
 #endif
 {
     PyObject *m;
@@ -474,7 +532,7 @@ PyMODINIT_FUNC PyInit_tabix(void)
         goto fail;
 
 #if PY_MAJOR_VERSION < 3
-    m = Py_InitModule3("tabix", tabix_functions, module_doc);
+    m = Py_InitModule3("pairix", tabix_functions, module_doc);
 #else
     m = PyModule_Create(&tabixmodule);
 #endif
@@ -482,7 +540,7 @@ PyMODINIT_FUNC PyInit_tabix(void)
         goto fail;
 
     if (TabixError == NULL) {
-        TabixError = PyErr_NewException("tabix.TabixError", NULL, NULL);
+        TabixError = PyErr_NewException("pairix.TabixError", NULL, NULL);
         if (TabixError == NULL)
             goto fail;
     }
