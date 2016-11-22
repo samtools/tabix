@@ -83,15 +83,6 @@ class TabixTest(unittest.TestCase):
         tb_result = [[x[0], x[1], x[1]] for x in it]
         self.assertEqual(self.result, tb_result)
 
-    def test_remote_file(self):
-        file1 = "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20100804/" \
-                "ALL.2of4intersection.20100804.genotypes.vcf.gz"
-        pairix.open(file1)
-
-    def test_remote_file_bad_url(self):
-        file1 = "ftp://badurl"
-        with self.assertRaises(pairix.TabixError):
-            pairix.open(file1)
 
 
 ## semi-2D query on 2D indexed file
@@ -137,8 +128,10 @@ class TabixTest2D(unittest.TestCase):
 
 class TabixTestBlocknames(unittest.TestCase):
     tb = pairix.open(TEST_FILE_2D)
+    print ("after") ## DEBUGGING
     def test_blocknames(self):
-        print (self.tb.blocknames)
+      print ("...") ## DEBUGGING
+    #    print (str(self.tb.blocknames))
 
 
 if __name__ == '__main__':

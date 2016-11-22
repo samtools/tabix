@@ -194,7 +194,6 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     const char *fn, *fnidx=NULL;
     static char *kwnames[]={"fn", "fnidx", NULL};
     tabix_t *tb;
-    int n;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|z:open",
                                      kwnames, &fn, &fnidx))
@@ -212,8 +211,8 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     self->tb = tb;
     self->fn = strdup(fn);
-    self->blocknames = ti_seqname(self->tb->idx, &n);
-    self->nblocks = n;
+    self->tb->idx = ti_index_load(self->fn);
+    self->blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
     return (PyObject *)self;
 }
 
@@ -221,6 +220,8 @@ static void
 tabix_dealloc(TabixObject *self)
 {
     free(self->fn);
+    free(*(self->blocknames));
+    free(self->blocknames);
     ti_close(self->tb);
     PyObject_Del(self);
 }

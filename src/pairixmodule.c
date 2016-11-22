@@ -39,6 +39,8 @@ typedef struct {
     PyObject_HEAD
     tabix_t *tb;
     char *fn;
+    char **blocknames;
+    int nblocks;
 } TabixObject;
 
 typedef struct {
@@ -197,6 +199,7 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                                      kwnames, &fn, &fnidx))
         return NULL;
 
+    fprintf(stdout,"fnidx=%s\n",fnidx); //debugging 
     tb = ti_open(fn, fnidx);
     if (tb == NULL) {
         PyErr_SetString(TabixError, "Can't open the index file.");
@@ -209,7 +212,9 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     self->tb = tb;
     self->fn = strdup(fn);
-
+    self->tb->idx = ti_index_load(self->fn);
+    self->blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
+    fprintf(stdout,"%s\n",self->blocknames[0]);  //debugging
     return (PyObject *)self;
 }
 
@@ -217,6 +222,8 @@ static void
 tabix_dealloc(TabixObject *self)
 {
     free(self->fn);
+    free(*(self->blocknames));
+    free(self->blocknames);
     ti_close(self->tb);
     PyObject_Del(self);
 }
@@ -332,6 +339,7 @@ tabix_querys_2D(TabixObject *self, PyObject *args)
 
     return tabixiter_create(self, result);
 }
+
 
 static PyObject *
 tabix_repr(TabixObject *self)
