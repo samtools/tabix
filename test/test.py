@@ -129,7 +129,7 @@ class TabixTest2D(unittest.TestCase):
 class TabixTestBlocknames(unittest.TestCase):
     tb = pairix.open(TEST_FILE_2D)
     def test_blocknames(self):
-     # print (str(self.tb.get_blocknames()))  ## without this line it works. 
+      print (str(self.tb.get_blocknames()))  ## without this line it works. 
 
 if __name__ == '__main__':
     unittest.main()

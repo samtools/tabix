@@ -39,7 +39,7 @@ typedef struct {
     PyObject_HEAD
     tabix_t *tb;
     char *fn;
-    char **blocknames;
+    PyObject *blocknames;
     int nblocks;
 } TabixObject;
 
@@ -195,6 +195,8 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     const char *fn, *fnidx=NULL;
     static char *kwnames[]={"fn", "fnidx", NULL};
     tabix_t *tb;
+    char **blocknames;
+    int i;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|z:open",
                                      kwnames, &fn, &fnidx))
@@ -213,7 +215,16 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->tb = tb;
     self->fn = strdup(fn);
     self->tb->idx = ti_index_load(self->fn);
-    self->blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
+    blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
+    self->blocknames = PyList_New(self->nblocks);
+    if(!self->blocknames) { return NULL; } 
+    for(i=0;i<self->nblocks;i++){
+      PyObject *val = Py_BuildValue("s",blocknames[i]);
+      if(!val) { Py_DECREF(self->blocknames); return NULL; } 
+      PyList_SET_ITEM(self->blocknames,i,val);
+    }
+    free(*(blocknames));
+    free(blocknames);
     return (PyObject *)self;
 }
 
@@ -221,8 +232,7 @@ static void
 tabix_dealloc(TabixObject *self)
 {
     free(self->fn);
-    free(*(self->blocknames));
-    free(self->blocknames);
+    Py_DECREF(self->blocknames);
     ti_close(self->tb);
     PyObject_Del(self);
 }
@@ -340,7 +350,7 @@ tabix_querys_2D(TabixObject *self, PyObject *args)
 }
 
 
-static char**
+static PyObject *
 tabix_get_blocknames(TabixObject *self)
 {
   return self->blocknames;
