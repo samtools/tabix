@@ -162,4 +162,9 @@ it = tb.querys2D(querystr)
 tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
 print tb_result
 
+# get the list of (chr-pair) blocks
+tb=pairix.open("textfile.gz")
+chrplist = tb.get_blocknames()
+print str(chrplist)
+
 ```
