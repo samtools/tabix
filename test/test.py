@@ -23,6 +23,10 @@ def read_vcf(filename):
     """Read a VCF file and return a list of [chrom, start, end] items."""
     retval = []
     for line in gzip.open(filename):
+        try:
+            line = line.decode('utf-8')
+        except AttributeError:
+            pass
         fields = line.rstrip().split('\t')
         chrom = fields[0]
         start = fields[1]
@@ -35,6 +39,10 @@ def read_pairs(filename):
     """Read a pairs file and return a list of [chrom1, start1, end1, chrom2, start2, end2] items."""
     retval = []
     for line in gzip.open(filename):
+        try:
+            line = line.decode('utf-8')
+        except AttributeError:
+            pass
         fields = line.rstrip().split('\t')
         chrom1 = fields[1]
         start1 = fields[2]
@@ -92,7 +100,7 @@ class TabixTest_2(unittest.TestCase):
     start = 25944
     end = 27000000
     chrom2 = '20'
-    result = get_result_2D(regions, chrom, start, end, chrom2, 0, sys.maxint)
+    result = get_result_2D(regions, chrom, start, end, chrom2, 0, sys.maxsize)
     tb = pairix.open(TEST_FILE_2D)
 
     def test_querys(self):
@@ -129,7 +137,7 @@ class TabixTest2D(unittest.TestCase):
 class TabixTestBlocknames(unittest.TestCase):
     tb = pairix.open(TEST_FILE_2D)
     def test_blocknames(self):
-      print (str(self.tb.get_blocknames()))  
+      print (str(self.tb.get_blocknames()))
 
 if __name__ == '__main__':
     unittest.main()

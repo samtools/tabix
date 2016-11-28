@@ -30,7 +30,7 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#include <Python/Python.h>
+#include "Python.h"
 #include "pairix.h"
 
 static PyObject *TabixError;
@@ -223,7 +223,6 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
       if(!val) { Py_DECREF(self->blocknames); return NULL; } 
       PyList_SET_ITEM(self->blocknames,i,val);
     }
-    free(*(blocknames));
     free(blocknames);
     return (PyObject *)self;
 }
