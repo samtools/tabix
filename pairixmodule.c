@@ -30,7 +30,7 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#include <Python/Python.h>
+#include "Python.h"
 #include "pairix.h"
 
 static PyObject *TabixError;
@@ -217,10 +217,10 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->tb->idx = ti_index_load(self->fn);
     blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
     self->blocknames = PyList_New(self->nblocks);
-    if(!self->blocknames) { return NULL; } 
+    if(!self->blocknames) { return NULL; }
     for(i=0;i<self->nblocks;i++){
       PyObject *val = Py_BuildValue("s",blocknames[i]);
-      if(!val) { Py_DECREF(self->blocknames); return NULL; } 
+      if(!val) { Py_DECREF(self->blocknames); return NULL; }
       PyList_SET_ITEM(self->blocknames,i,val);
     }
     free(*(blocknames));
