@@ -30,6 +30,7 @@ make
 ```
 # to install the python module pypairix,
 pip install pypairix
+# you may need to install python-dev for some ubuntu releases.
 
 # or
 cd pairix
