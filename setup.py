@@ -5,6 +5,7 @@
 # pysam (https://github.com/pysam-developers)
 # The Github repo for this project is:
 # https://github.com/4dn-dcic/pairix
+# IMPORTANT: use Python 2.7 or above for this package
 
 from setuptools import setup, find_packages, Extension
 
@@ -23,10 +24,10 @@ EXT_MODULES = [
 
 setup(
     name = "pypairix",
-    version = "0.0.3",
+    version = "0.0.4",
     description = "Python interface for pairix",
     url = "https://github.com/4dn-dcic/pairix",
-    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.0.3",
+    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.0.4",
     author = "Soo Lee, Carl Vitzthum",
     author_email = "duplexa@gmail.com",
     license = "MIT",
@@ -37,6 +38,8 @@ setup(
     test_suite = "test",
     classifiers = [
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
