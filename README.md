@@ -10,7 +10,7 @@ Pairix is available either as a stand-alone command-line program or a python lib
     * [Usage](#usage-for-pairix)
     * [Examples](#usage-examples-for-pairix)
 * [Pypairix](#pypairix)
-    * [Installation](#installation-pypairix)
+    * [Installation](#installation-for-pypairix)
     * [Examples](#usage-examples-for-pypairix)
 * [Note](#note)
 * [Utils](#utils)
