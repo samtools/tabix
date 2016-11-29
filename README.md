@@ -1,46 +1,32 @@
 # pairix
-This modification can do 2D indexing/query as an option.
+Pairix is a tool for indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line.
 The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip.
-The index has an extension .px2.
+The index file has an extension .px2.
+Pairix is available either as a stand-alone command-line program or a python library (pypairix).
 
 ## Table of contents
+* [Pairix](#pairix)
+    * [Installation](#installation-for-pairix)
+    * [Usage](#usage-for-pairix)
+    * [Examples](#usage-examples-for-pairix)
+* [Pypairix](#pypairix)
+    * [Installation](#installation-pairix)
+    * [Examples](#usage-examples-for-pypairix)
+* [Note](#note)
 * [Utils](#utils)
-* [Libraries](#libraries)
-* [Installation](#installation)
-* [Usage for pairix](#usage-for-pairix)
-* [Note](#notes)
-* [Examples](#examples)
-* [Usage example for pypairix](#usage-example-for-pypairix)
 
 
-## Utils
-* The repo contains bgzip (cloned), pairix, merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
 
-## Libraries
-* The repo also contains python module pypairix.
-
-
-## Installation
+## Pairix
+### Installation for pairix
 ```
 git clone https://github.com/SooLee/pairix
 cd pairix
 make
 # add the bin path to PATH
 ```
-```
-# to install the python module pypairix,
-pip install pypairix
-# you may need to install python-dev for some ubuntu releases.
 
-# or
-cd pairix
-python setup.py install
-
-# testing the python module
-python test/test.py
-```
-
-## Usage for pairix
+### Usage for pairix
 ```
 # compression
 bgzip textfile
@@ -53,16 +39,8 @@ pairix textfile.gz region1 [region2 [...]]  ## region is in the following format
 pairix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
 ```
 
-
-
-## Note
-* Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
-* The index produced by this modified pairix is not compatible with the original pairix index. They are based on different structures.
-* Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric.
-
-
-## Example
-### Preparing a double-chromosome-block sorted text file 
+### Usage examples for pairix
+#### Preparing a double-chromosome-block sorted text file 
 (column 2 and 6 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
 ```
 # the following has already be done and the final merged_nodup.tab.chrblock_sorted.txt.gz is already in the samples folder.
@@ -81,13 +59,12 @@ head samples/merged_nodup.tab.chrblock_sorted.txt
 0	1	139312	305	0	1	141553	315
 0	1	142396	316	0	1	222981299	509189
 ```
-
 bgzipping
 ```
 bgzip samples/merged_nodup.tab.chrblock_sorted.txt
 ```
 
-### 2D indexing & query on the above file
+#### 2D indexing & query on the above file
 2D indexing with pairix on chromosome pair (-s2 -d6) and the position of the first chromosome (b3). For full 2D query, also add -u7 and -v7, the start and end positions of the second coordinate. They are not used for indexing per se, but the column index is stored as part of the index, which allows full 2D query through individual comparisons.
 ```
 pairix -f -s2 -d6 -b3 -e3 -u7 samples/merged_nodup.tab.chrblock_sorted.txt.gz
@@ -118,7 +95,7 @@ pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '1:1-10000000|20:50000000
 ```
 
 
-### 1D indexing on a regular vcf file, bgzipped.
+#### 1D indexing on a regular vcf file, bgzipped.
 1D indexing
 ```
 pairix -s1 -b2 -e2 -f samples/SRR1171591.variants.snp.vqsr.p.vcf.gz
@@ -132,7 +109,24 @@ chr10	3978709	.	G	A	1901.77	PASS	AC=2;AF=1.00;AN=2;BaseQRankSum=0.677;DB;DP=66;D
 ```
 
 
-## Usage example for pypairix
+## Pypairix
+### Installation for pypairix
+
+```
+# to install the python module pypairix,
+pip install pypairix
+# you may need to install python-dev for some ubuntu releases.
+
+# or
+cd pairix
+python setup.py install
+
+# testing the python module
+python test/test.py
+```
+
+
+### Usage examples for pypairix
 ```
 # to import and use python module pypairix, add the following in your python script.
 import pairix
@@ -169,3 +163,14 @@ chrplist = tb.get_blocknames()
 print str(chrplist)
 
 ```
+
+
+## Note
+* Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
+* The index produced by this modified pairix is not compatible with the original tabix index. They are based on different structures.
+* Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric.
+
+
+## Utils
+* bgzip (identical to the one from the tabix repo), 
+* merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
