@@ -4,14 +4,10 @@
  
 input_bam=$1
 prefix=$2
-echo "#sort: chromosome-block" > $prefix.bsorted.pairs
-echo "#column1: readID" >> $prefix.bsorted.pairs
-echo "#column2: chr1" >> $prefix.bsorted.pairs
-echo "#column3: pos1" >> $prefix.bsorted.pairs
-echo "#column4: chr2" >> $prefix.bsorted.pairs
-echo "#column5: pos2" >> $prefix.bsorted.pairs
-echo "#column6: strand1" >> $prefix.bsorted.pairs
-echo "#column7: strand2" >> $prefix.bsorted.pairs
+echo "#sorted: chr1-chr2-pos1-pos2" > $prefix.bsorted.pairs
+echo "#shape: upper triangle" >> $prefix.bsorted.pairs
+echo "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2" >> $prefix.bsorted.pairs
+echo "#command: bam2pairs $input_bam $prefix" >> $prefix.bsorted.pairs
 samtools view -F12 $input_bam | parse_line.pl |sort -k2,2 -k4,4 -k3,3g -k5,5g >> $prefix.bsorted.pairs
 bgzip -f $prefix.bsorted.pairs
 pairix -f -s2 -d4 -b3 -e3 -u5 $prefix.bsorted.pairs.gz
