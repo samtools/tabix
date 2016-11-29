@@ -40,7 +40,7 @@ pairix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make s
 ```
 
 ### Usage examples for pairix
-#### Preparing a double-chromosome-block sorted text file 
+#### Preparing a double-chromosome-block sorted text file
 (column 2 and 6 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
 ```
 # the following has already be done and the final merged_nodup.tab.chrblock_sorted.txt.gz is already in the samples folder.
@@ -129,36 +129,36 @@ python test/test.py
 ### Usage examples for pypairix
 ```
 # to import and use python module pypairix, add the following in your python script.
-import pairix
+import pypairix
 
 # 2D query usage example 1
-tb=pairix.open("textfile.gz")
+tb=pypairix.open("textfile.gz")
 it = tb.query2D(chrom, start, end, chrom2, start2, end2)
 tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
 print tb_result
 
 # 2D query usage example 2
-tb=pairix.open("textfile.gz")
+tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}|{}:{}-{}'.format(chrom, start, end, chrom2, start2, end2)
-it = tb.querys2D(querystr) 
+it = tb.querys2D(querystr)
 tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
 print tb_result
 
 # 1D query usage example 1
-tb=pairix.open("textfile.gz")
+tb=pypairix.open("textfile.gz")
 it = tb.query(chrom, start, end)
 tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
 print tb_result
 
 # 1D query usage example 2
-tb=pairix.open("textfile.gz")
+tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}'.format(chrom, start, end)
-it = tb.querys2D(querystr) 
+it = tb.querys2D(querystr)
 tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
 print tb_result
 
 # get the list of (chr-pair) blocks
-tb=pairix.open("textfile.gz")
+tb=pypairix.open("textfile.gz")
 chrplist = tb.get_blocknames()
 print str(chrplist)
 
@@ -172,5 +172,5 @@ print str(chrplist)
 
 
 ## Utils
-* bgzip (identical to the one from the tabix repo), 
+* bgzip (identical to the one from the tabix repo),
 * merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs

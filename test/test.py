@@ -7,13 +7,16 @@ First, ensure you have fully installed the pypairix package:
 `pip install pypairix --user`
 OR
 `sudo python setup.py install`
+
+If you're having trouble running this file, try installing
+python-dev and zlib1g-dev.
 """
 
 
 import unittest
 import gzip
 import sys
-import pairix
+import pypairix
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
@@ -78,18 +81,18 @@ class TabixTest(unittest.TestCase):
     start = 25944
     end = 27000000
     result = get_result(regions, chrom, start, end)
-    tb = pairix.open(TEST_FILE_1D)
+    pr = pypairix.open(TEST_FILE_1D)
 
     def test_query(self):
-        it = self.tb.query(self.chrom, self.start, self.end)
-        tb_result = [[x[0], x[1], x[1]] for x in it]
-        self.assertEqual(self.result, tb_result)
+        it = self.pr.query(self.chrom, self.start, self.end)
+        pr_result = [[x[0], x[1], x[1]] for x in it]
+        self.assertEqual(self.result, pr_result)
 
     def test_querys(self):
         query = '{}:{}-{}'.format(self.chrom, self.start, self.end)
-        it = self.tb.querys(query)
-        tb_result = [[x[0], x[1], x[1]] for x in it]
-        self.assertEqual(self.result, tb_result)
+        it = self.pr.querys(query)
+        pr_result = [[x[0], x[1], x[1]] for x in it]
+        self.assertEqual(self.result, pr_result)
 
 
 
@@ -101,13 +104,13 @@ class TabixTest_2(unittest.TestCase):
     end = 27000000
     chrom2 = '20'
     result = get_result_2D(regions, chrom, start, end, chrom2, 0, sys.maxsize)
-    tb = pairix.open(TEST_FILE_2D)
+    pr = pypairix.open(TEST_FILE_2D)
 
     def test_querys(self):
         query = '{}:{}-{}|{}'.format(self.chrom, self.start, self.end, self.chrom2)
-        it = self.tb.querys2D(query)
-        tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-        self.assertEqual(self.result, tb_result)
+        it = self.pr.querys2D(query)
+        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        self.assertEqual(self.result, pr_result)
 
 
 ## 2D query on 2D indexed file
@@ -120,24 +123,25 @@ class TabixTest2D(unittest.TestCase):
     start2 = 50000000
     end2 = 60000000
     result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
-    tb = pairix.open(TEST_FILE_2D)
+    pr = pypairix.open(TEST_FILE_2D)
 
     def test_query2(self):
-        it = self.tb.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-        self.assertEqual(self.result, tb_result)
+        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        self.assertEqual(self.result, pr_result)
 
     def test_querys_2(self):
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        it = self.tb.querys2D(query)
-        tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-        self.assertEqual(self.result, tb_result)
+        it = self.pr.querys2D(query)
+        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        self.assertEqual(self.result, pr_result)
 
 
 class TabixTestBlocknames(unittest.TestCase):
-    tb = pairix.open(TEST_FILE_2D)
+    pr = pypairix.open(TEST_FILE_2D)
+
     def test_blocknames(self):
-      print (str(self.tb.get_blocknames()))
+      print (str(self.pr.get_blocknames()))
 
 if __name__ == '__main__':
     unittest.main()
