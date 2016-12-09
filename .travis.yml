@@ -1,3 +1,6 @@
 language: c python
 compiler: gcc
-script: make
+script: 
+ - make
+ - python setup.py install
+ - python test/test.py
