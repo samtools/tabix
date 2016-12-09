@@ -1,6 +1,6 @@
 *.o
 *.a
-tabix.1
+*.so
 bin/
 pypairix.egg-info/
 dist/
