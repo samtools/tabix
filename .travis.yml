@@ -1,4 +1,5 @@
 language: c python
+sudo: true
 compiler: gcc
 script: 
  - make
