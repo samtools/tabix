@@ -15,9 +15,9 @@ The `px_query` function can be used on R.
 source("rpairix.r")
 px_query(filename,querystr,max_mem=8000)
 ```
-The filename is sometextfile.gz and an index file sometextfile.gz.px2 must exist.
-The query string is in the same format as the format for pairix. (e.g. '1:1-10000000|20:50000000-60000000')
-The max_mem is the maximum total length of the result strings (sum of string lengths). 
+* The filename is sometextfile.gz and an index file sometextfile.gz.px2 must exist.
+* The query string is in the same format as the format for pairix. (e.g. '1:1-10000000|20:50000000-60000000')
+* The max_mem is the maximum total length of the result strings (sum of string lengths). 
 
 ```
 source("rpairix.r")
