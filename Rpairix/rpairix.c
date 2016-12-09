@@ -26,6 +26,7 @@ void get_size(char** pfn, char** pquerystr, int* pn, int* pmax_len){
 
    tabix_t *tb = load(*pfn);
    const ti_conf_t *idxconf = ti_get_conf(tb->idx);
+
    ti_iter_t iter = ti_querys_2d(tb, *pquerystr);
 
    *pn=0;
@@ -36,6 +37,7 @@ void get_size(char** pfn, char** pquerystr, int* pn, int* pmax_len){
      (*pn)++;
    }
 
+   ti_close(tb);
 }
 
 
@@ -55,6 +57,7 @@ void get_lines(char** pfn, char** pquerystr, char** presultstr){
      strcpy(presultstr[k++],s);
    }
 
+   ti_close(tb);
 }
 
 
