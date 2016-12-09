@@ -22,10 +22,3 @@ px_query<-function(filename, querystr, max_mem=8000){
   return (res.table)
 }
 
-## example run
-filename = "../samples/merged_nodup.tab.chrblock_sorted.txt.gz"
-querystr = "10:1-1000000|20"
-res = px_query(filename,querystr)
-print(res)
-
-
