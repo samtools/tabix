@@ -34,3 +34,24 @@ px_keylist<-function(filename){
 
    return(out[[2]])
 }
+
+px_seq1list<-function(filename){
+  seqpairs = px_keylist(filename)
+  seq1_list = unique(sapply(seqpairs,function(xx)strsplit(xx,'|',fixed=T)[[1]][1]))
+  return(sort(seq1_list))
+}
+
+px_seq2list<-function(filename){
+  seqpairs = px_keylist(filename)
+  seq2_list = unique(sapply(seqpairs,function(xx)strsplit(xx,'|',fixed=T)[[1]][2]))
+  return(sort(seq2_list))
+}
+
+px_seqlist<-function(filename){
+  seqpairs = px_keylist(filename)
+  seq1_list = unique(sapply(seqpairs,function(xx)strsplit(xx,'|',fixed=T)[[1]][1]))
+  seq2_list = unique(sapply(seqpairs,function(xx)strsplit(xx,'|',fixed=T)[[1]][2]))
+  seq_list = unique(c(seq1_list, seq2_list))
+  return(sort(seq_list))
+}
+
