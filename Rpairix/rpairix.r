@@ -22,3 +22,15 @@ px_query<-function(filename, querystr, max_mem=8000){
   return (res.table)
 }
 
+px_keylist<-function(filename){
+   # first-round, get the max length and the number of items in the key list.
+   out = .C("get_keylist_size", filename, as.integer(0), as.integer(0))
+   max_key_len = out[[3]][1]
+   n = out[[2]][1]
+  
+   # second-round, get the key list.
+   result_str = rep(paste(rep("a",max_key_len),collapse=''),n)
+   out = .C("get_keylist", filename, result_str)
+
+   return(out[[2]])
+}

@@ -10,7 +10,7 @@ R CMD SHLIB rpairix.c index.o bgzf.o --preclean
 ```
 
 ## Usage
-The `px_query` function can be used on R. 
+Functions `px_query` and `px_keylist` can be used on R. 
 ```
 source("rpairix.r")
 px_query(filename,querystr,max_mem=8000)
@@ -18,24 +18,33 @@ px_query(filename,querystr,max_mem=8000)
 * The filename is sometextfile.gz and an index file sometextfile.gz.px2 must exist.
 * The query string is in the same format as the format for pairix. (e.g. '1:1-10000000|20:50000000-60000000')
 * The max_mem is the maximum total length of the result strings (sum of string lengths). 
+* The return value is a data frame, each row corresponding to the line in the input file within the query range.
 
 ```
 source("rpairix.r")
+px_keylist(filename)
+```
+* The filename is sometextfile.gz and an index file sometextfile.gz.px2 must exist.
+* The return value is a vector of keys (chromosome pairs).
 
-## example run
-filename = "../samples/merged_nodup.tab.chrblock_sorted.txt.gz"
-querystr = "10:1-1000000|20"
-res = px_query(filename,querystr)
-print(res)
+
+## Example run
 ```
-The result would look as below:
-```
+> source("rpairix.r")
+> filename = "../samples/merged_nodup.tab.chrblock_sorted.txt.gz"
+> querystr = "10:1-1000000|20"
+> res = px_query(filename,querystr)
+> print(res)
   V1 V2     V3   V4 V5 V6       V7     V8
 1  0 10 624779 1361  0 20 40941397  97868
 2 16 10 948577 2120 16 20 59816485 148396
+>
+> keys = px_keylist("../samples/merged_nodup.tab.chrblock_sorted.txt.gz")
+> length(keys)
+[1] 1239
+> keys[1:10]
+[1] "1|1"  "1|10" "1|11" "1|12" "1|13" "1|14" "1|15" "1|16" "1|17" "1|18"
 ```
 
-## Return value
-Return value is a data frame, each row corresponding to the line in the input file within the query range.
 
 
