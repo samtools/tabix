@@ -1,4 +1,5 @@
 language: c python r
+cache: packages
 sudo: true
 compiler: gcc
 r:
