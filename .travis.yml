@@ -5,4 +5,4 @@ script:
  - make
  - python setup.py install
  - python test/test.py
- - bash test/test_c.sh
+ - source test/test_c.sh
