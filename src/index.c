@@ -1074,19 +1074,19 @@ const ti_conf_t *ti_get_conf(ti_index_t *idx) { return idx? &idx->conf : 0; }
  * High-level APIs *
  *******************/
 
-tabix_t *ti_open(const char *fn, const char *fnidx)
+pairix_t *ti_open(const char *fn, const char *fnidx)
 {
-	tabix_t *t;
+	pairix_t *t;
 	BGZF *fp;
 	if ((fp = bgzf_open(fn, "r")) == 0) return 0;
-	t = calloc(1, sizeof(tabix_t));
+	t = calloc(1, sizeof(pairix_t));
 	t->fn = strdup(fn);
 	if (fnidx) t->fnidx = strdup(fnidx);
 	t->fp = fp;
 	return t;
 }
 
-void ti_close(tabix_t *t)
+void ti_close(pairix_t *t)
 {
 	if (t) {
 		bgzf_close(t->fp);
@@ -1096,7 +1096,7 @@ void ti_close(tabix_t *t)
 	}
 }
 
-int ti_lazy_index_load(tabix_t *t)
+int ti_lazy_index_load(pairix_t *t)
 {
 	if (t->idx == 0) { // load index
 		if (t->fnidx) t->idx = ti_index_load_local(t->fnidx);
@@ -1106,24 +1106,24 @@ int ti_lazy_index_load(tabix_t *t)
 	return 0;
 }
 
-ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end)
+ti_iter_t ti_queryi(pairix_t *t, int tid, int beg, int end)
 {
         return ti_queryi_2d(t,tid,beg,end,-1,-1);
 }
 
-ti_iter_t ti_queryi_2d(tabix_t *t, int tid, int beg, int end, int beg2, int end2)
+ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2)
 {
 	if (tid < 0) return ti_iter_first();
 	if (ti_lazy_index_load(t) != 0) return 0;
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
-ti_iter_t ti_querys(tabix_t *t, const char *reg)
+ti_iter_t ti_querys(pairix_t *t, const char *reg)
 {
         return ti_querys_2d(t,reg);
 }
 
-ti_iter_t ti_querys_2d(tabix_t *t, const char *reg)
+ti_iter_t ti_querys_2d(pairix_t *t, const char *reg)
 {
 	int tid, beg, end, beg2, end2;
 	if (reg == 0) return ti_iter_first();
@@ -1132,7 +1132,7 @@ ti_iter_t ti_querys_2d(tabix_t *t, const char *reg)
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
-ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end)
+ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end)
 {
 	int tid;
 	if (name == 0) return ti_iter_first();
@@ -1142,7 +1142,7 @@ ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end)
 	return ti_iter_query(t->idx, tid, beg, end, -1, -1);
 }
 
-ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
+ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
 	int tid;
         char namepair[1000], *str_ptr;
@@ -1159,7 +1159,7 @@ ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
-const char *ti_read(tabix_t *t, ti_iter_t iter, int *len)
+const char *ti_read(pairix_t *t, ti_iter_t iter, int *len)
 {
 	return ti_iter_read(t->fp, iter, len);
 }

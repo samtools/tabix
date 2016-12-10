@@ -50,7 +50,7 @@ typedef struct {
 	BGZF *fp;
 	ti_index_t *idx;
 	char *fn, *fnidx;
-} tabix_t;
+} pairix_t;
 
 typedef struct {
 	int32_t preset;
@@ -76,16 +76,16 @@ extern "C" {
 	 * High-level APIs *
 	 *******************/
 
-	tabix_t *ti_open(const char *fn, const char *fnidx);
-	int ti_lazy_index_load(tabix_t *t);
-	void ti_close(tabix_t *t);
-	ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end);
-	ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end);
-	ti_iter_t ti_querys(tabix_t *t, const char *reg);
-	ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
-	ti_iter_t ti_queryi_2d(tabix_t *t, int tid, int beg, int end, int beg2, int end2);
-	ti_iter_t ti_querys_2d(tabix_t *t, const char *reg);
-	const char *ti_read(tabix_t *t, ti_iter_t iter, int *len);
+	pairix_t *ti_open(const char *fn, const char *fnidx);
+	int ti_lazy_index_load(pairix_t *t);
+	void ti_close(pairix_t *t);
+	ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end);
+	ti_iter_t ti_queryi(pairix_t *t, int tid, int beg, int end);
+	ti_iter_t ti_querys(pairix_t *t, const char *reg);
+	ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
+	ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
+	ti_iter_t ti_querys_2d(pairix_t *t, const char *reg);
+	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
 
 	/* Destroy the iterator */
 	void ti_iter_destroy(ti_iter_t iter);

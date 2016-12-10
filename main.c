@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 		return ti_index_build(argv[optind], &conf);
 	}
 	{ // retrieve
-		tabix_t *t;
+		pairix_t *t;
         // On some systems, stat on non-existent files returns undefined value for sm_mtime, the user had to use -f
         int is_remote = (strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx) ? 1 : 0;
         if ( !is_remote )

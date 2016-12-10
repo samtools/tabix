@@ -37,7 +37,7 @@ static PyObject *PairixError;
 
 typedef struct {
     PyObject_HEAD
-    tabix_t *tb;
+    pairix_t *tb;
     char *fn;
     PyObject *blocknames;
     int nblocks;
@@ -194,7 +194,7 @@ pairix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     PairixObject *self;
     const char *fn, *fnidx=NULL;
     static char *kwnames[]={"fn", "fnidx", NULL};
-    tabix_t *tb;
+    pairix_t *tb;
     char **blocknames;
     int i;
 
