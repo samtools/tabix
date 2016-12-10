@@ -10,7 +10,8 @@ R CMD SHLIB rpairix.c index.o bgzf.o --preclean
 ```
 
 ## Usage
-Functions `px_query` and `px_keylist` can be used on R. 
+Available R functions : `px_query`, `px_keylist`, `px_seqlist`, `px_seq1list`, `px_seq2list`
+
 ```
 source("rpairix.r")
 px_query(filename,querystr,max_mem=8000)
