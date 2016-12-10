@@ -230,7 +230,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 	if (ncols < conf->sc || ncols < conf->bc || ncols < conf->ec) {
 		if (ncols == 1) fprintf(stderr,"[get_intv] Is the file tab-delimited? The line has %d field only: %s\n", ncols, line);
 		else fprintf(stderr,"[get_intv] The line has %d field(s) only: %s\n", ncols, line);
-		exit(1);
+		return(1);
 	}
 */
 	if (intv->ss == 0 || intv->se == 0 || intv->beg < 0 || intv->end < 0 ) return -1;
@@ -386,19 +386,19 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
         if ( intv.beg<0 || intv.end<0 )
         {
             fprintf(stderr,"[ti_index_core] the indexes overlap or are out of bounds\n");
-            exit(1);
+            return(NULL);
         }
 		if (last_tid != intv.tid) { // change of chromosomes
             if (last_tid>intv.tid )
             {
                 fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted? [pos %d]\n",(unsigned long long)lineno,intv.beg+1);
-                exit(1);
+                return(NULL);
             }
 			last_tid = intv.tid;
 			last_bin = 0xffffffffu;
 		} else if (last_coor > intv.beg) {
 			fprintf(stderr, "[ti_index_core] the file out of order at line %llu\n", (unsigned long long)lineno);
-			exit(1);
+			return(NULL);
 		}
 		tmp = insert_offset2(&idx->index2[intv.tid], intv.beg, intv.end, last_off);
 		if (last_off == 0) offset0 = tmp;
@@ -413,7 +413,7 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 		if (bgzf_tell(fp) <= last_off) {
 			fprintf(stderr, "[ti_index_core] bug in BGZF: %llx < %llx\n",
 					(unsigned long long)bgzf_tell(fp), (unsigned long long)last_off);
-			exit(1);
+			return(NULL);
 		}
 		last_off = bgzf_tell(fp);
 		last_coor = intv.beg;
@@ -737,6 +737,7 @@ int ti_index_build2(const char *fn, const ti_conf_t *conf, const char *_fnidx)
 		return -1;
 	}
 	idx = ti_index_core(fp, conf);
+        if(!idx) return -1;
 	bgzf_close(fp);
 	if (_fnidx == 0) {
 		fnidx = (char*)calloc(strlen(fn) + 5, 1);
