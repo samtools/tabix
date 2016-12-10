@@ -1,0 +1,7 @@
+*.o
+*.a
+*.so
+bin/
+pypairix.egg-info/
+dist/
+build/

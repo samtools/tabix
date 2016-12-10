@@ -55,12 +55,15 @@ typedef struct {
 typedef struct {
 	int32_t preset;
 	int32_t sc, bc, ec; // seq col., beg col. and end col.
+	int32_t sc2, bc2, ec2; // seq col., beg col. and end col. for the second coordinate
 	int32_t meta_char, line_skip;
 } ti_conf_t;
 
 typedef struct {
 	int beg, end;
+	int beg2, end2;
 	char *ss, *se;
+	char *ss2, *se2;
 } ti_interval_t;
 
 extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
@@ -79,6 +82,9 @@ extern "C" {
 	ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end);
 	ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end);
 	ti_iter_t ti_querys(tabix_t *t, const char *reg);
+	ti_iter_t ti_query_2d(tabix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
+	ti_iter_t ti_queryi_2d(tabix_t *t, int tid, int beg, int end, int beg2, int end2);
+	ti_iter_t ti_querys_2d(tabix_t *t, const char *reg);
 	const char *ti_read(tabix_t *t, ti_iter_t iter, int *len);
 
 	/* Destroy the iterator */
@@ -111,6 +117,7 @@ extern "C" {
 
 	/* Parse a region like: chr2, chr2:100, chr2:100-200. Return -1 on failure. */
 	int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end);
+	int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2);
 
 	int ti_get_tid(const ti_index_t *idx, const char *name);
 

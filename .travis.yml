@@ -1,0 +1,7 @@
+language: c python 
+sudo: true
+compiler: gcc
+script: 
+ - make
+ - python setup.py install
+ - python test/test.py
