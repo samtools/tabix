@@ -5,7 +5,6 @@ R pairix is an R binder for pairix, which allows querying on pairix-indexed bgzi
 
 ## Installation
 ```
-make
 R CMD SHLIB rpairix.c index.o bgzf.o --preclean
 ```
 
