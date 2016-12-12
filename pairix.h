@@ -49,7 +49,7 @@ typedef struct __ti_iter_t *ti_iter_t;
 typedef struct {
 	BGZF *fp;
 	ti_index_t *idx;
-	char *fn, *fnidx;
+	char *fn, fnidx;
 } pairix_t;
 
 typedef struct {
@@ -65,6 +65,22 @@ typedef struct {
 	char *ss, *se;
 	char *ss2, *se2;
 } ti_interval_t;
+
+
+// The following two structs are for merging.
+typedef struct {
+    pairix_t *t;
+    ti_iter_t iter;
+    int *len;
+    char *s;  // This points to iter->str.s. It's redundant but it allows us to flush the string without touching iter->str.s itself.
+} iter_unit;
+    
+typedef struct {
+    iter_unit *iu; 
+    int n;
+    char first;
+} merged_iter_t;
+
 
 extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
 
@@ -86,9 +102,13 @@ extern "C" {
 	ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
 	ti_iter_t ti_querys_2d(pairix_t *t, const char *reg);
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
+        const char *merged_ti_read(merged_iter_t *miter, int *len);
+        int pairs_merger(char **fn, int n);
+        void stream_1d(char *fn);
 
 	/* Destroy the iterator */
 	void ti_iter_destroy(ti_iter_t iter);
+        void destroy_merged_iter(merged_iter_t *miter);
 
 	/* Get the list of sequence names. Each "char*" pointer points to a
 	 * internal member of the index, so DO NOT modify the returned
@@ -130,10 +150,15 @@ extern "C" {
 	ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int beg2, int end2);
 
 	/* Get the data line pointed by the iterator and iterate to the next record. */
-	const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len);
+	const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly);
 
 	const ti_conf_t *ti_get_conf(ti_index_t *idx);
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
+
+        merged_iter_t *create_merged_iter(int n);
+        void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu);
+        int compare_iter_unit (const void *a, const void *b);
+        int strcmp2(const void* a, const void* b);
 
 	/*******************
 	 * Deprecated APIs *

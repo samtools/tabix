@@ -56,6 +56,11 @@ typedef struct {
 	int tid, beg, end, bin, beg2, end2, bin2;
 } ti_intv_t;
 
+
+
+
+
+
 ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '#', 0 };
 ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '#', 0 };
 ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '#', 0 };
@@ -995,7 +1000,7 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int be
 }
 
 
-const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len)
+const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly)
 {
 	if (iter->finished) return 0;
 	if (iter->from_first) {
@@ -1025,7 +1030,12 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len)
 			iter->curr_off = bgzf_tell(fp);
 			if (iter->str.s[0] == iter->idx->conf.meta_char) continue;
 			get_intv((ti_index_t*)iter->idx, &iter->str, &intv);
-			if (intv.tid != iter->tid || intv.beg >= iter->end ) break; // no need to proceed
+                        if(seqonly) 
+                                if(intv.tid == iter->tid) { 
+                                      if (len) *len = iter->str.l;
+                                      return iter->str.s;  // compare only chromosome (chromosome pair) not position.
+                                } else break;
+			else if (intv.tid != iter->tid || intv.beg >= iter->end ) break; // no need to proceed
 			else if (intv.end > iter->beg && iter->end > intv.beg && ( iter->beg2==-1 || iter->end2==-1 || (intv.end2 > iter->beg2 && iter->end2 > intv.beg2) )) {
 				if (len) *len = iter->str.l;
 				return iter->str.s;
@@ -1050,7 +1060,7 @@ int ti_fetch(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, void *d
 	const char *s;
 	int len;
 	iter = ti_iter_query(idx, tid, beg, end, -1, -1);
-	while ((s = ti_iter_read(fp, iter, &len)) != 0)
+	while ((s = ti_iter_read(fp, iter, &len, 0)) != 0)
 		func(len, s, data);
 	ti_iter_destroy(iter);
 	return 0;
@@ -1062,7 +1072,7 @@ int ti_fetch_2d(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, int 
 	const char *s;
 	int len;
 	iter = ti_iter_query(idx, tid, beg, end, beg2, end2);
-	while ((s = ti_iter_read(fp, iter, &len)) != 0)
+	while ((s = ti_iter_read(fp, iter, &len, 0)) != 0)
 		func(len, s, data);
 	ti_iter_destroy(iter);
 	return 0;
@@ -1161,5 +1171,187 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 
 const char *ti_read(pairix_t *t, ti_iter_t iter, int *len)
 {
-	return ti_iter_read(t->fp, iter, len);
+	return ti_iter_read(t->fp, iter, len, 0);
 }
+
+
+// create an empty merged_iter_t struct with predefined length
+merged_iter_t *create_merged_iter(int n)
+{
+   int i;
+   merged_iter_t *miter;
+   miter->iu = malloc(n*sizeof(iter_unit));
+   miter->n = n;
+   miter->first=1;
+   return(miter);
+}
+
+void destroy_merged_iter(merged_iter_t *miter)
+{
+  int i;
+  for(i=0;i<miter->n;i++){
+    ti_iter_destroy(miter->iu[i].iter);
+    if(miter->iu[i].len != NULL ) free(miter->iu[i].len); 
+  }
+  free(miter->iu);
+}
+
+// fill in an iter_unit struct given a pointer
+void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
+{
+   iu->t=t; iu->iter=iter; iu->len=NULL; iu->s=NULL;
+}
+
+
+int compare_iter_unit (const void *a, const void *b)
+{
+  if (((iter_unit*)a)->s == NULL) {
+    if ((iter_unit*)b != NULL) return(1); // non-NULL iter should go before a NULL iter.
+    if ((iter_unit*)b == NULL) return(0);
+  } else {
+    int res = ((iter_unit*)a)->iter->beg - ((iter_unit*)b)->iter->beg;  // sort first by beg
+    if (res == 0 && ((iter_unit*)a)->iter->beg2 && ((iter_unit*)b)->iter->beg2) return ( ((iter_unit*)a)->iter->beg2 - ((iter_unit*)b)->iter->beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
+    else return (res); 
+  }
+}
+
+
+// read method for merged_iter
+const char *merged_ti_read(merged_iter_t *miter, int *len)
+{
+    iter_unit tmp_iu;
+    int i,k;
+    char *s;
+    char seqonly=1; // seqonly=1 forces ti_iter_read to only check tid not positions. (faster, given the position comparison is done within this function)
+
+    // initial sorting of the iterators based on their first entry
+    if (miter->first){
+      for(i=0;i<miter->n;i++) miter->iu[i].s = ti_iter_read(miter->iu[i].t, miter->iu[i].iter, miter->iu[i].len, seqonly); // get first entry for each iter
+      qsort(miter->iu, miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
+      miter->first=0;
+    }
+    else {
+      if(miter->iu[0].s==NULL) miter->iu[0].s = ti_iter_read(miter->iu[0].t, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
+   
+      // put it at the right place in the sorted iu array
+      k=0;
+      while( k < miter->n-1 && compare_iter_unit(miter->iu, miter->iu + (++k))>0 ) ;
+      if (k>1) {
+        tmp_iu = miter->iu[0];
+        for(i=1;i<=k;i++) miter->iu[i-1] = miter->iu[i];
+        miter->iu[k]= tmp_iu; 
+      }
+    }
+
+    // flush the lowest
+    s = miter->iu[0].s;
+    miter->iu[0].s=NULL;
+
+    len = miter->iu[0].len;
+    miter->iu[0].len=NULL;
+
+    return ( s );  // if s is null, iteration finishes.
+}
+
+
+int strcmp2(const void* a, const void* b)
+{
+    return strcmp(*(char**)a, *(char**)b);
+}
+
+// pairs merger - merge multiple 2D-sorted files into a merged, 2D-sorted stream 
+int pairs_merger(char **fn, int n)
+{
+    pairix_t *tbs[n];
+    int i,j,k, prev_i;
+    int len;
+    int n_seq_list =0, n_uniq_seq=0;
+    char **conc_seq_list=NULL,**uniq_seq_list=NULL;
+    char *s, **seqnames;
+
+    // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
+    fprintf(stderr,"Opening files...\n");
+    for(i=0;i<n;i++){
+      char *fnidx = calloc(strlen(fn[i]) + 5, 1);
+      strcat(strcpy(fnidx, fn[i]), ".px2");
+      tbs[i] = ti_open(fn[i], fnidx);
+      if(tbs[i]){
+         tbs[i]->idx = ti_index_load(fn[i]);
+         if(tbs[i]->idx) {
+            seqnames = ti_seqname(tbs[i]->idx,&len);
+            conc_seq_list = realloc(conc_seq_list, sizeof(char)*(n_seq_list+len));
+            for(k=0,j=n_seq_list;j<n_seq_list+len;j++,k++)
+              conc_seq_list[j] = seqnames[k];
+            n_seq_list += len;
+         } else { fprintf(stderr,"Cannot load index.\n"); return(-1); }
+      } else { 
+         for(j=0;j<i;j++) { ti_close(tbs[j]); fn[j]=NULL;}
+         free(fnidx); free(fn[i]); fn[i]=NULL;
+         if(conc_seq_list) {
+            for(j=0;j<i;j++) free(conc_seq_list[j]);
+            free(conc_seq_list);
+         }
+         fprintf(stderr,"Not all files can be open.\n");
+         return (-1);
+      }
+    }
+ 
+    for(i=0;i<n_seq_list;i++){
+      fprintf(stderr,"conc_seq_list[%d]=%s\n",i,conc_seq_list[i]);
+    }
+
+    // get a sorted unique seqname list
+    fprintf(stderr,"creating a sorted unique seqname list...\n");
+    if(conc_seq_list){
+      qsort(conc_seq_list, n_seq_list, sizeof(char*), strcmp2);
+      k=0; prev_i=0; 
+      for(i=1;i<n_seq_list;i++){
+        fprintf(stderr,"conc_seq_list[%d]=%s\n",i,conc_seq_list[i]);
+        fprintf(stderr,"conc_seq_list[%d]=%s\n",prev_i,conc_seq_list[prev_i]);
+        if ( strcmp(conc_seq_list[i], conc_seq_list[prev_i])==0) continue;
+        else {
+          fprintf(stderr,"haha\n"); 
+          k++;
+          prev_i=i;
+          fprintf(stderr,"haha\n"); 
+        }
+      }
+      n_uniq_seq=k;
+      fprintf(stderr,"(total %d unique seq names)\n",n_uniq_seq);
+      if( uniq_seq_list = malloc(n_uniq_seq*sizeof(char*)) ) {
+        k=0; prev_i=0; uniq_seq_list[0]=conc_seq_list[0];
+        for(i=1;i<n_seq_list;i++){
+          if ( strcmp(conc_seq_list[i], conc_seq_list[prev_i])==0) continue;
+          else {
+            uniq_seq_list[++k]=conc_seq_list[i]; 
+            prev_i=i;
+          }
+        }
+        free(conc_seq_list);
+      } else { free(conc_seq_list); fprintf(stderr, "Cannot allocate memory for unique_seq_list\n"); return(-1); }
+    } else { fprintf(stderr, "Cannot get seq list\n"); return(-1); }
+
+    // loop over the seq_list (chrpair list) and merge
+    fprintf(stderr,"Merging...\n");
+    for(i=0;i<n_uniq_seq;i++){
+      merged_iter_t *miter = create_merged_iter(n);
+      for(j=0;j<n;j++){
+         ti_iter_t iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
+         create_iter_unit(tbs[j],iter,miter->iu + j);
+      }
+      while ( s=merged_ti_read(miter,n) ) puts(s);
+      destroy_merged_iter(miter);      
+    }
+    for(i=0;i<n;i++) ti_close(tbs[i]);
+    return(0);
+}
+
+
+// Uc->Up converter - convert a single 2D-sorted file into a 1D-sorted stream.
+void stream_1d(char *fn)
+{
+
+
+}
+
+

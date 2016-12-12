@@ -8,7 +8,7 @@
 #include "pairix.h"
 #include "knetfile.h"
 
-#define PACKAGE_VERSION "0.2.5 (r1005)"
+#define PACKAGE_VERSION "0.0.1"
 
 #define error(...) { fprintf(stderr,__VA_ARGS__); return -1; }
 
@@ -134,9 +134,9 @@ int main(int argc, char *argv[])
         if(conf.bc2 && !conf.ec2) conf.ec2=conf.bc2;
 	if (optind == argc) {
 		fprintf(stderr, "\n");
-		fprintf(stderr, "Program: tabix (TAB-delimited file InderXer)\n");
+		fprintf(stderr, "Program: pairix (PAIRs file InderXer)\n");
 		fprintf(stderr, "Version: %s\n\n", PACKAGE_VERSION);
-		fprintf(stderr, "Usage:   tabix <in.tab.bgz> [region1 [region2 [...]]]\n\n");
+		fprintf(stderr, "Usage:   pairix <in.pairs.gz> [region1 [region2 [...]]]\n\n");
 		fprintf(stderr, "Options: -p STR     preset: gff, bed, sam, vcf, psltbl [gff]\n");
 		fprintf(stderr, "         -s INT     sequence name column [1]\n");
 		fprintf(stderr, "         -d INT     second sequence name column [null]\n");
