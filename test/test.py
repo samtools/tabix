@@ -20,7 +20,7 @@ import pypairix
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
-TEST_FILE_2D_SPACE = 'merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
+TEST_FILE_2D_SPACE = 'samples/merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
 
 def read_vcf(filename):
     """Read a VCF file and return a list of [chrom, start, end] items."""
