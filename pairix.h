@@ -96,6 +96,7 @@ extern "C" {
 	 * High-level APIs *
 	 *******************/
 
+        pairix_t *load_from_file(char *fn);
 	pairix_t *ti_open(const char *fn, const char *fnidx);
 	int ti_lazy_index_load(pairix_t *t);
 	void ti_close(pairix_t *t);
@@ -159,10 +160,17 @@ extern "C" {
 	const ti_conf_t *ti_get_conf(ti_index_t *idx);
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
+        /* create an empty merge_iter_t struct */
         merged_iter_t *create_merged_iter(int n);
+ 
+        /* fill in an existing (allocated) iter_unit struct from an iter struct */
         void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu);
+
         int compare_iter_unit (const void *a, const void *b);
         int strcmp2(const void* a, const void* b);
+        char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq);
+        char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq);
+
 
 	/*******************
 	 * Deprecated APIs *

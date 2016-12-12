@@ -1185,41 +1185,54 @@ merged_iter_t *create_merged_iter(int n)
 {
    int i;
    merged_iter_t *miter = malloc(sizeof(merged_iter_t));
-   miter->iu = calloc(n,sizeof(iter_unit));
-   miter->n = n;
-   miter->first=1;
-   return(miter);
+   if(miter){
+     if( miter->iu = calloc(n,sizeof(iter_unit))) {
+       miter->n = n;
+       miter->first=1;
+     } else { fprintf(stderr,"Cannot allocate memory for iter_unit array in merged_iter_t\n"); }
+     return(miter);
+   } else { 
+      fprintf(stderr,"Cannot allocate memory for merged_iter_t\n"); 
+      return(NULL); 
+   }
 }
 
 void destroy_merged_iter(merged_iter_t *miter)
 {
   int i;
-  for(i=0;i<miter->n;i++){
-    ti_iter_destroy(miter->iu[i].iter);
-    if(miter->iu[i].len) free(miter->iu[i].len); 
-    if(miter->iu[i].s) free(miter->iu[i].s); 
+  if(miter && miter->n>0 && miter->iu){
+    for(i=0;i<miter->n;i++){
+      ti_iter_destroy(miter->iu[i].iter);
+      if(miter->iu[i].len) free(miter->iu[i].len); 
+      if(miter->iu[i].s) free(miter->iu[i].s); 
+    }
+    free(miter->iu);
+    free(miter);
   }
-  free(miter->iu);
-  free(miter);
 }
 
 // fill in an iter_unit struct given a pointer
 void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 {
-   iu->t=t; iu->iter=iter; iu->len=NULL; iu->s=NULL;
+   if(iu){
+     iu->t=t; iu->iter=iter; iu->len=NULL; iu->s=NULL;
+   }
 }
 
 
 int compare_iter_unit (const void *a, const void *b)
 {
   if ((iter_unit*)a == NULL || ((iter_unit*)a)->s == NULL) {
+    fprintf(stderr,"haha");
     if ((iter_unit*)b == NULL) return(0);
     else if (((iter_unit*)b)->s == NULL) return(0);
     else return(1); // non-NULL iter should go before a NULL iter.
   } else if((iter_unit*)b == NULL || ((iter_unit*)b)->s == NULL) {
+    fprintf(stderr,"haha2");
     return(-1);
   } else {
     int res = ((iter_unit*)a)->iter->beg - ((iter_unit*)b)->iter->beg;  // sort first by beg
+    fprintf(stderr,"iter comparison, res=%d\n", res);
     if (res == 0 && ((iter_unit*)a)->iter->beg2 && ((iter_unit*)b)->iter->beg2) return ( ((iter_unit*)a)->iter->beg2 - ((iter_unit*)b)->iter->beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
     else return (res); 
   }
@@ -1234,10 +1247,24 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
     char *s;
     char seqonly=1; // seqonly=1 forces ti_iter_read to only check tid not positions. (faster, given the position comparison is done within this function)
 
+    if(!miter) { fprintf(stderr,"Null merged_iter_t\n"); return(NULL); }
+    if(miter->n<=0) { fprintf(stderr,"No iter_unit lement in merged_iter_t\n"); return(NULL); }
+
     // initial sorting of the iterators based on their first entry
-    if (miter->first){
-      for(i=0;i<miter->n;i++) { miter->iu[i].s = ti_iter_read(miter->iu[i].t, miter->iu[i].iter, miter->iu[i].len, seqonly); } // get first entry for each iter
-      qsort(miter->iu, miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
+    if (miter->first){ 
+      for(i=0;i<miter->n;i++) { 
+        fprintf(stderr,"i=%d, n=%d\n",i,miter->n);
+        if(miter->iu[i].t && miter->iu[i].iter){
+          miter->iu[i].s = ti_iter_read(miter->iu[i].t, miter->iu[i].iter, miter->iu[i].len, seqonly); 
+          fprintf(stderr,"miter->iu[i].s= %s\n",miter->iu[i].s);
+          fprintf(stderr,"miter->iu[i].len= %d\n",miter->iu[i].len);
+          fprintf(stderr,"miter->iu[i].iter->str.s = %s\n",miter->iu[i].iter->str.s);
+          fprintf(stderr,"miter->iu[i].iter->str.l = %d\n",miter->iu[i].iter->str.l);
+
+        } else { fprintf(stderr, "Null elements in merged_iter_t\n"); return(NULL); } 
+      } // get first entry for each iter
+      fprintf(stderr,"ready to sort\n");
+      qsort((void*)(miter->iu), miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
       miter->first=0;
     }
     else {
@@ -1269,26 +1296,28 @@ int strcmp2(const void* a, const void* b)
     return strcmp(*(char**)a, *(char**)b);
 }
 
-// pairs merger - merge multiple 2D-sorted files into a merged, 2D-sorted stream 
-int pairs_merger(char **fn, int n)
-{
-    pairix_t *tbs[n];
-    int i,j,k, prev_i;
-    int len, reslen;
-    int n_seq_list =0, n_uniq_seq=0;
-    char **conc_seq_list=NULL,**uniq_seq_list=NULL;
-    char *s=NULL, **seqnames=NULL;
 
-    // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
-    fprintf(stderr,"Opening files...\n");
-    for(i=0;i<n;i++){
-      char *fnidx = calloc(strlen(fn[i]) + 5, 1);
-      strcat(strcpy(fnidx, fn[i]), ".px2");
-      tbs[i] = ti_open(fn[i], fnidx);
+pairix_t *load_from_file(char *fn)
+{
+      char *fnidx = calloc(strlen(fn) + 5, 1);
+      strcat(strcpy(fnidx, fn), ".px2");
+      pairix_t *tb = ti_open(fn, fnidx);
       free(fnidx);
-      if(tbs[i]){
-         tbs[i]->idx = ti_index_load(fn[i]);
-         if(tbs[i]->idx) {
+      if(tb){
+         tb->idx = ti_index_load(fn);
+      } else return 0;
+      return(tb);
+}
+
+
+char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
+{
+     int i,j, k, len, n_seq_list=0;
+     char **conc_seq_list=NULL, **uniq_seq_list=NULL;
+     char **seqnames=NULL;
+     if(n<=0) { fprintf(stderr, "Null pairix_t array\n"); return(0); }
+     for(i=0;i<n;i++){
+      if(tbs[i] && tbs[i]->idx){
             seqnames = ti_seqname(tbs[i]->idx,&len);
             if(seqnames){
               conc_seq_list = realloc(conc_seq_list, sizeof(char*)*(n_seq_list+len));
@@ -1296,56 +1325,95 @@ int pairs_merger(char **fn, int n)
                 conc_seq_list[j] = seqnames[k];
               n_seq_list += len;
               free(seqnames);
-            }else { fprintf(stderr, "Cannot retrieve seqnames.\n"); return(-1); }
-         } else { fprintf(stderr,"Cannot load index.\n"); return(-1); }
-      } else { 
+            }else { fprintf(stderr, "Cannot retrieve seqnames.\n"); return(0); }
+      } else {
          for(j=0;j<i;j++) ti_close(tbs[j]);
          if(conc_seq_list) free(conc_seq_list);
          fprintf(stderr,"Not all files can be open.\n");
-         return (-1);
+         return (0);
       }
     }
- 
-    // get a sorted unique seqname list
-    fprintf(stderr,"creating a sorted unique seqname list...\n");
+
     if(conc_seq_list){
-      qsort(conc_seq_list, n_seq_list, sizeof(char*), strcmp2);
-      k=0; prev_i=0; 
+      uniq_seq_list = merge_seqlist_to_uniq(conc_seq_list,n_seq_list,pn_uniq_seq);
+      free(conc_seq_list);
+      return(uniq_seq_list);
+    } else { fprintf(stderr,"Null concatenated seq list\n"); return(0); }
+}
+
+char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
+{
+    int k,i,prev_i;
+    char **uniq_seq_list=NULL;
+  
+    fprintf(stderr,"(total %d seq names)\n",n_seq_list);
+    if(seq_list){
+      qsort(seq_list, n_seq_list, sizeof(char*), strcmp2);
+      fprintf(stderr,"seq_list[0]=%s\n",seq_list[0]);
+      k=0; prev_i=0;
       for(i=1;i<n_seq_list;i++){
-        if ( strcmp(conc_seq_list[i], conc_seq_list[prev_i])==0) continue;
+        if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;
         else {
           k++;
           prev_i=i;
         }
       }
-      n_uniq_seq=k;
-      fprintf(stderr,"(total %d unique seq names)\n",n_uniq_seq);
-      if( uniq_seq_list = malloc(n_uniq_seq*sizeof(char*)) ) {
-        k=0; prev_i=0; uniq_seq_list[0]=conc_seq_list[0];
+      *pn_uniq_seq=k+1;
+      fprintf(stderr,"(total %d unique seq names)\n",*pn_uniq_seq);
+      if( uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*)) ) {
+        k=0; prev_i=0; uniq_seq_list[0]=seq_list[0];
         for(i=1;i<n_seq_list;i++){
-          if ( strcmp(conc_seq_list[i], conc_seq_list[prev_i])==0) continue;
+          if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;
           else {
-            uniq_seq_list[++k]=conc_seq_list[i]; 
+            uniq_seq_list[++k]=seq_list[i];
             prev_i=i;
           }
         }
-        free(conc_seq_list);
-      } else { free(conc_seq_list); fprintf(stderr, "Cannot allocate memory for unique_seq_list\n"); return(-1); }
-    } else { fprintf(stderr, "Cannot get seq list\n"); return(-1); }
+        assert(k+1==*pn_uniq_seq);
+      } else { fprintf(stderr, "Cannot allocate memory for unique_seq_list\n"); return(0); }
+    } else { fprintf(stderr, "Null seq list\n"); return(0); } 
+
+    return(uniq_seq_list);
+}
+
+
+// pairs merger - merge multiple 2D-sorted files into a merged, 2D-sorted stream 
+int pairs_merger(char **fn, int n)
+{
+    pairix_t *tbs[n];
+    int i,j,k, prev_i;
+    int len, reslen;
+    int n_uniq_seq=0;
+    char **uniq_seq_list=NULL;
+    char *s=NULL;
+    merged_iter_t *miter=NULL;
+    ti_iter_t iter;
+
+    // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
+    fprintf(stderr,"Opening files...\n");
+    for(i=0;i<n;i++)  tbs[i] = load_from_file(fn[i]);
+
+    // get a sorted unique seqname list
+    fprintf(stderr,"creating a sorted unique seqname list...\n");
+    uniq_seq_list = get_unique_merged_seqname(tbs, n, &n_uniq_seq);
 
     // loop over the seq_list (chrpair list) and merge
-    fprintf(stderr,"Merging...\n");
-    for(i=0;i<n_uniq_seq;i++){
-      merged_iter_t *miter = create_merged_iter(n);
-      for(j=0;j<n;j++){
-         ti_iter_t iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
-         create_iter_unit(tbs[j], iter, miter->iu + j);
+    if(uniq_seq_list){
+      fprintf(stderr,"Merging...\n");
+      fprintf(stderr,"n_uniq_seq=%d\n",n_uniq_seq);
+      for(i=0;i<n_uniq_seq;i++){
+        miter = create_merged_iter(n);
+        for(j=0;j<n;j++){
+           iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
+           create_iter_unit(tbs[j], iter, miter->iu + j);
+        }
+        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+        destroy_merged_iter(miter); miter=NULL;     
       }
-      while ( s=merged_ti_read(miter,&reslen) ) puts(s);
-      destroy_merged_iter(miter); miter=NULL;     
-    }
-    for(i=0;i<n;i++) ti_close(tbs[i]);
-    return(0);
+      for(i=0;i<n;i++) ti_close(tbs[i]);
+      free(uniq_seq_list);
+      return(0);
+    } else { fprintf(stderr,"Null unique seq list\n"); return(0); }
 }
 
 
