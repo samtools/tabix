@@ -38,21 +38,23 @@ KHASH_MAP_INIT_INT(i, ti_binlist_t)
 KHASH_MAP_INIT_STR(s, int)
 
 struct __ti_index_t {
-	ti_conf_t conf;
-	int32_t n, max;
-	khash_t(s) *tname;
-	khash_t(i) **index;
-	ti_lidx_t *index2;
+        ti_conf_t conf;
+        int32_t n, max;
+        khash_t(s) *tname;
+        khash_t(i) **index;
+        ti_lidx_t *index2;
 };
 
 struct __ti_iter_t {
-	int from_first; // read from the first record; no random access
-	int tid, beg, end, beg2, end2, n_off, i, finished;
-	uint64_t curr_off;
-	kstring_t str;
-	const ti_index_t *idx;
-	pair64_t *off;
+        int from_first; // read from the first record; no random access
+        int tid, beg, end, beg2, end2, n_off, i, finished;
+        uint64_t curr_off;
+        kstring_t str;
+        const ti_index_t *idx;
+        pair64_t *off;
 };
+
+
 
 typedef struct {
 	int tid, beg, end, bin, beg2, end2, bin2;

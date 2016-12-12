@@ -8,7 +8,7 @@
 #include "pairix.h"
 #include "knetfile.h"
 
-#define PACKAGE_VERSION "0.2.5 (r1005)"
+#define PACKAGE_VERSION "0.0.1"
 
 #define error(...) { fprintf(stderr,__VA_ARGS__); return -1; }
 
@@ -98,9 +98,11 @@ int reheader_file(const char *header, const char *file, int meta)
 int main(int argc, char *argv[])
 {
     int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0;
-	ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
+    ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
     const char *reheader = NULL;
-	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:d:u:v:")) >= 0) {
+    char delimiter = 0;
+
+    while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:d:u:v:T")) >= 0) {
 		switch (c) {
 		case 'B': bed_reg = 1; break;
 		case 'C': bed_comp = bed_reg = 1; break;
@@ -124,6 +126,7 @@ int main(int argc, char *argv[])
 		case 'e': conf.ec = atoi(optarg); break;
 		case 'u': conf.bc2 = atoi(optarg); break;
 		case 'v': conf.ec2 = atoi(optarg); break;
+                case 'T': delimiter=' '; break;
         case 'l': list_chrms = 1; break;
         case 'h': print_header = 1; break;
         case 'H': print_only_header = 1; break;
@@ -134,9 +137,9 @@ int main(int argc, char *argv[])
         if(conf.bc2 && !conf.ec2) conf.ec2=conf.bc2;
 	if (optind == argc) {
 		fprintf(stderr, "\n");
-		fprintf(stderr, "Program: tabix (TAB-delimited file InderXer)\n");
+		fprintf(stderr, "Program: pairix (PAIRs file InderXer)\n");
 		fprintf(stderr, "Version: %s\n\n", PACKAGE_VERSION);
-		fprintf(stderr, "Usage:   tabix <in.tab.bgz> [region1 [region2 [...]]]\n\n");
+		fprintf(stderr, "Usage:   pairix <in.pairs.gz> [region1 [region2 [...]]]\n\n");
 		fprintf(stderr, "Options: -p STR     preset: gff, bed, sam, vcf, psltbl [gff]\n");
 		fprintf(stderr, "         -s INT     sequence name column [1]\n");
 		fprintf(stderr, "         -d INT     second sequence name column [null]\n");
@@ -144,6 +147,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "         -e INT     end1 column; can be identical to '-b' [5]\n");
 		fprintf(stderr, "         -u INT     start2 column [null]\n");
 		fprintf(stderr, "         -v INT     end2 column; can be identical to '-u' [null or identical to the start2 specified by -u]\n");
+		fprintf(stderr, "         -T         delimiter is space instead of tab.\n");
 		fprintf(stderr, "         -S INT     skip first INT lines [0]\n");
 		fprintf(stderr, "         -c CHAR    symbol for comment/meta lines [#]\n");
 	    fprintf(stderr, "         -r FILE    replace the header with the content of FILE [null]\n");
@@ -169,8 +173,9 @@ int main(int argc, char *argv[])
     if ( conf_ptr )
         conf = *conf_ptr;
 
-	if (skip >= 0) conf.line_skip = skip;
-	if (meta >= 0) conf.meta_char = meta;
+    if (skip >= 0) conf.line_skip = skip;
+    if (meta >= 0) conf.meta_char = meta;
+    if (delimiter) conf.delimiter = delimiter;
     if (list_chrms) {
 		ti_index_t *idx;
 		int i, n;

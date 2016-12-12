@@ -49,7 +49,7 @@ typedef struct __ti_iter_t *ti_iter_t;
 typedef struct {
 	BGZF *fp;
 	ti_index_t *idx;
-	char *fn, fnidx;
+	char *fn, *fnidx;
 } pairix_t;
 
 typedef struct {
@@ -66,6 +66,9 @@ typedef struct {
 	char *ss, *se;
 	char *ss2, *se2;
 } ti_interval_t;
+
+
+
 
 
 // The following two structs are for merging.

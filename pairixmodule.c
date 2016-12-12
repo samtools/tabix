@@ -96,7 +96,7 @@ pairixiter_iternext(PairixIteratorObject *self)
 {
     const char *chunk;
     int len, i;
-    char delimiter = self->tbobj->tb->idx->conf->delimiter;
+    char delimiter = ti_get_conf(self->tbobj->tb->idx)->delimiter;
 
     chunk = ti_read(self->tbobj->tb, self->iter, &len);
 
