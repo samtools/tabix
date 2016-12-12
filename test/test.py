@@ -147,7 +147,7 @@ class TabixTest2DSpace(unittest.TestCase):
     start2 = 50000000
     end2 = 60000000
     result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
-    pr = pypairix.open(TEST_FILE_2D)
+    pr = pypairix.open(TEST_FILE_2D_SPACE)
 
     def test_query2(self):
         it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
@@ -166,6 +166,7 @@ class TabixTestBlocknames(unittest.TestCase):
 
     def test_blocknames(self):
       print (str(self.pr.get_blocknames()))
+
 
 if __name__ == '__main__':
     unittest.main()
