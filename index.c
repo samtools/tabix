@@ -1334,7 +1334,6 @@ int pairs_merger(char **fn, int n)
     // loop over the seq_list (chrpair list) and merge
     fprintf(stderr,"Merging...\n");
     for(i=0;i<n_uniq_seq;i++){
-      fprintf(stderr,"uniq_seq[%d]=%s\n",i,uniq_seq_list[i]);
       merged_iter_t *miter = create_merged_iter(n);
       for(j=0;j<n;j++){
          ti_iter_t iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
