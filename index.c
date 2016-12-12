@@ -14,6 +14,8 @@
 // 1<<14 is the size of minimum bin.
 #define TAD_LIDX_SHIFT    14
 #define REGION_SPLIT_CHARACTER   '|'
+#define DEFAULT_DELIMITER '\t'
+
 
 typedef struct {
 	uint64_t u, v;
@@ -57,15 +59,11 @@ typedef struct {
 } ti_intv_t;
 
 
-
-
-
-
-ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '#', 0 };
-ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '#', 0 };
-ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '#', 0 };
-ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '@', 0 };
-ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '#', 0 };
+ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '\t', '#', 0 };
+ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', '#', 0 };
+ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', '#', 0 };
+ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '\t', '@', 0 };
+ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '\t', '#', 0 };
 
 /***************
  * read a line *
@@ -137,7 +135,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 	char *s;
 	intv->ss = intv->se = 0; intv->ss2 = intv->se2 = 0; intv->beg = intv->end = -1; intv->beg2 = intv->end2 = -1;
 	for (i = 0; i <= len; ++i) {
-		if (line[i] == '\t' || line[i] == 0) {
+		if (line[i] == conf->delimiter || line[i] == 0) {
             ++ncols;
 			if (id == conf->sc) {
 				intv->ss = line + b; intv->se = line + i;
@@ -477,10 +475,10 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
 	} else bgzf_write(fp, &idx->n, 4);
-	assert(sizeof(ti_conf_t) == 36);
+	assert(sizeof(ti_conf_t) == 40);
 	if (ti_is_be) { // write ti_conf_t;
 		uint32_t x[6];
-		memcpy(x, &idx->conf, 36);
+		memcpy(x, &idx->conf, 40);
 		for (i = 0; i < 6; ++i) bgzf_write(fp, bam_swap_endian_4p(&x[i]), 4);
 	} else bgzf_write(fp, &idx->conf, sizeof(ti_conf_t));
 	{ // write target names
@@ -574,6 +572,10 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 		bam_swap_endian_4p(&idx->conf.sc);
 		bam_swap_endian_4p(&idx->conf.bc);
 		bam_swap_endian_4p(&idx->conf.ec);
+		bam_swap_endian_4p(&idx->conf.sc2);
+		bam_swap_endian_4p(&idx->conf.bc2);
+		bam_swap_endian_4p(&idx->conf.ec2);
+		bam_swap_endian_4p(&idx->conf.delimiter);
 		bam_swap_endian_4p(&idx->conf.meta_char);
 		bam_swap_endian_4p(&idx->conf.line_skip);
 	}
@@ -1002,6 +1004,7 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int be
 
 const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly)
 {
+        if (!iter) return 0;
 	if (iter->finished) return 0;
 	if (iter->from_first) {
 		int ret;
@@ -1179,8 +1182,8 @@ const char *ti_read(pairix_t *t, ti_iter_t iter, int *len)
 merged_iter_t *create_merged_iter(int n)
 {
    int i;
-   merged_iter_t *miter;
-   miter->iu = malloc(n*sizeof(iter_unit));
+   merged_iter_t *miter = malloc(sizeof(merged_iter_t));
+   miter->iu = calloc(n,sizeof(iter_unit));
    miter->n = n;
    miter->first=1;
    return(miter);
@@ -1191,9 +1194,11 @@ void destroy_merged_iter(merged_iter_t *miter)
   int i;
   for(i=0;i<miter->n;i++){
     ti_iter_destroy(miter->iu[i].iter);
-    if(miter->iu[i].len != NULL ) free(miter->iu[i].len); 
+    if(miter->iu[i].len) free(miter->iu[i].len); 
+    if(miter->iu[i].s) free(miter->iu[i].s); 
   }
   free(miter->iu);
+  free(miter);
 }
 
 // fill in an iter_unit struct given a pointer
@@ -1205,9 +1210,12 @@ void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 
 int compare_iter_unit (const void *a, const void *b)
 {
-  if (((iter_unit*)a)->s == NULL) {
-    if ((iter_unit*)b != NULL) return(1); // non-NULL iter should go before a NULL iter.
+  if ((iter_unit*)a == NULL || ((iter_unit*)a)->s == NULL) {
     if ((iter_unit*)b == NULL) return(0);
+    else if (((iter_unit*)b)->s == NULL) return(0);
+    else return(1); // non-NULL iter should go before a NULL iter.
+  } else if((iter_unit*)b == NULL || ((iter_unit*)b)->s == NULL) {
+    return(-1);
   } else {
     int res = ((iter_unit*)a)->iter->beg - ((iter_unit*)b)->iter->beg;  // sort first by beg
     if (res == 0 && ((iter_unit*)a)->iter->beg2 && ((iter_unit*)b)->iter->beg2) return ( ((iter_unit*)a)->iter->beg2 - ((iter_unit*)b)->iter->beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
@@ -1226,7 +1234,7 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
 
     // initial sorting of the iterators based on their first entry
     if (miter->first){
-      for(i=0;i<miter->n;i++) miter->iu[i].s = ti_iter_read(miter->iu[i].t, miter->iu[i].iter, miter->iu[i].len, seqonly); // get first entry for each iter
+      for(i=0;i<miter->n;i++) { miter->iu[i].s = ti_iter_read(miter->iu[i].t, miter->iu[i].iter, miter->iu[i].len, seqonly); } // get first entry for each iter
       qsort(miter->iu, miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
       miter->first=0;
     }
@@ -1247,7 +1255,7 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
     s = miter->iu[0].s;
     miter->iu[0].s=NULL;
 
-    len = miter->iu[0].len;
+    *len = *(miter->iu[0].len);
     miter->iu[0].len=NULL;
 
     return ( s );  // if s is null, iteration finishes.
@@ -1264,10 +1272,10 @@ int pairs_merger(char **fn, int n)
 {
     pairix_t *tbs[n];
     int i,j,k, prev_i;
-    int len;
+    int len, reslen;
     int n_seq_list =0, n_uniq_seq=0;
     char **conc_seq_list=NULL,**uniq_seq_list=NULL;
-    char *s, **seqnames;
+    char *s=NULL, **seqnames=NULL;
 
     // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
     fprintf(stderr,"Opening files...\n");
@@ -1275,45 +1283,37 @@ int pairs_merger(char **fn, int n)
       char *fnidx = calloc(strlen(fn[i]) + 5, 1);
       strcat(strcpy(fnidx, fn[i]), ".px2");
       tbs[i] = ti_open(fn[i], fnidx);
+      free(fnidx);
       if(tbs[i]){
          tbs[i]->idx = ti_index_load(fn[i]);
          if(tbs[i]->idx) {
             seqnames = ti_seqname(tbs[i]->idx,&len);
-            conc_seq_list = realloc(conc_seq_list, sizeof(char)*(n_seq_list+len));
-            for(k=0,j=n_seq_list;j<n_seq_list+len;j++,k++)
-              conc_seq_list[j] = seqnames[k];
-            n_seq_list += len;
+            if(seqnames){
+              conc_seq_list = realloc(conc_seq_list, sizeof(char*)*(n_seq_list+len));
+              for(k=0,j=n_seq_list;j<n_seq_list+len;j++,k++)
+                conc_seq_list[j] = seqnames[k];
+              n_seq_list += len;
+              free(seqnames);
+            }else { fprintf(stderr, "Cannot retrieve seqnames.\n"); return(-1); }
          } else { fprintf(stderr,"Cannot load index.\n"); return(-1); }
       } else { 
-         for(j=0;j<i;j++) { ti_close(tbs[j]); fn[j]=NULL;}
-         free(fnidx); free(fn[i]); fn[i]=NULL;
-         if(conc_seq_list) {
-            for(j=0;j<i;j++) free(conc_seq_list[j]);
-            free(conc_seq_list);
-         }
+         for(j=0;j<i;j++) ti_close(tbs[j]);
+         if(conc_seq_list) free(conc_seq_list);
          fprintf(stderr,"Not all files can be open.\n");
          return (-1);
       }
     }
  
-    for(i=0;i<n_seq_list;i++){
-      fprintf(stderr,"conc_seq_list[%d]=%s\n",i,conc_seq_list[i]);
-    }
-
     // get a sorted unique seqname list
     fprintf(stderr,"creating a sorted unique seqname list...\n");
     if(conc_seq_list){
       qsort(conc_seq_list, n_seq_list, sizeof(char*), strcmp2);
       k=0; prev_i=0; 
       for(i=1;i<n_seq_list;i++){
-        fprintf(stderr,"conc_seq_list[%d]=%s\n",i,conc_seq_list[i]);
-        fprintf(stderr,"conc_seq_list[%d]=%s\n",prev_i,conc_seq_list[prev_i]);
         if ( strcmp(conc_seq_list[i], conc_seq_list[prev_i])==0) continue;
         else {
-          fprintf(stderr,"haha\n"); 
           k++;
           prev_i=i;
-          fprintf(stderr,"haha\n"); 
         }
       }
       n_uniq_seq=k;
@@ -1334,13 +1334,14 @@ int pairs_merger(char **fn, int n)
     // loop over the seq_list (chrpair list) and merge
     fprintf(stderr,"Merging...\n");
     for(i=0;i<n_uniq_seq;i++){
+      fprintf(stderr,"uniq_seq[%d]=%s\n",i,uniq_seq_list[i]);
       merged_iter_t *miter = create_merged_iter(n);
       for(j=0;j<n;j++){
          ti_iter_t iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
-         create_iter_unit(tbs[j],iter,miter->iu + j);
+         create_iter_unit(tbs[j], iter, miter->iu + j);
       }
-      while ( s=merged_ti_read(miter,n) ) puts(s);
-      destroy_merged_iter(miter);      
+      while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+      destroy_merged_iter(miter); miter=NULL;     
     }
     for(i=0;i<n;i++) ti_close(tbs[i]);
     return(0);

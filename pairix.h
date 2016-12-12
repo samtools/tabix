@@ -56,8 +56,9 @@ typedef struct {
 	int32_t preset;
 	int32_t sc, bc, ec; // seq col., beg col. and end col.
 	int32_t sc2, bc2, ec2; // seq col., beg col. and end col. for the second coordinate
+        char delimiter;  // 1 byte for char, but 3 bytes padded so that integers are aligned by 4 bytes.
 	int32_t meta_char, line_skip;
-} ti_conf_t;
+} ti_conf_t;  // size 40.
 
 typedef struct {
 	int beg, end;

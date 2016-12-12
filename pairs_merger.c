@@ -31,6 +31,9 @@ int main(int argc, char *argv[])
     }
     int res = pairs_merger(fn_list,num_fn);
 
+    for(i=0;i<num_fn;i++) {
+       free(fn_list[i]);
+    }
     return(res);
 }
 

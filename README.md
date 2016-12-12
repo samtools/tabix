@@ -32,7 +32,8 @@ make
 bgzip textfile
 
 # indexing
-pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_column> [-u<pos2_start_column> -v<pos2_end_column>] textfile.gz    # u, v is required for full 2d query.
+pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_column> [-u<pos2_start_column> -v<pos2_end_column>] [-T] textfile.gz    # u, v is required for full 2d query.
+# use -T option for a space-delimited file.
 
 # querying
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
@@ -93,6 +94,13 @@ pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '1:1-10000000|20:50000000
 0	3	7272964	17297	0	X	88560374	211726
 16	3	8402388	19935	16	X	77717595	187377
 ```
+
+#### 2D indexing & query on a space-delimited file
+The -T option is for space-delimited files.
+```
+pairix -T -f -s2 -d6 -b3 -e3 -u7 samples/merged_nodups.space.chrblock_sorted.subsample1.txt.gz
+```
+Query commands are the same as above (no need to use -T option for query).
 
 
 #### 1D indexing on a regular vcf file, bgzipped.
