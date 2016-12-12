@@ -96,6 +96,7 @@ pairixiter_iternext(PairixIteratorObject *self)
 {
     const char *chunk;
     int len, i;
+    char delimiter = self->tbobj->tb->idx->conf->delimiter;
 
     chunk = ti_read(self->tbobj->tb, self->iter, &len);
 
@@ -111,7 +112,7 @@ pairixiter_iternext(PairixIteratorObject *self)
         colidx = 0;
         ptr = begin = chunk;
         for (i = len; i > 0; i--, ptr++)
-            if (*ptr == '\t') {
+            if (*ptr == delimiter) {
                 column = PYOBJECT_FROM_STRING_AND_SIZE(begin,
                                                        (Py_ssize_t)(ptr - begin));
                 if (column == NULL || PyList_Append(ret, column) == -1) {

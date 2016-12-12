@@ -20,7 +20,7 @@ import pypairix
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
-
+TEST_FILE_2D_SPACE = 'merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
 
 def read_vcf(filename):
     """Read a VCF file and return a list of [chrom, start, end] items."""
@@ -38,7 +38,7 @@ def read_vcf(filename):
     return retval
 
 
-def read_pairs(filename):
+def read_pairs(filename, delimiter='\t'):
     """Read a pairs file and return a list of [chrom1, start1, end1, chrom2, start2, end2] items."""
     retval = []
     for line in gzip.open(filename):
@@ -46,7 +46,7 @@ def read_pairs(filename):
             line = line.decode('utf-8')
         except AttributeError:
             pass
-        fields = line.rstrip().split('\t')
+        fields = line.rstrip().split(delimiter)
         chrom1 = fields[1]
         start1 = fields[2]
         chrom2 = fields[5]
@@ -116,6 +116,30 @@ class TabixTest_2(unittest.TestCase):
 ## 2D query on 2D indexed file
 class TabixTest2D(unittest.TestCase):
     regions = read_pairs(TEST_FILE_2D)
+    chrom = '10'
+    start = 1
+    end = 1000000
+    chrom2 = '20'
+    start2 = 50000000
+    end2 = 60000000
+    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
+    pr = pypairix.open(TEST_FILE_2D)
+
+    def test_query2(self):
+        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        self.assertEqual(self.result, pr_result)
+
+    def test_querys_2(self):
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it = self.pr.querys2D(query)
+        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        self.assertEqual(self.result, pr_result)
+
+
+## 2D query on 2D indexed space-delimited file
+class TabixTest2DSpace(unittest.TestCase):
+    regions = read_pairs(TEST_FILE_2D_SPACE, ' ')
     chrom = '10'
     start = 1
     end = 1000000
