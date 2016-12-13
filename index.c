@@ -56,9 +56,6 @@ struct __ti_iter_t {
 
 
 
-typedef struct {
-	int tid, beg, end, bin, beg2, end2, bin2;
-} ti_intv_t;
 
 
 ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '\t', '#', 0 };
@@ -1018,11 +1015,10 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly)
 			if (len) *len = iter->str.l;
 			return iter->str.s;
 		}
-                fprintf(stderr,"str=%s,len=%l\n",iter->str.s,iter->str.l);
+                fprintf(stderr,"str=%s,len=%d\n",iter->str.s,iter->str.l);
 	}
 	if (iter->n_off == 0) {fprintf(stderr,"n_off=0\n"); return 0;}
 	while (1) {
-                fprintf(stderr,"here-start\n");
 		int ret;
 		if (iter->curr_off == 0 || iter->curr_off >= iter->off[iter->i].v) { // then jump to the next chunk
 			if (iter->i == iter->n_off - 1) break; // no more chunks
@@ -1186,7 +1182,6 @@ const char *ti_read(pairix_t *t, ti_iter_t iter, int *len)
 // create an empty merged_iter_t struct with predefined length
 merged_iter_t *create_merged_iter(int n)
 {
-   int i;
    merged_iter_t *miter = malloc(sizeof(merged_iter_t));
    if(miter){
      if( miter->iu = calloc(n,sizeof(iter_unit))) {
@@ -1208,6 +1203,7 @@ void destroy_merged_iter(merged_iter_t *miter)
       ti_iter_destroy(miter->iu[i].iter);
       if(miter->iu[i].len) free(miter->iu[i].len); 
       if(miter->iu[i].s) free(miter->iu[i].s); 
+      if(miter->iu[i].intv) free(miter->iu[i].intv); 
     }
     free(miter->iu);
     free(miter);
@@ -1218,7 +1214,8 @@ void destroy_merged_iter(merged_iter_t *miter)
 void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 {
    if(iu){
-     iu->t=t; iu->iter=iter; iu->len=NULL; iu->s=NULL;
+     iu->t=t; iu->iter=iter; iu->len=malloc(sizeof(int)); iu->s=NULL;
+     iu->intv = malloc(sizeof(ti_intv_t));
    }
 }
 
@@ -1226,18 +1223,17 @@ void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 int compare_iter_unit (const void *a, const void *b)
 {
   if ((iter_unit*)a == NULL || ((iter_unit*)a)->s == NULL) {
-    fprintf(stderr,"haha");
     if ((iter_unit*)b == NULL) return(0);
     else if (((iter_unit*)b)->s == NULL) return(0);
     else return(1); // non-NULL iter should go before a NULL iter.
   } else if((iter_unit*)b == NULL || ((iter_unit*)b)->s == NULL) {
-    fprintf(stderr,"haha2");
     return(-1);
   } else {
-    int res = ((iter_unit*)a)->iter->beg - ((iter_unit*)b)->iter->beg;  // sort first by beg
-    fprintf(stderr,"iter comparison, res=%d\n", res);
-    if (res == 0 && ((iter_unit*)a)->iter->beg2 && ((iter_unit*)b)->iter->beg2) return ( ((iter_unit*)a)->iter->beg2 - ((iter_unit*)b)->iter->beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
-    else return (res); 
+    if( ((iter_unit*)a)->intv && ((iter_unit*)b)->intv) {
+       int res = ((iter_unit*)a)->intv->beg - ((iter_unit*)b)->intv->beg;  // sort first by beg
+       if (res == 0 && ((iter_unit*)a)->intv->beg2 && ((iter_unit*)b)->intv->beg2) return ( ((iter_unit*)a)->intv->beg2 - ((iter_unit*)b)->intv->beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
+       else return (res); 
+    } else { fprintf(stderr,"Error in getting interval\n"); return(0); }
   }
 }
 
@@ -1257,10 +1253,11 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
     if (miter->first){ 
       for(i=0;i<miter->n;i++) { 
         fprintf(stderr,"i=%d, n=%d\n",i,miter->n);
-        if(miter->iu[i].t && miter->iu[i].iter){
-          miter->iu[i].s = ti_iter_read(miter->iu[i].t, miter->iu[i].iter, miter->iu[i].len, seqonly); 
+        if(miter->iu[i].t && miter->iu[i].iter && miter->iu[i].t->fp){
+          miter->iu[i].s = ti_iter_read(miter->iu[i].t->fp, miter->iu[i].iter, miter->iu[i].len, seqonly); 
+          get_intv(miter->iu[i].t->idx, &(miter->iu[i].iter->str), miter->iu[i].intv);
           fprintf(stderr,"miter->iu[i].s= %s\n",miter->iu[i].s);
-          fprintf(stderr,"miter->iu[i].len= %d\n",miter->iu[i].len);
+          fprintf(stderr,"miter->iu[i].len= %d\n",*(miter->iu[i].len));
           fprintf(stderr,"miter->iu[i].iter->str.s = %s\n",miter->iu[i].iter->str.s);
           fprintf(stderr,"miter->iu[i].iter->str.l = %d\n",miter->iu[i].iter->str.l);
 
@@ -1271,15 +1268,20 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
       miter->first=0;
     }
     else {
-      if(miter->iu[0].s==NULL) miter->iu[0].s = ti_iter_read(miter->iu[0].t, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
-   
+      if(miter->iu[0].s==NULL) {
+          miter->iu[0].s = ti_iter_read(miter->iu[0].t->fp, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
+          get_intv(miter->iu[0].t->idx, &(miter->iu[0].iter->str), miter->iu[0].intv);
+      }
+
       // put it at the right place in the sorted iu array
       k=0;
-      while( k < miter->n-1 && compare_iter_unit(miter->iu, miter->iu + (++k))>0 ) ;
+      while( k < miter->n-1 && compare_iter_unit((void*)(miter->iu), (void*)(miter->iu + (++k))) >0 ) ;
       if (k>1) {
         tmp_iu = miter->iu[0];
+        fprintf(stderr,"tmp_iu.s=%s, miter->iu[0]=%s\n",tmp_iu.s,miter->iu[0]);
         for(i=1;i<=k;i++) miter->iu[i-1] = miter->iu[i];
         miter->iu[k]= tmp_iu; 
+        fprintf(stderr,"tmp_iu.s=%s, miter->iu[k]=%s\n",tmp_iu.s,miter->iu[k]);
       }
     }
 
@@ -1384,8 +1386,8 @@ char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
 int pairs_merger(char **fn, int n)
 {
     pairix_t *tbs[n];
-    int i,j,k, prev_i;
-    int len, reslen;
+    int i,j;
+    int reslen;
     int n_uniq_seq=0;
     char **uniq_seq_list=NULL;
     char *s=NULL;

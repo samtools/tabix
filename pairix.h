@@ -67,23 +67,24 @@ typedef struct {
 	char *ss2, *se2;
 } ti_interval_t;
 
+typedef struct {
+        int tid, beg, end, bin, beg2, end2, bin2;
+} ti_intv_t;
 
-
-
-
-// The following two structs are for merging.
 typedef struct {
     pairix_t *t;
     ti_iter_t iter;
+    ti_intv_t *intv;
     int *len;
     char *s;  // This points to iter->str.s. It's redundant but it allows us to flush the string without touching iter->str.s itself.
 } iter_unit;
-    
+
 typedef struct {
-    iter_unit *iu; 
+    iter_unit *iu;
     int n;
     char first;
 } merged_iter_t;
+
 
 
 extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
