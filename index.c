@@ -1006,9 +1006,10 @@ ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int be
 
 const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly)
 {
-        if (!iter) return 0;
-	if (iter->finished) return 0;
+        if (!iter) {fprintf(stderr,"no iter\n"); return 0;}
+	if (iter->finished) {fprintf(stderr,"finished\n");return 0;}
 	if (iter->from_first) {
+                fprintf(stderr,"First\n"); 
 		int ret;
 		if ((ret = ti_readline(fp, &iter->str)) < 0) {
 			iter->finished = 1;
@@ -1017,9 +1018,11 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly)
 			if (len) *len = iter->str.l;
 			return iter->str.s;
 		}
+                fprintf(stderr,"str=%s,len=%l\n",iter->str.s,iter->str.l);
 	}
-	if (iter->n_off == 0) return 0;
+	if (iter->n_off == 0) {fprintf(stderr,"n_off=0\n"); return 0;}
 	while (1) {
+                fprintf(stderr,"here-start\n");
 		int ret;
 		if (iter->curr_off == 0 || iter->curr_off >= iter->off[iter->i].v) { // then jump to the next chunk
 			if (iter->i == iter->n_off - 1) break; // no more chunks
