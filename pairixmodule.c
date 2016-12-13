@@ -249,7 +249,7 @@ pairix_query(PairixObject *self, PyObject *args)
 
     result = ti_query(self->tb, name, begin, end);
     if (result == NULL) {
-        PyErr_SetString(PairixError, "query failed");
+        //PyErr_SetString(PairixError, "query failed");
         return NULL;
     }
 
