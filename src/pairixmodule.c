@@ -241,11 +241,27 @@ static PyObject *
 pairix_query(PairixObject *self, PyObject *args)
 {
     char *name;
-    int begin, end;
+    int begin, end, tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end))
+    if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end)){
+        PyErr_SetString(PairixError, "Argument error! query() takes the following args: <chromosome (str)> <begin (int)> <end (int)>");
         return NULL;
+    }
+
+    tid_test = ti_query_tid(self->tb, name, begin, end);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
 
     result = ti_query(self->tb, name, begin, end);
     if (result == NULL) {
@@ -262,8 +278,9 @@ pairix_queryi(PairixObject *self, PyObject *args)
     int tid, begin, end;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end))
+    if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end)){
         return NULL;
+    }
 
     result = ti_queryi(self->tb, tid, begin, end);
     if (result == NULL) {
@@ -278,10 +295,27 @@ static PyObject *
 pairix_querys(PairixObject *self, PyObject *args)
 {
     const char *reg;
+    int tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "s:querys", &reg))
+    if (!PyArg_ParseTuple(args, "s:querys", &reg)){
+        PyErr_SetString(PairixError, "Argument error! querys2D() takes one str formatted as: '{CHR}:{START}-{END}'");
         return NULL;
+    }
+
+    tid_test = ti_querys_tid(self->tb, reg);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
 
     result = ti_querys(self->tb, reg);
     if (result == NULL) {
@@ -298,11 +332,27 @@ static PyObject *
 pairix_query_2D(PairixObject *self, PyObject *args)
 {
     char *name, *name2;
-    int begin, end, begin2, end2;
+    int begin, end, begin2, end2, tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "siisii:query_2D", &name, &begin, &end, &name2, &begin2, &end2))
+    if (!PyArg_ParseTuple(args, "siisii:query2D", &name, &begin, &end, &name2, &begin2, &end2)){
+        PyErr_SetString(PairixError, "Argument error! query2D() takes the following args: <1st_chromosome (str)> <begin (int)> <end (int)> <2nd_chromosome (str)> <begin (int)> <end (int)>");
         return NULL;
+    }
+
+    tid_test = ti_query_2d_tid(self->tb, name, begin, end, name2, begin2, end2);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
 
     result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
     if (result == NULL) {
@@ -319,8 +369,9 @@ pairix_queryi_2D(PairixObject *self, PyObject *args)
     int tid, begin, end, begin2, end2;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "iiiii:queryi_2D", &tid, &begin, &end, &begin2, &end2))
+    if (!PyArg_ParseTuple(args, "iiiii:queryi2D", &tid, &begin, &end, &begin2, &end2)){
         return NULL;
+    }
 
     result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
     if (result == NULL) {
@@ -335,10 +386,27 @@ static PyObject *
 pairix_querys_2D(PairixObject *self, PyObject *args)
 {
     const char *reg;
+    int tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "s:querys_2D", &reg))
+    if (!PyArg_ParseTuple(args, "s:querys2D", &reg)){
+        PyErr_SetString(PairixError, "Argument error! querys2D() takes one str formatted as: '{CHR}:{START}-{END}|{CHR}:{START}-{END}'");
         return NULL;
+    }
+
+    tid_test = ti_querys_tid(self->tb, reg);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
 
     result = ti_querys_2d(self->tb, reg);
     if (result == NULL) {
