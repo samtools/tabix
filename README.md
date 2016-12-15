@@ -179,6 +179,8 @@ print str(chrplist)
 ```
 
 ## Pairs_merger
+Pairs_merger is a tool that merges indexed pairs files. It loops over a merged iterator composed of a sorted array of interators, each corresponding to a single input file.
+
 
 ### Installation for pairs_merger
 See [Installation for pairix](#installation-for-pairix)
