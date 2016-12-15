@@ -15,12 +15,15 @@ int main(int argc, char *argv[])
 {
     int num_fn = argc -1;
     int i;
+    //BGZF *bzfp;
+    //int f_dst;
 
     if(argc==1){
        fprintf(stderr, "\n");
        fprintf(stderr, "Program: pairs_merger\n");
        fprintf(stderr, "Version: %s\n\n", PACKAGE_VERSION);
-       fprintf(stderr, "Usage:   pairs_merger <in1.pairs.gz> <in2.pairs.gz> <in2.pairs.gz> > out.pairs\n\n");
+       //fprintf(stderr, "Usage:   pairs_merger <in1.pairs.gz> <in2.pairs.gz> <in3.pairs.gz> ... > out.pairs.gz\n\n");
+       fprintf(stderr, "Usage:   pairs_merger <in1.pairs.gz> <in2.pairs.gz> <in3.pairs.gz> ... | bgzip -c  > out.pairs.gz\n\n");
        return(1);
     }
 
@@ -29,11 +32,24 @@ int main(int argc, char *argv[])
        fn_list[i]=malloc(FILENAMEMAX*sizeof(char));
        strcpy(fn_list[i],argv[i+1]);
     }
-    int res = pairs_merger(fn_list,num_fn);
+
+    // write to stdout bgzip
+    //f_dst = fileno(stdout);                
+    //bzfp = bgzf_dopen(f_dst, "w");
+
+    // actually write merged pairs to bzfp stdout
+    //int res = pairs_merger(fn_list, num_fn, bzfp);
+    int res = pairs_merger(fn_list, num_fn, NULL);
+
+    // close bgzf stream
+    //if (bgzf_close(bzfp) < 0) fail(bzfp);
+    //if (bgzf_close(bzfp) < 0){  fprintf(stderr,"Error: %d\n",bzfp->errcode); return(1); }
+
 
     for(i=0;i<num_fn;i++) {
        free(fn_list[i]);
     }
     return(res);
 }
+
 
