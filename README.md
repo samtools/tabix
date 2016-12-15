@@ -185,8 +185,12 @@ See [Installation for pairix](#installation-for-pairix)
 
 ### Usage for pairs_merger
 ```
-pairs_merger <in1.gz> <in2.gz> <in3.gz> ... > <out.gz>
+pairs_merger <in1.gz> <in2.gz> <in3.gz> ... > <out.txt>
 # Each of the input files must have a .px2 index file.
+bgzip out.txt
+
+## or pipe to bgzip
+pairs_merger <in1.gz> <in2.gz> <in3.gz> ... | bgzip -c > <out.gz>
 
 # To index the output file as well
 # use the appropriate options according to the output file format.
