@@ -113,7 +113,7 @@ extern "C" {
 	int ti_querys_2d_tid(pairix_t *t, const char *reg);
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
         const char *merged_ti_read(merged_iter_t *miter, int *len);
-        int pairs_merger(char **fn, int n);
+        int pairs_merger(char **fn, int n, BGZF *bzfp);
         void stream_1d(char *fn);
 
 	/* Destroy the iterator */
@@ -175,6 +175,9 @@ extern "C" {
         int strcmp2(const void* a, const void* b);
         char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq);
         char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq);
+
+        /* bgzip function */
+        void fail(BGZF *fp);
 
 
 	/*******************

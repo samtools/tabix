@@ -1,8 +1,10 @@
 # pairix
-Pairix is a tool for indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line.
-The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip.
-The index file has an extension .px2.
-Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
+* Pairix is a tool for indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
+* The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip. The file can be either tab-delimited or space-delimited.
+* The index file has an extension .px2.
+* Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
+* Pairs_merger is available to merge two or more indexed pairs file.
+* Bgzip is provided as part of the repo, which is identical to the original program.
 
 ## Table of contents
 * [Pairix](#pairix)
@@ -12,15 +14,19 @@ Pairix is available either as a stand-alone command-line program, a python libra
 * [Pypairix](#pypairix)
     * [Installation](#installation-for-pypairix)
     * [Examples](#usage-examples-for-pypairix)
+* [Pairs_merger](#pairs_merger)
+    * [Installation](#installation-for-pairs_merger)
+    * [Usage](#usage-for-pairs_merger)
+    * [Examples](#usage-examples-for-pairs_merger)
 * [Note](#note)
-* [Utils](#utils)
 
 
 
 ## Pairix
 ### Installation for pairix
+The same command installs bgzip and pairs_merger as well.
 ```
-git clone https://github.com/SooLee/pairix
+git clone https://github.com/4dn-dcic/pairix
 cd pairix
 make
 # add the bin path to PATH
@@ -172,6 +178,33 @@ print str(chrplist)
 
 ```
 
+## Pairs_merger
+Pairs_merger is a tool that merges indexed pairs files. It loops over a merged iterator composed of a sorted array of interators, each corresponding to a single input file.
+
+
+### Installation for pairs_merger
+See [Installation for pairix](#installation-for-pairix)
+
+### Usage for pairs_merger
+```
+pairs_merger <in1.gz> <in2.gz> <in3.gz> ... > <out.txt>
+# Each of the input files must have a .px2 index file.
+bgzip out.txt
+
+## or pipe to bgzip
+pairs_merger <in1.gz> <in2.gz> <in3.gz> ... | bgzip -c > <out.gz>
+
+# To index the output file as well
+# use the appropriate options according to the output file format.
+pairix [options] out.gz
+```
+
+### Usage Examples for pairs_merger
+```
+bin/pairs_merger samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | bin/bgzip -c > out.gz
+bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
+```
+
 
 ## Note
 * Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
@@ -179,6 +212,4 @@ print str(chrplist)
 * Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric.
 
 
-## Utils
-* bgzip (identical to the one from the tabix repo),
-* merge-pairs. For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
+

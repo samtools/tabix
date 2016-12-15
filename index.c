@@ -1241,7 +1241,6 @@ void destroy_merged_iter(merged_iter_t *miter)
     for(i=0;i<miter->n;i++){
       ti_iter_destroy(miter->iu[i].iter);
       if(miter->iu[i].len) free(miter->iu[i].len); 
-      if(miter->iu[i].s) free(miter->iu[i].s); 
       if(miter->iu[i].intv) free(miter->iu[i].intv); 
     }
     free(miter->iu);
@@ -1291,45 +1290,34 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
     // initial sorting of the iterators based on their first entry
     if (miter->first){ 
       for(i=0;i<miter->n;i++) { 
-        fprintf(stderr,"i=%d, n=%d\n",i,miter->n);
         if(miter->iu[i].t && miter->iu[i].iter && miter->iu[i].t->fp){
           miter->iu[i].s = ti_iter_read(miter->iu[i].t->fp, miter->iu[i].iter, miter->iu[i].len, seqonly); 
           get_intv(miter->iu[i].t->idx, &(miter->iu[i].iter->str), miter->iu[i].intv);
-          fprintf(stderr,"miter->iu[i].s= %s\n",miter->iu[i].s);
-          fprintf(stderr,"miter->iu[i].len= %d\n",*(miter->iu[i].len));
-          fprintf(stderr,"miter->iu[i].iter->str.s = %s\n",miter->iu[i].iter->str.s);
-          fprintf(stderr,"miter->iu[i].iter->str.l = %d\n",miter->iu[i].iter->str.l);
-
-        } else { fprintf(stderr, "Null elements in merged_iter_t\n"); return(NULL); } 
+        } 
       } // get first entry for each iter
-      fprintf(stderr,"ready to sort\n");
       qsort((void*)(miter->iu), miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
       miter->first=0;
     }
-    else {
-      if(miter->iu[0].s==NULL) {
-          miter->iu[0].s = ti_iter_read(miter->iu[0].t->fp, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
-          get_intv(miter->iu[0].t->idx, &(miter->iu[0].iter->str), miter->iu[0].intv);
-      }
-
+    else if(miter->iu[0].s==NULL) {
+      miter->iu[0].s = ti_iter_read(miter->iu[0].t->fp, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
+      get_intv(miter->iu[0].t->idx, &(miter->iu[0].iter->str), miter->iu[0].intv);
+    
       // put it at the right place in the sorted iu array
       k=0;
-      while( k < miter->n-1 && compare_iter_unit((void*)(miter->iu), (void*)(miter->iu + (++k))) >0 ) ;
-      if (k>1) {
+      while( k < miter->n-1 && compare_iter_unit((void*)(miter->iu), (void*)(miter->iu + k + 1 )) >0 ) k++;
+      if (k>=1) {
         tmp_iu = miter->iu[0];
-        fprintf(stderr,"tmp_iu.s=%s, miter->iu[0]=%s\n",tmp_iu.s,miter->iu[0]);
         for(i=1;i<=k;i++) miter->iu[i-1] = miter->iu[i];
         miter->iu[k]= tmp_iu; 
-        fprintf(stderr,"tmp_iu.s=%s, miter->iu[k]=%s\n",tmp_iu.s,miter->iu[k]);
       }
     }
+    if(miter->iu[0].iter==NULL) return(NULL);
 
     // flush the lowest
     s = miter->iu[0].s;
     miter->iu[0].s=NULL;
 
     *len = *(miter->iu[0].len);
-    miter->iu[0].len=NULL;
 
     return ( s );  // if s is null, iteration finishes.
 }
@@ -1337,7 +1325,30 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
 
 int strcmp2(const void* a, const void* b)
 {
-    return strcmp(*(char**)a, *(char**)b);
+    //char aa[strlen(*(char**)a)], bb[strlen(*(char**)b)];
+    //strcpy(aa, *(char**)a);
+    //strcpy(bb, *(char**)b);
+    int res;
+    char c,d;
+    char *aa=*(char**)a;
+    char *bb=*(char**)b;
+    char *a2,*b2;
+    char *a_split = strchr(aa,REGION_SPLIT_CHARACTER);
+    char *b_split = strchr(bb,REGION_SPLIT_CHARACTER);
+    if(a_split && b_split) {  // 2D name
+      c = a_split[0]; d=b_split[0];
+      a2 = a_split+1; b2 = b_split+1;
+      a_split[0]=0;
+      b_split[0]=0;
+      if ((res = strcmp(aa, bb))==0) res =strcmp(a2, b2) ;
+      a_split[0]=c; b_split[0]=d;
+      return (res) ;
+    } else if(!a_split && !b_split) {   // 1D name
+       return strcmp(aa, bb);
+    } else {  // weird mix?
+       fprintf(stderr, "Warning: Mix of 1D and 2D indexed files? (%s vs %s)\n",aa,bb);
+       return strcmp(aa, bb);
+    }
 }
 
 
@@ -1393,7 +1404,6 @@ char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
     fprintf(stderr,"(total %d seq names)\n",n_seq_list);
     if(seq_list){
       qsort(seq_list, n_seq_list, sizeof(char*), strcmp2);
-      fprintf(stderr,"seq_list[0]=%s\n",seq_list[0]);
       k=0; prev_i=0;
       for(i=1;i<n_seq_list;i++){
         if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;
@@ -1421,8 +1431,16 @@ char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
 }
 
 
+void fail(BGZF* fp)
+{
+    fprintf(stderr, "Error: %d\n", fp->errcode);
+    exit(1);
+}
+
+
 // pairs merger - merge multiple 2D-sorted files into a merged, 2D-sorted stream 
-int pairs_merger(char **fn, int n)
+//pass null - bgzf_write is slower than piping to bgzip -c.
+int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result should be bgzipped. or pass NULL.
 {
     pairix_t *tbs[n];
     int i,j;
@@ -1444,7 +1462,6 @@ int pairs_merger(char **fn, int n)
     // loop over the seq_list (chrpair list) and merge
     if(uniq_seq_list){
       fprintf(stderr,"Merging...\n");
-      fprintf(stderr,"n_uniq_seq=%d\n",n_uniq_seq);
       for(i=0;i<n_uniq_seq;i++){
         miter = create_merged_iter(n);
         for(j=0;j<n;j++){
@@ -1452,6 +1469,7 @@ int pairs_merger(char **fn, int n)
            create_iter_unit(tbs[j], iter, miter->iu + j);
         }
         while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+        //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
         destroy_merged_iter(miter); miter=NULL;     
       }
       for(i=0;i<n;i++) ti_close(tbs[i]);
