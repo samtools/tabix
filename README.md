@@ -1,10 +1,10 @@
 # pairix
-Pairix is a tool for indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
-The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip.
-The index file has an extension .px2.
-Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
-Pairs_merger is available to merge two or more indexed pairs file.
-Bgzip is provided as part of the repo, which is identical to the original program.
+* Pairix is a tool for indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
+* The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip.
+* The index file has an extension .px2.
+* Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
+* Pairs_merger is available to merge two or more indexed pairs file.
+* Bgzip is provided as part of the repo, which is identical to the original program.
 
 ## Table of contents
 * [Pairix](#pairix)
