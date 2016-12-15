@@ -20,4 +20,4 @@ bin/merge-pairs . out2 samples/merged_nodups.space.chrblock_sorted.subsample2.tx
 gunzip -f out2.bsorted.pairs.gz 
 gunzip -f out.gz
 if [ -z $(diff out out2.bsorted.pairs)]; then echo "pairs_merger successful!"; fi
-rm -f out out2.bsorted.pairs out2.pairs
+rm -f out out2.bsorted.pairs out2.pairs out.gz.px2 out2.bsorted.pairs.gz.px2

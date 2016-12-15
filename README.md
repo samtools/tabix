@@ -4,6 +4,7 @@ The text file must be first sorted by two chromosome columns and then by the fir
 The index file has an extension .px2.
 Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
 Pairs_merger is available to merge two or more indexed pairs file.
+Bgzip is provided as part of the repo, which is identical to the original program.
 
 ## Table of contents
 * [Pairix](#pairix)
@@ -18,7 +19,6 @@ Pairs_merger is available to merge two or more indexed pairs file.
     * [Usage](#usage-for-pairs_merger)
     * [Examples](#usage-examples-for-pairs_merger)
 * [Note](#note)
-* [Utils](#utils)
 
 
 
@@ -204,13 +204,6 @@ bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
 * Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
 * The index produced by this modified pairix is not compatible with the original tabix index. They are based on different structures.
 * Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric.
-
-
-## Utils
-* bgzip (identical to the one from the tabix repo),
-* pairs_merger
-* merge-pairs. (depricated, used for testing pairs_merger) For details about merge-pairs, see https://github.com/hms-dbmi/pairix/tree/master/merge-pairs
-
 
 
 
