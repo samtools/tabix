@@ -26,7 +26,7 @@
 ### Installation for pairix
 The same command installs bgzip and pairs_merger as well.
 ```
-git clone https://github.com/SooLee/pairix
+git clone https://github.com/4dn-dcic/pairix
 cd pairix
 make
 # add the bin path to PATH
