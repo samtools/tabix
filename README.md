@@ -1,12 +1,28 @@
 # pairix
-* Pairix is a tool for indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
-* The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip. The file can be either tab-delimited or space-delimited.
-* The index file has an extension .px2.
-* Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
-* Pairs_merger is available to merge two or more indexed pairs file.
-* Bgzip is provided as part of the repo, which is identical to the original program.
-
+* Pairix is a tool for random accessing a compressed text file. Specifically, it does indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
+* As an example, you have a text file with millions or bilions or lines like below, and you want to extract lines in (chr10,chrX) pair. An awk command would read the file from the beginning till you find the pair. However, if your file is sorted by chromosome pair and indexed, you can extract the lines almost instantly. That's what pairix does.:
+ 
+  ex1)
+  ```
+  chr1  10000  20000 chr2  30000  50000
+  chr1  30000  40000 chr3  10000  70000
+  ```
+  ex2)
+  ```
+  chr1  10000  +  chr2  30000  -
+  chr1  30000  -  chr3  50000  -
+  ```
+  
+* If you're thinking "Sounds familiar.. How is it different from tabix?"
+  * Pairix was created by modifying tabix, and the major difference is that pairix create an index based on a pair of chromosome columns instead of a single colume.
+  * Pairix has added functionality of 2D query.
+  * Pairix comes with a pairs_merger util for fast merging of sorted pairs files, that makes use of the index.
+  * Pairix can handle space-delimited files as well as tab-delimited files.
+  * Tabix and pairix are not cross-compatible, although pairix can optionally index based on a single colume. The index structure had to change to accomodate the double-colume requirement. If you want to create a single-colume index, it is recommended to use Tabix, to avoid potential confusion.
+  
 ## Table of contents
+* [Availability](#availability)
+* [Input file format](#input-file-format)
 * [Pairix](#pairix)
     * [Installation](#installation-for-pairix)
     * [Usage](#usage-for-pairix)
@@ -20,7 +36,14 @@
     * [Examples](#usage-examples-for-pairs_merger)
 * [Note](#note)
 
+## Availability
+* Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
+* Pairs_merger is available to merge two or more indexed pairs file.
+* Bgzip is provided as part of the repo, which is identical to the original program.
 
+## Input file format
+* The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip. The file can be either tab-delimited or space-delimited.
+* The index file has an extension .px2.
 
 ## Pairix
 ### Installation for pairix
@@ -179,8 +202,7 @@ print str(chrplist)
 ```
 
 ## Pairs_merger
-Pairs_merger is a tool that merges indexed pairs files. It loops over a merged iterator composed of a sorted array of interators, each corresponding to a single input file.
-
+Pairs_merger is a tool that merges indexed pairs files that are already sorted and creates a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k interators. It does not require additional memory nor produces temporary files.
 
 ### Installation for pairs_merger
 See [Installation for pairix](#installation-for-pairix)
