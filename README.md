@@ -33,7 +33,7 @@
 
 ## Availability
 * Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
-* Pairs_merger is available to merge two or more indexed pairs file.
+* Pairs_merger is available to merge two or more indexed pairs files.
 * Bgzip is provided as part of the repo, which is identical to the original program.
 
 ## Input file format
