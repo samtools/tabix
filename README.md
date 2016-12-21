@@ -1,6 +1,6 @@
 # pairix
 * Pairix is a tool for random accessing a compressed text file. Specifically, it does indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
-* As an example, you have a text file with millions or bilions or lines like below, and you want to extract lines in (chr10,chrX) pair. An awk command would read the file from the beginning till you find the pair. However, if your file is sorted by chromosome pair and indexed, you can extract the lines almost instantly. That's what pairix does.:
+* As an example, you have a text file with millions or bilions of lines like below, and you want to extract lines in (chr10,chrX) pair. An awk command would read the file from the beginning till you find the pair. However, if your file is sorted by chromosome pair and indexed, you can extract the lines almost instantly. That's what pairix does.:
  
   ex1)
   ```
@@ -13,13 +13,6 @@
   chr1  30000  -  chr3  50000  -
   ```
   
-* If you're thinking "Sounds familiar.. How is it different from tabix?"
-  * Pairix was created by modifying tabix, and the major difference is that pairix create an index based on a pair of chromosome columns instead of a single colume.
-  * Pairix has added functionality of 2D query.
-  * Pairix comes with a pairs_merger util for fast merging of sorted pairs files, that makes use of the index.
-  * Pairix can handle space-delimited files as well as tab-delimited files.
-  * Tabix and pairix are not cross-compatible, although pairix can optionally index based on a single colume. The index structure had to change to accomodate the double-colume requirement. If you want to create a single-colume index, it is recommended to use Tabix, to avoid potential confusion.
-  
 ## Table of contents
 * [Availability](#availability)
 * [Input file format](#input-file-format)
@@ -30,10 +23,12 @@
 * [Pypairix](#pypairix)
     * [Installation](#installation-for-pypairix)
     * [Examples](#usage-examples-for-pypairix)
+* [Rpairix](#rpairix)
 * [Pairs_merger](#pairs_merger)
     * [Installation](#installation-for-pairs_merger)
     * [Usage](#usage-for-pairs_merger)
     * [Examples](#usage-examples-for-pairs_merger)
+* [Difference between pairix and tabix](#difference-between-pairix-and-tabix)
 * [Note](#note)
 
 ## Availability
@@ -201,6 +196,10 @@ print str(chrplist)
 
 ```
 
+## Rpairix
+* Rpairix is an R package for reading pairix-indexed pairs files. It has its own repo: https:/github.com/4dn-dcic/Rpairix
+
+
 ## Pairs_merger
 Pairs_merger is a tool that merges indexed pairs files that are already sorted and creates a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k interators. It does not require additional memory nor produces temporary files.
 
@@ -228,6 +227,14 @@ bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
 ```
 
 
+## Difference between pairix and tabix
+* If you're thinking "Sounds familiar.. How is it different from tabix?"
+  * Pairix was created by modifying tabix, and the major difference is that pairix create an index based on a pair of chromosome columns instead of a single colume.
+  * Pairix has added functionality of 2D query.
+  * Pairix comes with a pairs_merger util for fast merging of sorted pairs files, that makes use of the index.
+  * Pairix can handle space-delimited files as well as tab-delimited files.
+  * Tabix and pairix are not cross-compatible, although pairix can optionally index based on a single colume. The index structure had to change to accomodate the double-colume requirement. If you want to create a single-colume index, it is recommended to use Tabix, to avoid potential confusion.
+  
 ## Note
 * Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
 * The index produced by this modified pairix is not compatible with the original tabix index. They are based on different structures.
