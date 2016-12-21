@@ -197,7 +197,7 @@ print str(chrplist)
 ```
 
 ## Rpairix
-* Rpairix is an R package for reading pairix-indexed pairs files. It has its own repo: https:/github.com/4dn-dcic/Rpairix
+* Rpairix is an R package for reading pairix-indexed pairs files. It has its own repo: https://github.com/4dn-dcic/Rpairix
 
 
 ## Pairs_merger
