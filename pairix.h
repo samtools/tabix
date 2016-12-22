@@ -114,7 +114,7 @@ extern "C" {
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
         const char *merged_ti_read(merged_iter_t *miter, int *len);
         int pairs_merger(char **fn, int n, BGZF *bzfp);
-        void stream_1d(char *fn);
+        int stream_1d(char *fn);
 
 	/* Destroy the iterator */
 	void ti_iter_destroy(ti_iter_t iter);
@@ -171,10 +171,32 @@ extern "C" {
         /* fill in an existing (allocated) iter_unit struct from an iter struct */
         void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu);
 
+        /* compare two iter_unit structs, compatible with qsort */
         int compare_iter_unit (const void *a, const void *b);
-        int strcmp2(const void* a, const void* b);
+
+        /* strcmp, argument type modified to be compatible with qsort */
+        int strcmp1d(const void* a, const void* b);
+
+        /* double strcmp on the two parts (for string 'xx|yy' vs 'zz|ww' compare 'xx' vs 'zz' first and then 'yy' vs 'ww') */
+        int strcmp2d(const void* a, const void* b);
+
+        /* return a uniqified array given an array of strings (generic), returned array must be fried at both array level and element level */
+        char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq);
+
+        /* given an array of pairix_t structs, get an array of unique key names, 
+           the returned array must be freed at both array level and element level */
         char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq);
-        char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq);
+
+        /* get mate1 chromosome list given a list of chromosome pairs, returned array must be freed at both array level and element level. */
+        char **get_seq1_list_from_seqpair_list(char** seqpair_list, int n_seqpair_list, int *pn_seq1);
+
+        /* get a sub-list of seq (chrpair) names given seq1, returned array is an array of pointers to the element of the original array */
+        char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* get a sub-list of seq (chrpair) names given seq2, returned array is an array of pointers to the element of the original array */
+        char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+
 
         /* bgzip function */
         void fail(BGZF *fp);

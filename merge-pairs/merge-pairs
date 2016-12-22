@@ -9,8 +9,8 @@ rm -f $outdir/$outprefix.pairs
 touch $outdir/$outprefix.pairs
 for input_pair in $@
 do
-  echo "zcat $input_pair >> $outdir/$outprefix.pairs"
-  zcat $input_pair >> $outdir/$outprefix.pairs
+  echo "gunzip -c $input_pair >> $outdir/$outprefix.pairs"
+  gunzip -c $input_pair >> $outdir/$outprefix.pairs
 done
 
 #sort -k2,2 -k4,4 -k3,3g -k5,5g $outdir/$outprefix.pairs > $outdir/$outprefix.bsorted.pairs

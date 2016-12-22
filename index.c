@@ -1323,7 +1323,9 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
 }
 
 
-int strcmp2(const void* a, const void* b)
+//compare two strings, but different from strcmp.
+//for a pair of strings 'chr1|chr2' vs 'chr10|chr3', it compares chr1 vs chr10 first and then do chr2 vs chr3. This results in an ordering different from strcmp-based sort, because 'chr10' comes before 'chr1|' whereas 'chr1' comes before 'chr10'.
+int strcmp2d(const void* a, const void* b)
 {
     //char aa[strlen(*(char**)a)], bb[strlen(*(char**)b)];
     //strcpy(aa, *(char**)a);
@@ -1352,6 +1354,12 @@ int strcmp2(const void* a, const void* b)
 }
 
 
+// same as strcmp, argument types modified to be compatible with qsort
+int strcmp1d(const void* a, const void* b)
+{
+   return( strcmp(*(char**)a, *(char**)b) );
+}
+
 pairix_t *load_from_file(char *fn)
 {
       char *fnidx = calloc(strlen(fn) + 5, 1);
@@ -1365,10 +1373,11 @@ pairix_t *load_from_file(char *fn)
 }
 
 
+// The returned array must be freed later.
 char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
 {
      int i,j, k, len, n_seq_list=0;
-     char **conc_seq_list=NULL, **uniq_seq_list=NULL;
+     char **conc_seq_list=NULL;
      char **seqnames=NULL;
      if(n<=0) { fprintf(stderr, "Null pairix_t array\n"); return(0); }
      for(i=0;i<n;i++){
@@ -1390,42 +1399,149 @@ char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
     }
 
     if(conc_seq_list){
-      uniq_seq_list = merge_seqlist_to_uniq(conc_seq_list,n_seq_list,pn_uniq_seq);
+      // given an array, do sort|uniq, but doing it as if sorting by two chromosome columns (e.g. by chr1 first then chr2) rather than by a single merged chromosome pair string (e.g. 'chr1|chr2')
+      qsort(conc_seq_list, n_seq_list, sizeof(char*), strcmp2d);  // This part does the sorting. see strcmp2d for more details.
       free(conc_seq_list);
-      return(uniq_seq_list);
+      return ( uniq(conc_seq_list, n_seq_list, pn_uniq_seq) ); 
     } else { fprintf(stderr,"Null concatenated seq list\n"); return(0); }
 }
 
-char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
+
+// given a chromosome for mate1 (seq1='chr1') return the array containing all seqpairs matching seq1 ('chr1|chr1', 'chr1|chr2', ... )
+// the returned subarray contains pointers to the original seqpair_list elements.
+char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split, b;
+    char **sublist;
+
+    // first round, count the number 
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1) ) k++;
+      b_split[0] = b;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1) ) { sublist[k] = seqpair_list[i]; k++; }
+      b_split[0] = b;
+    }
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
+
+
+// given a chromosome for mate2 (seq2='chr1') return the array containing all seqpairs matching seq2 ('chr1|chr1', 'chr2|chr1', ... )
+// the returned subarray contains pointers to the original seqpair_list elements.
+char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split, b;
+    char **sublist;
+
+    // first round, count the number 
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      if ( strcmp(b_split+1, seq2) ) k++;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      if ( strcmp(b_split+1, seq2) ) { sublist[k] = seqpair_list[i]; k++; }
+    }
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
+
+
+// given a list of seqpairs (either unique or non-unique), return an sorted array of unique seq1 list
+// the returned array must be freed later. (first for the string elements and then itself)
+char **get_seq1_list_from_seqpair_list(char** seqpair_list, int n_seqpair_list, int *pn_seq1)
+{
+    if(seqpair_list){
+        char *b_split,b;
+        char *seq1_list[n_seqpair_list];
+        char **uniq_seq1_list=NULL;
+        char *seqpair;
+        int i;
+
+        // extract seq1 from all seqpairs in the seqpair_list 
+        for(i=0;i<n_seqpair_list;i++){
+          seqpair = seqpair_list[i];
+          b_split = strchr(seqpair, REGION_SPLIT_CHARACTER);
+          b = b_split[0];
+          b_split[0] = 0;
+          seq1_list[i] = malloc((strlen(seqpair)+1)*sizeof(char));
+          strcpy(seq1_list[i], seqpair);
+          b_split[0] = b;
+        }
+
+        // uniquefy
+        qsort(seq1_list, n_seqpair_list, sizeof(char*), strcmp1d); // sort first
+        uniq_seq1_list = uniq(seq1_list, n_seqpair_list, pn_seq1); // uniq
+
+        // free the non-unique seq1 list
+        for(i=0;i<n_seqpair_list;i++) free(seq1_list[i]);
+
+        // return the uniq list
+        return(uniq_seq1_list);
+
+    } else {
+      fprintf(stderr, "Null seqpair list\n"); 
+      return(0); 
+    } 
+}
+
+char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
 {
     int k,i,prev_i;
     char **uniq_seq_list=NULL;
-  
-    fprintf(stderr,"(total %d seq names)\n",n_seq_list);
-    if(seq_list){
-      qsort(seq_list, n_seq_list, sizeof(char*), strcmp2);
-      k=0; prev_i=0;
+
+    // first round, just simulate uniquifying to get the length of the output array.
+    k=0; prev_i=0;
+    for(i=1;i<n_seq_list;i++){
+      if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;   // This part does the uniquifying
+      else {
+        k++;
+        prev_i=i;
+      }
+    }
+    *pn_uniq_seq=k+1;
+    fprintf(stderr,"(total %d unique seq names)\n",*pn_uniq_seq);
+
+    // second round, allocate memory and actually create an array containing uniquified array
+    if( uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*)) ) {
+      k=0; prev_i=0; 
+      uniq_seq_list[0] = malloc((strlen(seq_list[0])+1)*sizeof(char));
+      strcpy(uniq_seq_list[0],seq_list[0]);
       for(i=1;i<n_seq_list;i++){
-        if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;
+        if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;  // uniquifying
         else {
-          k++;
+          ++k;
+          uniq_seq_list[k] = malloc((strlen(seq_list[i])+1)*sizeof(char));
+          strcpy(uniq_seq_list[k],seq_list[i]);
           prev_i=i;
         }
       }
-      *pn_uniq_seq=k+1;
-      fprintf(stderr,"(total %d unique seq names)\n",*pn_uniq_seq);
-      if( uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*)) ) {
-        k=0; prev_i=0; uniq_seq_list[0]=seq_list[0];
-        for(i=1;i<n_seq_list;i++){
-          if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;
-          else {
-            uniq_seq_list[++k]=seq_list[i];
-            prev_i=i;
-          }
-        }
-        assert(k+1==*pn_uniq_seq);
-      } else { fprintf(stderr, "Cannot allocate memory for unique_seq_list\n"); return(0); }
-    } else { fprintf(stderr, "Null seq list\n"); return(0); } 
+      assert(k+1==*pn_uniq_seq);
+    } else { fprintf(stderr, "Cannot allocate memory for unique_seq_list\n"); return(0); }
 
     return(uniq_seq_list);
 }
@@ -1473,6 +1589,7 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
         destroy_merged_iter(miter); miter=NULL;     
       }
       for(i=0;i<n;i++) ti_close(tbs[i]);
+      for(i=0;i<n_uniq_seq;i++) free(uniq_seq_list[i]);
       free(uniq_seq_list);
       return(0);
     } else { fprintf(stderr,"Null unique seq list\n"); return(0); }
@@ -1480,10 +1597,41 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
 
 
 // Uc->Up converter - convert a single 2D-sorted file into a 1D-sorted stream.
-void stream_1d(char *fn)
+int stream_1d(char *fn)
 {
+    pairix_t *tbs;
+    int n_chrpairs, n_chr1, n_chr1pairs;
+    char **chrpair_list, **chr1_list, **chr1pair_list;
+    int i,j;
+    char *s=NULL;
+    merged_iter_t *miter=NULL;
+    ti_iter_t iter;
+    int reslen;
 
+    tbs = load_from_file(fn);
+    if(tbs==NULL) { fprintf(stderr,"file load failed\n"); return(1); }
+    chrpair_list = ti_seqname(tbs->idx,n_chrpairs);
+    if(chrpair_list==NULL) { fprintf(stderr, "Cannot retrieve key list\n"); return(1); }
+    chr1_list = get_seq1_list_from_seqpair_list(chrpair_list, n_chrpairs, &n_chr1);  // 'chr1','chr2',...
 
+    for(i=0;i<n_chr1;i++){
+       chr1pair_list = get_sub_seq_list_for_given_seq2(chr1_list[i], chrpair_list, n_chr1pairs, &n_chr1pairs); // 'chr2|chr2', 'chr2|chr3' ... given chr2, this one is not necessarily a sorted list but it doesn't matter.
+       miter = create_merged_iter(n_chr1pairs);
+       for(j=0;j<n_chr1pairs;j++){
+           iter = ti_querys_2d(tbs,chr1pair_list[j]);
+           create_iter_unit(tbs, iter, miter->iu + j);
+       }
+       while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+       destroy_merged_iter(miter); miter=NULL;     
+    }
+
+    ti_close(tbs);
+    for(i=0;i<n_chr1;i++) free(chr1_list[i]);
+    free(chr1_list);
+    free(chrpair_list);
+
+    return (0);   
 }
+
 
 
