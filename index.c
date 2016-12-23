@@ -52,6 +52,7 @@ struct __ti_iter_t {
         kstring_t str;
         const ti_index_t *idx;
         pair64_t *off;
+        ti_intv_t intv;
 };
 
 
@@ -1028,17 +1029,16 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly)
 			++iter->i;
 		}
 		if ((ret = ti_readline(fp, &iter->str)) >= 0) {
-			ti_intv_t intv;
 			iter->curr_off = bgzf_tell(fp);
 			if (iter->str.s[0] == iter->idx->conf.meta_char) continue;
-			get_intv((ti_index_t*)iter->idx, &iter->str, &intv);
+			get_intv((ti_index_t*)iter->idx, &iter->str, &iter->intv);
                         if(seqonly) 
-                                if(intv.tid == iter->tid) { 
+                                if(iter->intv.tid == iter->tid) { 
                                       if (len) *len = iter->str.l;
                                       return iter->str.s;  // compare only chromosome (chromosome pair) not position.
                                 } else break;
-			else if (intv.tid != iter->tid || intv.beg >= iter->end ) break; // no need to proceed
-			else if (intv.end > iter->beg && iter->end > intv.beg && ( iter->beg2==-1 || iter->end2==-1 || (intv.end2 > iter->beg2 && iter->end2 > intv.beg2) )) {
+			else if (iter->intv.tid != iter->tid || iter->intv.beg >= iter->end ) break; // no need to proceed
+			else if (iter->intv.end > iter->beg && iter->end > iter->intv.beg && ( iter->beg2==-1 || iter->end2==-1 || (iter->intv.end2 > iter->beg2 && iter->end2 > iter->intv.beg2) )) {
 				if (len) *len = iter->str.l;
 				return iter->str.s;
 			} else continue; 
@@ -1241,7 +1241,6 @@ void destroy_merged_iter(merged_iter_t *miter)
     for(i=0;i<miter->n;i++){
       ti_iter_destroy(miter->iu[i].iter);
       if(miter->iu[i].len) free(miter->iu[i].len); 
-      if(miter->iu[i].intv) free(miter->iu[i].intv); 
     }
     free(miter->iu);
     free(miter);
@@ -1253,25 +1252,24 @@ void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 {
    if(iu){
      iu->t=t; iu->iter=iter; iu->len=malloc(sizeof(int)); iu->s=NULL;
-     iu->intv = malloc(sizeof(ti_intv_t));
    }
 }
 
 
 int compare_iter_unit (const void *a, const void *b)
 {
-  if ((iter_unit*)a == NULL || ((iter_unit*)a)->s == NULL) {
-    if ((iter_unit*)b == NULL) return(0);
-    else if (((iter_unit*)b)->s == NULL) return(0);
+  iter_unit *aa=(iter_unit*)a;
+  iter_unit *bb=(iter_unit*)b;
+  if (aa == NULL || (aa)->s == NULL) {
+    if (bb == NULL) return(0);
+    else if (bb->s == NULL) return(0);
     else return(1); // non-NULL iter should go before a NULL iter.
-  } else if((iter_unit*)b == NULL || ((iter_unit*)b)->s == NULL) {
+  } else if(bb == NULL || bb->s == NULL) {
     return(-1);
   } else {
-    if( ((iter_unit*)a)->intv && ((iter_unit*)b)->intv) {
-       int res = ((iter_unit*)a)->intv->beg - ((iter_unit*)b)->intv->beg;  // sort first by beg
-       if (res == 0 && ((iter_unit*)a)->intv->beg2 && ((iter_unit*)b)->intv->beg2) return ( ((iter_unit*)a)->intv->beg2 - ((iter_unit*)b)->intv->beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
-       else return (res); 
-    } else { fprintf(stderr,"Error in getting interval\n"); return(0); }
+    int res = aa->iter->intv.beg - bb->iter->intv.beg;  // sort first by beg
+    if (res == 0 && aa->iter->intv.beg2 && bb->iter->intv.beg2) return ( aa->iter->intv.beg2 - bb->iter->intv.beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
+    else return (res); 
   }
 }
 
@@ -1292,7 +1290,6 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
       for(i=0;i<miter->n;i++) { 
         if(miter->iu[i].t && miter->iu[i].iter && miter->iu[i].t->fp){
           miter->iu[i].s = ti_iter_read(miter->iu[i].t->fp, miter->iu[i].iter, miter->iu[i].len, seqonly); 
-          get_intv(miter->iu[i].t->idx, &(miter->iu[i].iter->str), miter->iu[i].intv);
         } 
       } // get first entry for each iter
       qsort((void*)(miter->iu), miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
@@ -1300,7 +1297,6 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
     }
     else if(miter->iu[0].s==NULL) {
       miter->iu[0].s = ti_iter_read(miter->iu[0].t->fp, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
-      get_intv(miter->iu[0].t->idx, &(miter->iu[0].iter->str), miter->iu[0].intv);
     
       // put it at the right place in the sorted iu array
       k=0;
@@ -1617,7 +1613,6 @@ int stream_1d(char *fn)
 
     for(i=0;i<n_chr1;i++){
        chr1pair_list = get_sub_seq_list_for_given_seq1(chr1_list[i], chrpair_list, n_chrpairs, &n_chr1pairs); // 'chr2|chr2', 'chr2|chr3' ... given chr2, this one is not necessarily a sorted list but it doesn't matter.
-       fprintf(stderr, "seq1=%s, number of pairs=%d\n",chr1_list[i], n_chr1pairs);
        miter = create_merged_iter(n_chr1pairs);
        tbs_copies= malloc(n_chr1pairs*sizeof(pairix_t*));
        for(j=0;j<n_chr1pairs;j++){

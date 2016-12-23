@@ -21,3 +21,12 @@ gunzip -f out2.bsorted.pairs.gz
 gunzip -f out.gz
 if [ -z $(diff out out2.bsorted.pairs)]; then echo "pairs_merger successful!"; fi
 rm -f out out2.bsorted.pairs out2.pairs out.gz.px2 out2.bsorted.pairs.gz.px2
+
+
+## streamer_1d
+bin/streamer_1d samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | bin/bgzip -c > out.1d.pairs.gz
+gunzip -c samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | sort -t' ' -k2,2 -k3,3g | bin/bgzip -c > out2.1d.pairs.gz
+gunzip -f out.1d.pairs.gz
+gunzip -f out2.1d.pairs.gz
+if [ -z $(diff out.1d.pairs out2.1d.pairs)]; then echo "streamer_1d successful!"; fi 
+

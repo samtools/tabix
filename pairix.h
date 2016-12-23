@@ -74,7 +74,6 @@ typedef struct {
 typedef struct {
     pairix_t *t;
     ti_iter_t iter;
-    ti_intv_t *intv;
     int *len;
     char *s;  // This points to iter->str.s. It's redundant but it allows us to flush the string without touching iter->str.s itself.
 } iter_unit;
