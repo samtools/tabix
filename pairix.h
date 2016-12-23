@@ -79,7 +79,7 @@ typedef struct {
 } iter_unit;
 
 typedef struct {
-    iter_unit *iu;
+    iter_unit **iu;
     int n;
     char first;
 } merged_iter_t;

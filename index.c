@@ -1221,11 +1221,13 @@ const char *ti_read(pairix_t *t, ti_iter_t iter, int *len)
 // create an empty merged_iter_t struct with predefined length
 merged_iter_t *create_merged_iter(int n)
 {
+   int i;
    merged_iter_t *miter = malloc(sizeof(merged_iter_t));
    if(miter){
-     if( miter->iu = calloc(n,sizeof(iter_unit))) {
+     if( miter->iu = calloc(n,sizeof(iter_unit*))) {
        miter->n = n;
        miter->first=1;
+       for(i=0;i<n;i++) miter->iu[i] = calloc(1,sizeof(iter_unit));
      } else { fprintf(stderr,"Cannot allocate memory for iter_unit array in merged_iter_t\n"); }
      return(miter);
    } else { 
@@ -1239,8 +1241,9 @@ void destroy_merged_iter(merged_iter_t *miter)
   int i;
   if(miter && miter->n>0 && miter->iu){
     for(i=0;i<miter->n;i++){
-      ti_iter_destroy(miter->iu[i].iter);
-      if(miter->iu[i].len) free(miter->iu[i].len); 
+      ti_iter_destroy(miter->iu[i]->iter);
+      if(miter->iu[i]->len) free(miter->iu[i]->len); 
+      if(miter->iu[i]) free(miter->iu[i]); 
     }
     free(miter->iu);
     free(miter);
@@ -1258,9 +1261,9 @@ void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 
 int compare_iter_unit (const void *a, const void *b)
 {
-  iter_unit *aa=(iter_unit*)a;
-  iter_unit *bb=(iter_unit*)b;
-  if (aa == NULL || (aa)->s == NULL) {
+  iter_unit *aa=*(iter_unit**)a;
+  iter_unit *bb=*(iter_unit**)b;
+  if (aa == NULL || aa->s == NULL) {
     if (bb == NULL) return(0);
     else if (bb->s == NULL) return(0);
     else return(1); // non-NULL iter should go before a NULL iter.
@@ -1277,7 +1280,7 @@ int compare_iter_unit (const void *a, const void *b)
 // read method for merged_iter
 const char *merged_ti_read(merged_iter_t *miter, int *len)
 {
-    iter_unit tmp_iu;
+    iter_unit *tmp_iu;
     int i,k;
     char *s;
     char seqonly=1; // seqonly=1 forces ti_iter_read to only check tid not positions. (faster, given the position comparison is done within this function)
@@ -1285,18 +1288,18 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
     if(!miter) { fprintf(stderr,"Null merged_iter_t\n"); return(NULL); }
     if(miter->n<=0) { fprintf(stderr,"No iter_unit lement in merged_iter_t\n"); return(NULL); }
 
-    // initial sorting of the iterators based on their first entry
+    // initi al sorting of the iterators based on their first entry
     if (miter->first){ 
       for(i=0;i<miter->n;i++) { 
-        if(miter->iu[i].t && miter->iu[i].iter && miter->iu[i].t->fp){
-          miter->iu[i].s = ti_iter_read(miter->iu[i].t->fp, miter->iu[i].iter, miter->iu[i].len, seqonly); 
+        if(miter->iu[i]->t && miter->iu[i]->iter && miter->iu[i]->t->fp){
+          miter->iu[i]->s = ti_iter_read(miter->iu[i]->t->fp, miter->iu[i]->iter, miter->iu[i]->len, seqonly); 
         } 
       } // get first entry for each iter
-      qsort((void*)(miter->iu), miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
+      qsort((void*)(miter->iu), miter->n, sizeof(iter_unit*), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
       miter->first=0;
     }
-    else if(miter->iu[0].s==NULL) {
-      miter->iu[0].s = ti_iter_read(miter->iu[0].t->fp, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
+    else if(miter->iu[0]->s==NULL) {
+      miter->iu[0]->s = ti_iter_read(miter->iu[0]->t->fp, miter->iu[0]->iter, miter->iu[0]->len, seqonly); // get next entry for the flushed iter 
     
       // put it at the right place in the sorted iu array
       k=0;
@@ -1307,20 +1310,20 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
         miter->iu[k]= tmp_iu; 
       }
     }
-    if(miter->iu[0].iter==NULL) return(NULL);
+    if(miter->iu[0]->iter==NULL) return(NULL);
 
     // flush the lowest
-    s = miter->iu[0].s;
-    miter->iu[0].s=NULL;
+    s=miter->iu[0]->s;
+    miter->iu[0]->s=NULL;
 
-    *len = *(miter->iu[0].len);
+    *len = *(miter->iu[0]->len);
 
-    return ( s );  // if s is null, iteration finishes.
+    return ( s ); 
 }
 
 
 //compare two strings, but different from strcmp.
-//for a pair of strings 'chr1|chr2' vs 'chr10|chr3', it compares chr1 vs chr10 first and then do chr2 vs chr3. This results in an ordering different from strcmp-based sort, because 'chr10' comes before 'chr1|' whereas 'chr1' comes before 'chr10'.
+//for a pair of strings 'chr1|chr2' vs 'chr10|chr13', it compares chr1 vs chr10 first and then do chr2 vs chr13. This results in an ordering different from strcmp-based sort, because 'chr10' comes before 'chr1|' whereas 'chr1' comes before 'chr10'.
 int strcmp2d(const void* a, const void* b)
 {
     //char aa[strlen(*(char**)a)], bb[strlen(*(char**)b)];
@@ -1578,7 +1581,7 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
         miter = create_merged_iter(n);
         for(j=0;j<n;j++){
            iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
-           create_iter_unit(tbs[j], iter, miter->iu + j);
+           create_iter_unit(tbs[j], iter, miter->iu[j]);
         }
         while ( s=merged_ti_read(miter,&reslen) ) puts(s);
         //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
@@ -1618,7 +1621,7 @@ int stream_1d(char *fn)
        for(j=0;j<n_chr1pairs;j++){
            tbs_copies[j] = load_from_file(fn);
            iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
-           create_iter_unit(tbs_copies[j], iter, miter->iu + j);
+           create_iter_unit(tbs_copies[j], iter, miter->iu[j]);
        }
        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
        destroy_merged_iter(miter); miter=NULL;     

@@ -29,4 +29,4 @@ gunzip -c samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | sort -
 gunzip -f out.1d.pairs.gz
 gunzip -f out2.1d.pairs.gz
 if [ -z $(diff out.1d.pairs out2.1d.pairs)]; then echo "streamer_1d successful!"; fi 
-
+rm -f out.1d.pairs out2.1d.pairs
