@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
        fprintf(stderr, "Program: streamer_1d\n");
        fprintf(stderr, "Version: %s\n\n", PACKAGE_VERSION);
        fprintf(stderr, "Resorter (convert a file sorted by chr1-chr2-pos1-pos2 to a stream sorted by chr1-pos1)\n\n");
-       fprintf(stderr, "Usage:   streamer_1d in.2d.pairs > out.1d.pairs\n\n");
-       fprintf(stderr, "Usage:   streamer_1d in.2d.pairs | bgzip -c  > out.1d.pairs.gz\n\n");
+       fprintf(stderr, "Usage:   streamer_1d in.2d.pairs.gz > out.1d.pairs\n");
+       fprintf(stderr, "Usage:   streamer_1d in.2d.pairs.gz | bgzip -c  > out.1d.pairs.gz\n\n");
        return(1);
     }
 

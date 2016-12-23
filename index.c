@@ -1421,7 +1421,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
       b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
       b = b_split[0];
       b_split[0] = 0;
-      if ( strcmp(seqpair_list[i], seq1) ) k++;
+      if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
       b_split[0] = b;
     }
     *pn_sub_list = k;
@@ -1433,7 +1433,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
       b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
       b = b_split[0];
       b_split[0] = 0;
-      if ( strcmp(seqpair_list[i], seq1) ) { sublist[k] = seqpair_list[i]; k++; }
+      if ( strcmp(seqpair_list[i], seq1)==0 ) { sublist[k] = seqpair_list[i]; k++; }
       b_split[0] = b;
     }
     assert (k = *pn_sub_list);
@@ -1454,7 +1454,7 @@ char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_se
     k=0;
     for(i=0;i<n_seqpair_list;i++){
       b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
-      if ( strcmp(b_split+1, seq2) ) k++;
+      if ( strcmp(b_split+1, seq2)==0 ) k++;
     }
     *pn_sub_list = k;
 
@@ -1463,7 +1463,7 @@ char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_se
     k=0;
     for(i=0;i<n_seqpair_list;i++){
       b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
-      if ( strcmp(b_split+1, seq2) ) { sublist[k] = seqpair_list[i]; k++; }
+      if ( strcmp(b_split+1, seq2)==0 ) { sublist[k] = seqpair_list[i]; k++; }
     }
     assert (k = *pn_sub_list);
 
@@ -1599,7 +1599,7 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
 // Uc->Up converter - convert a single 2D-sorted file into a 1D-sorted stream.
 int stream_1d(char *fn)
 {
-    pairix_t *tbs;
+    pairix_t *tb, **tbs_copies=NULL;
     int n_chrpairs, n_chr1, n_chr1pairs;
     char **chrpair_list, **chr1_list, **chr1pair_list;
     int i,j;
@@ -1608,24 +1608,31 @@ int stream_1d(char *fn)
     ti_iter_t iter;
     int reslen;
 
-    tbs = load_from_file(fn);
-    if(tbs==NULL) { fprintf(stderr,"file load failed\n"); return(1); }
-    chrpair_list = ti_seqname(tbs->idx,n_chrpairs);
+    tb = load_from_file(fn);
+    if(tb==NULL) { fprintf(stderr,"file load failed\n"); return(1); }
+    chrpair_list = ti_seqname(tb->idx, &n_chrpairs);
     if(chrpair_list==NULL) { fprintf(stderr, "Cannot retrieve key list\n"); return(1); }
     chr1_list = get_seq1_list_from_seqpair_list(chrpair_list, n_chrpairs, &n_chr1);  // 'chr1','chr2',...
+    if(chr1_list==NULL) { fprintf(stderr, "Cannot retrieve list of first chromosomes\n"); return(1); }
 
     for(i=0;i<n_chr1;i++){
-       chr1pair_list = get_sub_seq_list_for_given_seq2(chr1_list[i], chrpair_list, n_chr1pairs, &n_chr1pairs); // 'chr2|chr2', 'chr2|chr3' ... given chr2, this one is not necessarily a sorted list but it doesn't matter.
+       chr1pair_list = get_sub_seq_list_for_given_seq1(chr1_list[i], chrpair_list, n_chrpairs, &n_chr1pairs); // 'chr2|chr2', 'chr2|chr3' ... given chr2, this one is not necessarily a sorted list but it doesn't matter.
+       fprintf(stderr, "seq1=%s, number of pairs=%d\n",chr1_list[i], n_chr1pairs);
        miter = create_merged_iter(n_chr1pairs);
+       tbs_copies= malloc(n_chr1pairs*sizeof(pairix_t*));
        for(j=0;j<n_chr1pairs;j++){
-           iter = ti_querys_2d(tbs,chr1pair_list[j]);
-           create_iter_unit(tbs, iter, miter->iu + j);
+           tbs_copies[j] = load_from_file(fn);
+           iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
+           create_iter_unit(tbs_copies[j], iter, miter->iu + j);
        }
        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
        destroy_merged_iter(miter); miter=NULL;     
+       for(j=0;j<n_chr1pairs;j++) ti_close(tbs_copies[j]);
+       free(tbs_copies); tbs_copies=NULL;
+       free(chr1pair_list);
     }
 
-    ti_close(tbs);
+    ti_close(tb);
     for(i=0;i<n_chr1;i++) free(chr1_list[i]);
     free(chr1_list);
     free(chrpair_list);

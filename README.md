@@ -18,6 +18,10 @@
     * [Installation](#installation-for-pairs_merger)
     * [Usage](#usage-for-pairs_merger)
     * [Examples](#usage-examples-for-pairs_merger)
+* [Streamer_1d](#streamer_1d)
+    * [Installation](#installation-for-streamer-1d)
+    * [Usage](#usage-for-streamer-1d)
+    * [Examples](#usage-examples-for-streamer-1d)
 * [Note](#note)
 
 
@@ -204,6 +208,33 @@ pairix [options] out.gz
 bin/pairs_merger samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | bin/bgzip -c > out.gz
 bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
 ```
+
+
+## Streamer_1d
+Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files.
+
+### Installation for streamer_1d
+See [Installation for pairix](#installation-for-pairix)
+
+### Usage for streamer_1d
+```
+streamer_1d <in.2d.gz> > out.1d.pairs
+streamer_1d <in.2d.gz> | bgzip -c > out.1d.pairs.gz
+```
+
+### Usage Examples for streamer_1d
+
+
+### FAQ for streamer_1d
+#### The tool creates many file pointers for the input file, which is equivalent to opening many files simultaneously. Your OS may have a limit on the number of files that can be open at a time. For example, for Mac El Captain and Sierra, it is by default set to 256. This is usually enough, but in case the number of chromosomes in your pairs file happen to be larger than or close to this limit, the tool may produce an error message saying file limit is exceeded. You can increase this limit outside the program. For example, for Mac El Captain and Sierra, the following command raises the limit to 2000.
+```
+# view the limits
+uimit -a
+
+# raise the limit to 2000
+ulimit -n 2000
+```
+
 
 
 ## Note
