@@ -211,7 +211,7 @@ bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
 
 
 ## Streamer_1d
-Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files.
+Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort (not recommended). 
 
 ### Installation for streamer_1d
 See [Installation for pairix](#installation-for-pairix)
