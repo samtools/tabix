@@ -1082,18 +1082,11 @@ pairix_t *ti_open(const char *fn, const char *fnidx)
 {
 	pairix_t *t;
 	BGZF *fp;
-        clock_t here1 = clock();
 	if ((fp = bgzf_open(fn, "r")) == 0) return 0;
-        clock_t here2 = clock();
 	t = calloc(1, sizeof(pairix_t));
-        clock_t here3 = clock();
 	t->fn = strdup(fn);
-        clock_t here4 = clock();
 	if (fnidx) t->fnidx = strdup(fnidx);
-        clock_t here5 = clock();
 	t->fp = fp;
-        clock_t here6 = clock();
-        fprintf(stderr,"    time: %lf %lf %lf %lf %lf\n", (double)(here2-here1)/CLOCKS_PER_SEC, (double)(here3-here2)/CLOCKS_PER_SEC, (double)(here4-here3)/CLOCKS_PER_SEC, (double)(here5-here4)/CLOCKS_PER_SEC, (double)(here6-here5)/CLOCKS_PER_SEC);
 	return t;
 }
 
@@ -1607,7 +1600,6 @@ int stream_1d(char *fn)
     ti_iter_t iter;
     int reslen;
 
-    clock_t begin = clock();
     tb = load_from_file(fn);
     if(tb==NULL) { fprintf(stderr,"file load failed\n"); return(1); }
     chrpair_list = ti_seqname(tb->idx, &n_chrpairs);
@@ -1615,35 +1607,21 @@ int stream_1d(char *fn)
     chr1_list = get_seq1_list_from_seqpair_list(chrpair_list, n_chrpairs, &n_chr1);  // 'chr1','chr2',...
     if(chr1_list==NULL) { fprintf(stderr, "Cannot retrieve list of first chromosomes\n"); return(1); }
 
-    clock_t interm = clock();
     for(i=0;i<n_chr1;i++){
-       clock_t interm2 = clock();
        chr1pair_list = get_sub_seq_list_for_given_seq1(chr1_list[i], chrpair_list, n_chrpairs, &n_chr1pairs); // 'chr2|chr2', 'chr2|chr3' ... given chr2, this one is not necessarily a sorted list but it doesn't matter.
-       clock_t interm2b = clock();
        miter = create_merged_iter(n_chr1pairs);
        tbs_copies= malloc(n_chr1pairs*sizeof(pairix_t*));
-       clock_t interm2c = clock();
        for(j=0;j<n_chr1pairs;j++){
-           clock_t interm2ca = clock();
            tbs_copies[j] = load_from_file(fn);
-           clock_t interm2cb = clock();
            iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
-           clock_t interm2cc = clock();
            create_iter_unit(tbs_copies[j], iter, miter->iu[j]);
-           clock_t interm2cd = clock();
-           fprintf(stderr, "  time: %lf, %lf, %lf\n", (double)(interm2cb-interm2ca)/CLOCKS_PER_SEC, (double)(interm2cc-interm2cb)/CLOCKS_PER_SEC, (double)(interm2cd-interm2cc)/CLOCKS_PER_SEC);
        }
-       clock_t interm3 = clock();
        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
-       clock_t interm4 = clock();
        destroy_merged_iter(miter); miter=NULL;     
        for(j=0;j<n_chr1pairs;j++) ti_close(tbs_copies[j]);
        free(tbs_copies); tbs_copies=NULL;
        free(chr1pair_list);
-       fprintf(stderr, "time: %lf, %lf, %lf, %lf\n", (double)(interm2b-interm2)/CLOCKS_PER_SEC, (double)(interm2c-interm2b)/CLOCKS_PER_SEC, (double)(interm3-interm2b)/CLOCKS_PER_SEC, (double)(interm4-interm3)/CLOCKS_PER_SEC); 
     }
-    clock_t end = clock();
-    fprintf(stderr, "time: %lf, %lf\n", (double)(interm-begin)/CLOCKS_PER_SEC, (double)(end-interm)/CLOCKS_PER_SEC); 
 
     ti_close(tb);
     for(i=0;i<n_chr1;i++) free(chr1_list[i]);
