@@ -15,7 +15,7 @@
 #define TAD_LIDX_SHIFT    14
 #define REGION_SPLIT_CHARACTER   '|'
 #define DEFAULT_DELIMITER '\t'
-
+#define COMP_ITER_UNIT(s) compare_iter_unit_##s##d
 
 typedef struct {
 	uint64_t u, v;
@@ -1259,7 +1259,22 @@ void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 }
 
 
-int compare_iter_unit (const void *a, const void *b)
+int compare_iter_unit_1d (const void *a, const void *b)
+{
+  iter_unit *aa=*(iter_unit**)a;
+  iter_unit *bb=*(iter_unit**)b;
+  if (aa == NULL || aa->s == NULL) {
+    if (bb == NULL) return(0);
+    else if (bb->s == NULL) return(0);
+    else return(1); // non-NULL iter should go before a NULL iter.
+  } else if(bb == NULL || bb->s == NULL) {
+    return(-1);
+  } else {
+    return( aa->iter->intv.beg - bb->iter->intv.beg );  // sort first by beg
+  }
+}
+
+int compare_iter_unit_2d (const void *a, const void *b)
 {
   iter_unit *aa=*(iter_unit**)a;
   iter_unit *bb=*(iter_unit**)b;
@@ -1278,7 +1293,7 @@ int compare_iter_unit (const void *a, const void *b)
 
 
 // read method for merged_iter
-const char *merged_ti_read(merged_iter_t *miter, int *len)
+const char *merged_ti_read(merged_iter_t *miter, int *len, int (*comp_iter_unit)(const void*, const void*))
 {
     iter_unit *tmp_iu;
     int i,k;
@@ -1287,36 +1302,35 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
 
     if(!miter) { fprintf(stderr,"Null merged_iter_t\n"); return(NULL); }
     if(miter->n<=0) { fprintf(stderr,"No iter_unit lement in merged_iter_t\n"); return(NULL); }
+    iter_unit **miu = miter->iu;
 
     // initi al sorting of the iterators based on their first entry
     if (miter->first){ 
       for(i=0;i<miter->n;i++) { 
-        if(miter->iu[i]->t && miter->iu[i]->iter && miter->iu[i]->t->fp){
-          miter->iu[i]->s = ti_iter_read(miter->iu[i]->t->fp, miter->iu[i]->iter, miter->iu[i]->len, seqonly); 
-        } 
+        miu[i]->s = ti_iter_read(miu[i]->t->fp, miu[i]->iter, miu[i]->len, seqonly); 
       } // get first entry for each iter
-      qsort((void*)(miter->iu), miter->n, sizeof(iter_unit*), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
+      qsort((void*)(miu), miter->n, sizeof(iter_unit*), (*comp_iter_unit));  // sort by the first entry. finished iters go to the end.
       miter->first=0;
     }
-    else if(miter->iu[0]->s==NULL) {
-      miter->iu[0]->s = ti_iter_read(miter->iu[0]->t->fp, miter->iu[0]->iter, miter->iu[0]->len, seqonly); // get next entry for the flushed iter 
+    else if(miu[0]->s==NULL) {
+      miu[0]->s = ti_iter_read(miu[0]->t->fp, miu[0]->iter, miu[0]->len, seqonly); // get next entry for the flushed iter 
     
       // put it at the right place in the sorted iu array
       k=0;
-      while( k < miter->n-1 && compare_iter_unit((void*)(miter->iu), (void*)(miter->iu + k + 1 )) >0 ) k++;
+      while( k < miter->n-1 && (*comp_iter_unit)((void*)(miu), (void*)(miu + k + 1 )) >0 ) k++;
       if (k>=1) {
-        tmp_iu = miter->iu[0];
-        for(i=1;i<=k;i++) miter->iu[i-1] = miter->iu[i];
-        miter->iu[k]= tmp_iu; 
+        tmp_iu = miu[0];
+        for(i=1;i<=k;i++) miu[i-1] = miu[i];
+        miu[k]= tmp_iu; 
       }
     }
-    if(miter->iu[0]->iter==NULL) return(NULL);
+    if(miu[0]->iter==NULL) return(NULL);
 
     // flush the lowest
-    s=miter->iu[0]->s;
-    miter->iu[0]->s=NULL;
+    s=miu[0]->s;
+    miu[0]->s=NULL;
 
-    *len = *(miter->iu[0]->len);
+    *len = *(miu[0]->len);
 
     return ( s ); 
 }
@@ -1583,8 +1597,8 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
            iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
            create_iter_unit(tbs[j], iter, miter->iu[j]);
         }
-        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
-        //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
+        while ( s=merged_ti_read(miter,&reslen,COMP_ITER_UNIT(2)) ) puts(s);
+        //while ( s=merged_ti_read(miter,&reslen,COMP_ITER_UNIT(2)) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
         destroy_merged_iter(miter); miter=NULL;     
       }
       for(i=0;i<n;i++) ti_close(tbs[i]);
@@ -1623,7 +1637,7 @@ int stream_1d(char *fn)
            iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
            create_iter_unit(tbs_copies[j], iter, miter->iu[j]);
        }
-       while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+       while ( s=merged_ti_read(miter,&reslen,COMP_ITER_UNIT(1)) ) puts(s);
        destroy_merged_iter(miter); miter=NULL;     
        for(j=0;j<n_chr1pairs;j++) ti_close(tbs_copies[j]);
        free(tbs_copies); tbs_copies=NULL;
