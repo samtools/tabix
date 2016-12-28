@@ -111,7 +111,7 @@ extern "C" {
 	int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	int ti_querys_2d_tid(pairix_t *t, const char *reg);
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
-        const char *merged_ti_read(merged_iter_t *miter, int *len, int (*f)(const void*, const void*));
+        const char *merged_ti_read(merged_iter_t *miter, int *len);
         int pairs_merger(char **fn, int n, BGZF *bzfp);
         int stream_1d(char *fn);
 

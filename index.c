@@ -9,13 +9,13 @@
 #include "knetfile.h"
 #endif
 #include "pairix.h"
+#include <time.h>
 
 #define TAD_MIN_CHUNK_GAP 32768
 // 1<<14 is the size of minimum bin.
 #define TAD_LIDX_SHIFT    14
 #define REGION_SPLIT_CHARACTER   '|'
 #define DEFAULT_DELIMITER '\t'
-#define COMP_ITER_UNIT(s) compare_iter_unit_##s##d
 
 typedef struct {
 	uint64_t u, v;
@@ -54,8 +54,6 @@ struct __ti_iter_t {
         pair64_t *off;
         ti_intv_t intv;
 };
-
-
 
 
 
@@ -136,7 +134,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 	intv->ss = intv->se = 0; intv->ss2 = intv->se2 = 0; intv->beg = intv->end = -1; intv->beg2 = intv->end2 = -1;
 	for (i = 0; i <= len; ++i) {
 		if (line[i] == conf->delimiter || line[i] == 0) {
-            ++ncols;
+                        ++ncols;
 			if (id == conf->sc) {
 				intv->ss = line + b; intv->se = line + i;
                         } else if (conf->sc2 && id == conf->sc2) {
@@ -157,7 +155,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 				if (intv->end2 < 1) intv->end2 = 1;
 			} else if(id == conf->ec) {
 				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
-					if (id == conf->ec) intv->end = strtol(line + b, &s, 0);
+					intv->end = strtol(line + b, &s, 0);
 				} else if ((conf->preset&0xffff) == TI_PRESET_SAM) {
 					if (id == 6) { // CIGAR
 						int l = 0, op;
@@ -190,7 +188,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 				}
 			} else if(conf->ec2 && id == conf->ec2) {
 				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
-					if (id == conf->ec2) intv->end2 = strtol(line + b, &s, 0);
+					intv->end2 = strtol(line + b, &s, 0);
                                 }
 			} else {
 				if ((conf->preset&0xffff) == TI_PRESET_SAM) {
@@ -229,19 +227,13 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 			++id;
 		}
 	}
-/*
-	if (ncols < conf->sc || ncols < conf->bc || ncols < conf->ec) {
-		if (ncols == 1) fprintf(stderr,"[get_intv] Is the file tab-delimited? The line has %d field only: %s\n", ncols, line);
-		else fprintf(stderr,"[get_intv] The line has %d field(s) only: %s\n", ncols, line);
-		return(1);
-	}
-*/
 	if (intv->ss == 0 || intv->se == 0 || intv->beg < 0 || intv->end < 0 ) return -1;
         if(conf->sc2 && (intv->ss2 == 0 || intv->se2 == 0)) return -1;
         if(conf->bc2 && (intv->beg2 < 0 || intv->end2 < 0)) return -1;
         if(conf->ec2 && (intv->beg2 < 0 || intv->end2 < 0)) return -1;
 	return 0;
 }
+
 
 static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 {
@@ -1090,11 +1082,18 @@ pairix_t *ti_open(const char *fn, const char *fnidx)
 {
 	pairix_t *t;
 	BGZF *fp;
+        clock_t here1 = clock();
 	if ((fp = bgzf_open(fn, "r")) == 0) return 0;
+        clock_t here2 = clock();
 	t = calloc(1, sizeof(pairix_t));
+        clock_t here3 = clock();
 	t->fn = strdup(fn);
+        clock_t here4 = clock();
 	if (fnidx) t->fnidx = strdup(fnidx);
+        clock_t here5 = clock();
 	t->fp = fp;
+        clock_t here6 = clock();
+        fprintf(stderr,"    time: %lf %lf %lf %lf %lf\n", (double)(here2-here1)/CLOCKS_PER_SEC, (double)(here3-here2)/CLOCKS_PER_SEC, (double)(here4-here3)/CLOCKS_PER_SEC, (double)(here5-here4)/CLOCKS_PER_SEC, (double)(here6-here5)/CLOCKS_PER_SEC);
 	return t;
 }
 
@@ -1259,22 +1258,7 @@ void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 }
 
 
-int compare_iter_unit_1d (const void *a, const void *b)
-{
-  iter_unit *aa=*(iter_unit**)a;
-  iter_unit *bb=*(iter_unit**)b;
-  if (aa == NULL || aa->s == NULL) {
-    if (bb == NULL) return(0);
-    else if (bb->s == NULL) return(0);
-    else return(1); // non-NULL iter should go before a NULL iter.
-  } else if(bb == NULL || bb->s == NULL) {
-    return(-1);
-  } else {
-    return( aa->iter->intv.beg - bb->iter->intv.beg );  // sort first by beg
-  }
-}
-
-int compare_iter_unit_2d (const void *a, const void *b)
+int compare_iter_unit (const void *a, const void *b)
 {
   iter_unit *aa=*(iter_unit**)a;
   iter_unit *bb=*(iter_unit**)b;
@@ -1293,7 +1277,7 @@ int compare_iter_unit_2d (const void *a, const void *b)
 
 
 // read method for merged_iter
-const char *merged_ti_read(merged_iter_t *miter, int *len, int (*comp_iter_unit)(const void*, const void*))
+const char *merged_ti_read(merged_iter_t *miter, int *len)
 {
     iter_unit *tmp_iu;
     int i,k;
@@ -1309,15 +1293,17 @@ const char *merged_ti_read(merged_iter_t *miter, int *len, int (*comp_iter_unit)
       for(i=0;i<miter->n;i++) { 
         miu[i]->s = ti_iter_read(miu[i]->t->fp, miu[i]->iter, miu[i]->len, seqonly); 
       } // get first entry for each iter
-      qsort((void*)(miu), miter->n, sizeof(iter_unit*), (*comp_iter_unit));  // sort by the first entry. finished iters go to the end.
+      qsort((void*)(miu), miter->n, sizeof(iter_unit*), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
       miter->first=0;
     }
     else if(miu[0]->s==NULL) {
       miu[0]->s = ti_iter_read(miu[0]->t->fp, miu[0]->iter, miu[0]->len, seqonly); // get next entry for the flushed iter 
-    
+   
+      //qsort((void*)(miu), miter->n, sizeof(iter_unit*), compare_iter_unit); // sort again
+ 
       // put it at the right place in the sorted iu array
       k=0;
-      while( k < miter->n-1 && (*comp_iter_unit)((void*)(miu), (void*)(miu + k + 1 )) >0 ) k++;
+      while( k < miter->n-1 && compare_iter_unit((void*)(miu), (void*)(miu + k + 1 )) >0 ) k++;
       if (k>=1) {
         tmp_iu = miu[0];
         for(i=1;i<=k;i++) miu[i-1] = miu[i];
@@ -1597,8 +1583,8 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
            iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
            create_iter_unit(tbs[j], iter, miter->iu[j]);
         }
-        while ( s=merged_ti_read(miter,&reslen,COMP_ITER_UNIT(2)) ) puts(s);
-        //while ( s=merged_ti_read(miter,&reslen,COMP_ITER_UNIT(2)) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
+        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+        //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
         destroy_merged_iter(miter); miter=NULL;     
       }
       for(i=0;i<n;i++) ti_close(tbs[i]);
@@ -1621,6 +1607,7 @@ int stream_1d(char *fn)
     ti_iter_t iter;
     int reslen;
 
+    clock_t begin = clock();
     tb = load_from_file(fn);
     if(tb==NULL) { fprintf(stderr,"file load failed\n"); return(1); }
     chrpair_list = ti_seqname(tb->idx, &n_chrpairs);
@@ -1628,21 +1615,35 @@ int stream_1d(char *fn)
     chr1_list = get_seq1_list_from_seqpair_list(chrpair_list, n_chrpairs, &n_chr1);  // 'chr1','chr2',...
     if(chr1_list==NULL) { fprintf(stderr, "Cannot retrieve list of first chromosomes\n"); return(1); }
 
+    clock_t interm = clock();
     for(i=0;i<n_chr1;i++){
+       clock_t interm2 = clock();
        chr1pair_list = get_sub_seq_list_for_given_seq1(chr1_list[i], chrpair_list, n_chrpairs, &n_chr1pairs); // 'chr2|chr2', 'chr2|chr3' ... given chr2, this one is not necessarily a sorted list but it doesn't matter.
+       clock_t interm2b = clock();
        miter = create_merged_iter(n_chr1pairs);
        tbs_copies= malloc(n_chr1pairs*sizeof(pairix_t*));
+       clock_t interm2c = clock();
        for(j=0;j<n_chr1pairs;j++){
+           clock_t interm2ca = clock();
            tbs_copies[j] = load_from_file(fn);
+           clock_t interm2cb = clock();
            iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
+           clock_t interm2cc = clock();
            create_iter_unit(tbs_copies[j], iter, miter->iu[j]);
+           clock_t interm2cd = clock();
+           fprintf(stderr, "  time: %lf, %lf, %lf\n", (double)(interm2cb-interm2ca)/CLOCKS_PER_SEC, (double)(interm2cc-interm2cb)/CLOCKS_PER_SEC, (double)(interm2cd-interm2cc)/CLOCKS_PER_SEC);
        }
-       while ( s=merged_ti_read(miter,&reslen,COMP_ITER_UNIT(1)) ) puts(s);
+       clock_t interm3 = clock();
+       while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+       clock_t interm4 = clock();
        destroy_merged_iter(miter); miter=NULL;     
        for(j=0;j<n_chr1pairs;j++) ti_close(tbs_copies[j]);
        free(tbs_copies); tbs_copies=NULL;
        free(chr1pair_list);
+       fprintf(stderr, "time: %lf, %lf, %lf, %lf\n", (double)(interm2b-interm2)/CLOCKS_PER_SEC, (double)(interm2c-interm2b)/CLOCKS_PER_SEC, (double)(interm3-interm2b)/CLOCKS_PER_SEC, (double)(interm4-interm3)/CLOCKS_PER_SEC); 
     }
+    clock_t end = clock();
+    fprintf(stderr, "time: %lf, %lf\n", (double)(interm-begin)/CLOCKS_PER_SEC, (double)(end-interm)/CLOCKS_PER_SEC); 
 
     ti_close(tb);
     for(i=0;i<n_chr1;i++) free(chr1_list[i]);
