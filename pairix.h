@@ -84,6 +84,12 @@ typedef struct {
     char first;
 } merged_iter_t;
 
+typedef struct {
+    pairix_t *t;
+    ti_iter_t *iter;
+    int n;
+    int curr;
+} sequential_iter_t;
 
 
 extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
@@ -106,12 +112,16 @@ extern "C" {
 	ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
 	ti_iter_t ti_querys_2d(pairix_t *t, const char *reg);
+        sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs);
+        sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg);
+
 	int ti_query_tid(pairix_t *t, const char *name, int beg, int end);
 	int ti_querys_tid(pairix_t *t, const char *reg);
 	int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	int ti_querys_2d_tid(pairix_t *t, const char *reg);
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
         const char *merged_ti_read(merged_iter_t *miter, int *len);
+        const char *sequential_ti_read(sequential_iter_t *siter, int *len);
         int pairs_merger(char **fn, int n, BGZF *bzfp);
         int stream_1d(char *fn);
 
@@ -194,6 +204,21 @@ extern "C" {
 
         /* get a sub-list of seq (chrpair) names given seq2, returned array is an array of pointers to the element of the original array */
         char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* get a sub-list of seq2 (chr2) names given seq1, returned array must be freed at both array level and element level. */
+        char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* get a sub-list of seq1 (chr1) names given seq2, returned array must be freed at both array level and element level. */ 
+        char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* initialize an empty sequential_iter associated with a pairix_t struct */
+        sequential_iter_t *create_sequential_iter(pairix_t *t);
+
+        /* destructor for sequential_iter */
+        void destroy_sequential_iter(sequential_iter_t *siter);
+
+        /* add an iter to sequential_iter - the array size is dynamically incremented */
+        void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter);
 
 
 

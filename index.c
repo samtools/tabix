@@ -1110,6 +1110,86 @@ int ti_lazy_index_load(pairix_t *t)
 	return 0;
 }
 
+
+// reg can contain wildcard for one of the two mates ('*')
+sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
+{
+   int n_seqpair_list;
+   int n_sub_list;
+   char *sp, *chr1, *chr2, **chr1list, **chr1pairlist, **chrpairlist;
+   char *chrend;
+   char chronly=1;
+   int i;
+
+   if((sp = strchr(reg, REGION_SPLIT_CHARACTER)) != NULL){
+      if(sp == reg + 1 && reg[0]=='*') {    // '*|c:s-e'
+         char *chr2 = sp + 1;
+
+         // get the second chromosome and the list of the first chromosomes pairing with the second chromosome.
+         // extract only chr part temporarily (split the beg and end part for now)
+         if( (chrend = strchr(chr2, ':')) != NULL) { 
+            *chrend=0; chronly=0;  
+         }
+         char **chrpairlist = ti_seqname(t->idx, &n_seqpair_list);
+         fprintf(stderr,"chr2 = %s, n_seqpair_list = %d\n", chr2, n_seqpair_list); //debugging
+         chr1list = get_seq1_list_for_given_seq2(chr2, chrpairlist, n_seqpair_list, &n_sub_list);
+         if(chronly==0) *chrend=':';  // revert to original region string including beg and end
+         fprintf(stderr, "chr2 = %s, n_sub_list = %d\n", chr2, n_sub_list); // debugging
+         // create an array of regions in string.
+         char **regions = malloc(n_sub_list * sizeof(char*));
+         for(i=0;i<n_sub_list;i++){
+            regions[i] = malloc((strlen(chr1list[i]) + strlen(chr2) + 2) * sizeof(char));
+            strcpy(regions[i], chr1list[i]); 
+            *(regions[i] + strlen(regions[i]) + 1) = 0;
+            *(regions[i] + strlen(regions[i])) = REGION_SPLIT_CHARACTER; 
+            strcat(regions[i], chr2);
+            fprintf(stderr,"region=%s\n", regions[i]);  //debugging
+         }
+
+         // multi-region query
+         sequential_iter_t *siter = ti_querys_2d_multi(t, regions, n_sub_list);
+         free(chrpairlist);
+         for(i=0;i<n_sub_list;i++) { free(chr1list[i]); free(regions[i]); }
+         free(chr1list);
+         free(regions);
+         return(siter);
+
+      } else if(sp == strlen(reg)-2 && sp[1]=='*'){  // 'c:s-e|*'
+         sp=0; char *chr1 = reg;
+         if( chrend = strchr(chr1, ':') != NULL) { 
+            chrend=0; chronly=0;
+         }
+         char **chrpairlist = ti_seqname(t->idx, &n_seqpair_list);
+         chr1pairlist = get_seq2_list_for_given_seq1(chr1, chrpairlist, n_seqpair_list, &n_sub_list);
+         if(chronly==0) chrend=':';
+         fprintf(stderr,"%s\n", chr1pairlist[0]);
+         sequential_iter_t *siter = ti_querys_2d_multi(t, chr1pairlist, n_sub_list);
+         free(chrpairlist);
+         free(chr1pairlist);
+         return(siter);
+      } else {  // no wildcard
+         sequential_iter_t *siter = create_sequential_iter(t);
+         add_to_sequential_iter ( siter, ti_querys_2d(t,reg) );
+         return(siter);
+      }
+   }else {  // 1d query (let's regard it as 1d query on 1d index for now)
+         sequential_iter_t *siter = create_sequential_iter(t);
+         add_to_sequential_iter ( siter, ti_querys_2d(t,reg) );
+         return(siter);
+   }
+}
+
+sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    int i;
+    for(i=0;i<nRegs;i++){
+      add_to_sequential_iter ( siter, ti_querys_2d(t, regs[i]) );
+    }
+    return(siter);
+}
+
+
 ti_iter_t ti_queryi(pairix_t *t, int tid, int beg, int end)
 {
         return ti_queryi_2d(t,tid,beg,end,-1,-1);
@@ -1209,6 +1289,34 @@ const char *ti_read(pairix_t *t, ti_iter_t iter, int *len)
 	return ti_iter_read(t->fp, iter, len, 0);
 }
 
+
+// create an empty sequential iterator
+sequential_iter_t *create_sequential_iter(pairix_t *t)
+{
+  sequential_iter_t *siter = malloc(sizeof(sequential_iter_t));
+  siter->t = t;
+  siter->n = 0;
+  siter->curr = 0;
+  siter->iter = NULL; 
+  return(siter);
+}
+
+// destroy a sequential iterator
+void destroy_sequential_iter(sequential_iter_t *siter)
+{
+  int i;
+  for(i=0;i<siter->n;i++) ti_iter_destroy(siter->iter[i]);
+  free(siter->iter);
+  free(siter);
+}
+
+// add an iter element to a sequential iterator, the size is dynamically incremented.
+void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter)
+{
+  siter->n++;
+  siter->iter=realloc(siter->iter, siter->n * sizeof(ti_iter_t));
+  siter->iter[siter->n-1] = iter;
+}
 
 // create an empty merged_iter_t struct with predefined length
 merged_iter_t *create_merged_iter(int n)
@@ -1315,6 +1423,22 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
 }
 
 
+const char *sequential_ti_read(sequential_iter_t *siter, int *len)
+{
+    if(!siter) { fprintf(stderr,"Null merged_iter_t\n"); return(NULL); }
+    if(siter->n<=0) { fprintf(stderr,"No iter_unit lement in merged_iter_t\n"); return(NULL); }
+
+    char *s = ti_iter_read(siter->t->fp,siter->iter[siter->curr], len, 0); 
+    while(s==NULL && siter->curr < siter->n - 1) { 
+      siter->curr++; 
+      s = ti_iter_read(siter->t->fp,siter->iter[siter->curr], len, 0); 
+    }
+    return s;
+}
+
+
+
+
 //compare two strings, but different from strcmp.
 //for a pair of strings 'chr1|chr2' vs 'chr10|chr13', it compares chr1 vs chr10 first and then do chr2 vs chr13. This results in an ordering different from strcmp-based sort, because 'chr10' comes before 'chr1|' whereas 'chr1' comes before 'chr10'.
 int strcmp2d(const void* a, const void* b)
@@ -1398,6 +1522,80 @@ char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
     } else { fprintf(stderr,"Null concatenated seq list\n"); return(0); }
 }
 
+
+// given a chromosome for mate1 (seq1='chr1') return the array containing all seqpairs matching seq1 ('chr1', 'chr2', ... for seqpairs 'chr1|chr1', 'chr1|chr2', ... )
+// the returned subarray contains copies of seq2 sequences (need to be freed later) 
+char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split, b;
+    char **sublist;
+
+    // first round, count the number 
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
+      b_split[0] = b;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1)==0 ) { 
+         sublist[k] = malloc((strlen(b_split+1)+1)*sizeof(char));
+         strcpy(sublist[k], b_split+1); 
+         k++; 
+      }
+      b_split[0] = b;
+    }
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
+
+
+// given a chromosome for mate2 (seq2='chr1') return the array containing all seqpairs matching seq2 ('chr1','chr2', ... for seqpairs 'chr1|chr1', 'chr2|chr1', ... )
+// the returned subarray contains copies of seq1 sequences (need to be freed later) 
+char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split, b;
+    char **sublist;
+
+    // first round, count the number 
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      if ( strcmp(b_split+1, seq2)==0 ) k++;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      if ( strcmp(b_split+1, seq2)==0 ) { 
+         *b_split=0;
+         sublist[k] = malloc((strlen(seqpair_list[i])+1)*sizeof(char));
+         strcpy(sublist[k], seqpair_list[i]); 
+         *b_split =  REGION_SPLIT_CHARACTER;
+         k++;
+      }
+    }
+    fprintf(stderr,"k=%d, *pn_sub_list=%d\n",k,*pn_sub_list); // debugging
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
 
 // given a chromosome for mate1 (seq1='chr1') return the array containing all seqpairs matching seq1 ('chr1|chr1', 'chr1|chr2', ... )
 // the returned subarray contains pointers to the original seqpair_list elements.
