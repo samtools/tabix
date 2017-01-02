@@ -1156,12 +1156,12 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
 
       } else if(sp == strlen(reg)-2 && sp[1]=='*'){  // 'c:s-e|*'
          sp=0; char *chr1 = reg;
-         if( chrend = strchr(chr1, ':') != NULL) { 
-            chrend=0; chronly=0;
+         if( (chrend = strchr(chr1, ':')) != NULL) { 
+            *chrend=0; chronly=0;
          }
          char **chrpairlist = ti_seqname(t->idx, &n_seqpair_list);
          chr1pairlist = get_seq2_list_for_given_seq1(chr1, chrpairlist, n_seqpair_list, &n_sub_list);
-         if(chronly==0) chrend=':';
+         if(chronly==0) *chrend=':';
          fprintf(stderr,"%s\n", chr1pairlist[0]);
          sequential_iter_t *siter = ti_querys_2d_multi(t, chr1pairlist, n_sub_list);
          free(chrpairlist);
