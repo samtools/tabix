@@ -1,5 +1,5 @@
 # pairix
-* Pairix is a tool for random accessing a compressed text file. Specifically, it does indexing and querying a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
+* Pairix is a tool for random accessing a compressed text file. Specifically, it does indexing and querying on a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
 * As an example, you have a text file with millions or bilions of lines like below, and you want to extract lines in (chr10,chrX) pair. An awk command would read the file from the beginning till you find the pair. However, if your file is sorted by chromosome pair and indexed, you can extract the lines almost instantly. That's what pairix does.:
  
   ex1)
@@ -57,7 +57,9 @@ bgzip textfile
 
 # indexing
 pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_column> [-u<pos2_start_column> -v<pos2_end_column>] [-T] textfile.gz    # u, v is required for full 2d query.
+# column indices are 1-based.
 # use -T option for a space-delimited file.
+
 
 # querying
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
