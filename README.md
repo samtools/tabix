@@ -28,6 +28,10 @@
     * [Installation](#installation-for-pairs_merger)
     * [Usage](#usage-for-pairs_merger)
     * [Examples](#usage-examples-for-pairs_merger)
+* [Streamer_1d](#streamer_1d)
+    * [Installation](#installation-for-streamer-1d)
+    * [Usage](#usage-for-streamer-1d)
+    * [Examples](#usage-examples-for-streamer-1d)
 * [Difference between pairix and tabix](#difference-between-pairix-and-tabix)
 * [Note](#note)
 
@@ -228,6 +232,31 @@ bin/pairs_merger samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz s
 bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
 ```
 
+ 
+## Streamer_1d
+Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort (not recommended). 
+
+### Installation for streamer_1d
+See [Installation for pairix](#installation-for-pairix)
+
+### Usage for streamer_1d
+```
+streamer_1d <in.2d.gz> > out.1d.pairs
+streamer_1d <in.2d.gz> | bgzip -c > out.1d.pairs.gz
+```
+
+### Usage Examples for streamer_1d
+
+
+### FAQ for streamer_1d
+#### The tool creates many file pointers for the input file, which is equivalent to opening many files simultaneously. Your OS may have a limit on the number of files that can be open at a time. For example, for Mac El Captain and Sierra, it is by default set to 256. This is usually enough, but in case the number of chromosomes in your pairs file happen to be larger than or close to this limit, the tool may produce an error message saying file limit is exceeded. You can increase this limit outside the program. For example, for Mac El Captain and Sierra, the following command raises the limit to 2000.
+```
+# view the limits
+uimit -a
+
+# raise the limit to 2000
+ulimit -n 2000
+```
 
 ## Difference between pairix and tabix
 * If you're thinking "Sounds familiar.. How is it different from tabix?"
@@ -236,7 +265,8 @@ bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
   * Pairix comes with a pairs_merger util for fast merging of sorted pairs files, that makes use of the index.
   * Pairix can handle space-delimited files as well as tab-delimited files.
   * Tabix and pairix are not cross-compatible, although pairix can optionally index based on a single colume. The index structure had to change to accomodate the double-colume requirement. If you want to create a single-colume index, it is recommended to use Tabix, to avoid potential confusion.
-  
+ 
+ 
 ## Note
 * Currently 2D indexing supports only 2D query and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
 * The index produced by this modified pairix is not compatible with the original tabix index. They are based on different structures.
