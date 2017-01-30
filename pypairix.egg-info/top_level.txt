@@ -1,1 +1,1 @@
-pairix
+pypairix
