@@ -24,6 +24,9 @@
     * [Installation](#installation-for-pypairix)
     * [Examples](#usage-examples-for-pypairix)
 * [Rpairix](#rpairix)
+* [Utils](#utils)
+    * [process_merged_nodup.sh](#process_merged_nodup-sh)
+    * [process_old_merged_nodup.sh](#process_old_merged_nodup-sh)
 * [Pairs_merger](#pairs_merger)
     * [Installation](#installation-for-pairs_merger)
     * [Usage](#usage-for-pairs_merger)
@@ -205,6 +208,18 @@ print str(chrplist)
 ## Rpairix
 * Rpairix is an R package for reading pairix-indexed pairs files. It has its own repo: https://github.com/4dn-dcic/Rpairix
 
+## Utils
+### process_merged_nodup.sh 
+* This script sorts, bgzips and indexes a newer version of merged_nodups.txt file with strand1 as the first column.
+```
+Usage: process_merged_nodup.sh <merged_nodups.txt>
+```
+
+### process_old_merged_nodup.sh 
+* This script sorts, bgzips and indexes an old version of merged_nodups.txt file with readID as the first column.
+```
+Usage: process_old_merged_nodup.sh <merged_nodups.txt>
+```
 
 ## Pairs_merger
 Pairs_merger is a tool that merges indexed pairs files that are already sorted and creates a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k interators. It does not require additional memory nor produces temporary files.
