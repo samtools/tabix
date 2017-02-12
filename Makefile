@@ -26,7 +26,6 @@ all-recur lib-recur clean-recur cleanlocal-recur install-recur:
 
 all:$(PROG)
 		mkdir -p bin; mv pairix bgzip pairs_merger streamer_1d bin;
-		cp process_merged_nodup.sh process_old_merged_nodup.sh bin;
 		chmod +x bin/*;
 
 lib:libpairix.a
