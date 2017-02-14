@@ -71,7 +71,15 @@ pairix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make s
 ```
 
 ### Usage examples for pairix
-#### Preparing a double-chromosome-block sorted text file
+
+#### Preparing a 4dn-style pairs file. This is a double-chromosome-block sorted test file.
+(column 2 and 4 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
+```
+sort -k2,2 -k4,4 -k3,3 -k5,5 samples/4dn.bsorted.chr21_22_only.pairs |bgzip -c > samples/4dn.bsorted.chr21_22_only.pairs.gz
+pairix -f -s2 -b3 -e3 -d4 -u5 samples/4dn.bsorted.chr21_22_only.pairs.gz
+```
+
+#### Preparing a double-chromosome-block sorted merged_nodups.txt file (Juicer style pairs file)
 (column 2 and 6 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
 ```
 # the following has already be done and the final merged_nodup.tab.chrblock_sorted.txt.gz is already in the samples folder.
