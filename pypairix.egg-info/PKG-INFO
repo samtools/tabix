@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: pypairix
-Version: 0.0.5
+Version: 0.0.6
 Summary: 
         Pypairix is a Python module for fast querying on a pairix-indexed bgzipped text file that contains a pair of genomic coordinates per line.
 
@@ -18,7 +18,7 @@ Home-page: https://github.com/4dn-dcic/pairix
 Author: Soo Lee, Carl Vitzthum
 Author-email: duplexa@gmail.com
 License: MIT
-Download-URL: https://github.com/4dn-dcic/pairix/tarball/0.0.5
+Download-URL: https://github.com/4dn-dcic/pairix/tarball/0.0.6
 Description: UNKNOWN
 Keywords: pairix,tabix,bgzip,bioinformatics,genomics,hi-c
 Platform: UNKNOWN

@@ -1152,3 +1152,19 @@ const char *ti_read(tabix_t *t, ti_iter_t iter, int *len)
 {
 	return ti_iter_read(t->fp, iter, len);
 }
+
+/* convert string 'region1|region2' to 'region2|region1' */
+char *flip_region ( char* s) {
+    char s_flp[MAX_REGION_STR_LEN]
+    l = strlen(s);
+    for(i = 0; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
+    s[i]=0;
+    split_pos = i;
+    l2 = l-1-i
+    strcpy(s_flp, s + i + 1)
+    s_flp[l2] = REGION_SPLIT_CHARACTER
+    strcpy(s_flp + l2 + 1, s)
+    return(s_flp)
+}
+
+

@@ -135,6 +135,9 @@ extern "C" {
 	const ti_conf_t *ti_get_conf(ti_index_t *idx);
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
+        /* convert string 'region1|region2' to 'region2|region1' */
+        char* flip_region ( char* s);
+
 	/*******************
 	 * Deprecated APIs *
 	 *******************/
