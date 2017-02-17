@@ -25,6 +25,7 @@ import sys
 import pypairix
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
+TEST_FILE_2D_4DN = 'samples/4dn.bsorted.chr21_22_only.pairs.gz'
 TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 TEST_FILE_2D_SPACE = 'samples/merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
 
@@ -44,7 +45,7 @@ def read_vcf(filename):
     return retval
 
 
-def find_pairs_type(filename, delimiter):
+def find_pairs_type(filename, delimiter='\t'):
     """Attempt to determine if input pairs file is of type: juicer, 4DN,
     or undetermined. Do this by testing string values of """
     is_juicer = False
@@ -58,13 +59,11 @@ def find_pairs_type(filename, delimiter):
         if is_str(fields[2]) and is_str(fields[6]):
             is_juicer = True
         if is_str(fields[2]) and is_str(fields[4]):
-            if_4DN = True
-        if is_juicer and not is_4DN:
-            return 'juicer'
-        elif not is_juicer and is_4DN:
+            is_4DN = True
+        if not is_juicer and is_4DN:
             return '4DN'
-        elif is_juicer and is_4DN:
-            return 'undetermined'
+        elif is_juicer:
+            return 'juicer'
     return 'undetermined'
 
 
@@ -79,6 +78,9 @@ def is_str(s):
 
 def read_pairs(filename, file_type='undetermined', delimiter='\t'):
     """Read a pairs file and return a list of [chrom1, start1, end1, chrom2, start2, end2] items."""
+    # handle this a different way?
+    if file_type == 'undetermined':
+        return []
     retval = []
     for line in gzip.open(filename):
         try:
@@ -111,12 +113,24 @@ def get_result(regions, chrom, start, end):
             retval.append(r)
     return retval
 
+
 def get_result_2D(regions, chrom, start, end, chrom2, start2, end2):
     retval = []
     for r in regions:
         if r[0] == chrom and overlap1(r[1], r[2], start, end) and r[3] == chrom2 and overlap1(r[4], r[5], start2, end2):
             retval.append(r)
     return retval
+
+
+def build_it_result(it, f_type):
+    """Build results using the pairix iterator based on the filetype"""
+    if f_type == 'juicer':
+        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+    elif f_type == '4DN':
+        pr_result = [[x[1], x[2], x[2], x[3], x[4], x[4]] for x in it]
+    elif f_type == 'undetermined':
+        pr_result = []
+    return pr_result
 
 
 ## 1D query on 1D indexed file
@@ -155,12 +169,37 @@ class TabixTest_2(unittest.TestCase):
     def test_querys(self):
         query = '{}:{}-{}|{}'.format(self.chrom, self.start, self.end, self.chrom2)
         it = self.pr.querys2D(query)
-        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
 
 ## 2D query on 2D indexed file
 class TabixTest2D(unittest.TestCase):
+    f_type = find_pairs_type(TEST_FILE_2D)
+    regions = read_pairs(TEST_FILE_2D, f_type)
+    chrom = '10'
+    start = 1
+    end = 1000000
+    chrom2 = '20'
+    start2 = 50000000
+    end2 = 60000000
+    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
+    pr = pypairix.open(TEST_FILE_2D)
+
+    def test_query2(self):
+        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
+
+    def test_querys_2(self):
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it = self.pr.querys2D(query)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
+
+
+## 2D query on 2D indexed file with chromosomes input in reverse order
+class TabixTest2D_reverse(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D)
     regions = read_pairs(TEST_FILE_2D, f_type)
     chrom2 = '10'
@@ -169,19 +208,46 @@ class TabixTest2D(unittest.TestCase):
     chrom = '20'
     start = 50000000
     end = 60000000
-    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
+    # reverse reversed results to get them in the required order here
+    result = get_result_2D(regions, chrom2, start2, end2, chrom, start, end)
     pr = pypairix.open(TEST_FILE_2D)
 
-    def test_query2(self):
+    def test_query2_rev(self):
         it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
-    # def test_querys_2(self):
-    #     query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-    #     it = self.pr.querys2D(query)
-    #     pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-    #     self.assertEqual(self.result, pr_result)
+    def test_querys_2_rev(self):
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it = self.pr.querys2D(query)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
+
+
+## 2D query on 2D indexed file with chromosomes using a 4DN pairs file
+class TabixTest2D_4DN(unittest.TestCase):
+    f_type = find_pairs_type(TEST_FILE_2D_4DN)
+    regions = read_pairs(TEST_FILE_2D_4DN, f_type)
+    chrom = 'chr21'
+    start = 1
+    end = 48129895
+    chrom2 = 'chr22'
+    start2 = 1
+    end2 = 51304566
+    # reverse reversed results to get them in the required order here
+    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
+    pr = pypairix.open(TEST_FILE_2D_4DN)
+
+    def test_query2_4dn(self):
+        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
+
+    def test_querys_2_4dn(self):
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it = self.pr.querys2D(query)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
 
 
 ## 2D query on 2D indexed space-delimited file
@@ -199,13 +265,13 @@ class TabixTest2DSpace(unittest.TestCase):
 
     def test_query2(self):
         it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
     def test_querys_2(self):
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
         it = self.pr.querys2D(query)
-        pr_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+        pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
 
