@@ -2,6 +2,7 @@
  * The MIT License
  *
  * Copyright (c) 2011 Seoul National University.
+ *               2016 Soo Lee
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -25,37 +26,40 @@
  */
 
 /*
- * Contact: Hyeshik Chang <hyeshik@snu.ac.kr>
+ * Contact: Soo Lee (duplexa@gmail.com)
  */
 
 #define PY_SSIZE_T_CLEAN
-#include <Python/Python.h>
+#include "Python.h"
 #include "pairix.h"
 
-static PyObject *TabixError;
+static PyObject *PairixError;
 
 typedef struct {
     PyObject_HEAD
-    tabix_t *tb;
+    pairix_t *tb;
     char *fn;
-} TabixObject;
+    PyObject *blocknames;
+    int nblocks;
+} PairixObject;
 
 typedef struct {
     PyObject_HEAD
-    TabixObject *tbobj;
+    PairixObject *tbobj;
     ti_iter_t iter;
-} TabixIteratorObject;
+} PairixIteratorObject;
 
-static PyTypeObject Tabix_Type, TabixIterator_Type;
 
-/* --- TabixIterator --------------------------------------------------- */
+static PyTypeObject Pairix_Type, PairixIterator_Type;
+
+/* --- PairixIterator --------------------------------------------------- */
 
 static PyObject *
-tabixiter_create(TabixObject *parentidx, ti_iter_t iter)
+pairixiter_create(PairixObject *parentidx, ti_iter_t iter)
 {
-    TabixIteratorObject *self;
+    PairixIteratorObject *self;
 
-    self = PyObject_New(TabixIteratorObject, &TabixIterator_Type);
+    self = PyObject_New(PairixIteratorObject, &PairixIterator_Type);
     if (self == NULL)
         return NULL;
 
@@ -67,7 +71,7 @@ tabixiter_create(TabixObject *parentidx, ti_iter_t iter)
 }
 
 static void
-tabixiter_dealloc(TabixIteratorObject *self)
+pairixiter_dealloc(PairixIteratorObject *self)
 {
     ti_iter_destroy(self->iter);
     Py_DECREF(self->tbobj);
@@ -75,7 +79,7 @@ tabixiter_dealloc(TabixIteratorObject *self)
 }
 
 static PyObject *
-tabixiter_iter(PyObject *self)
+pairixiter_iter(PyObject *self)
 {
     Py_INCREF(self);
     return self;
@@ -88,12 +92,14 @@ tabixiter_iter(PyObject *self)
 #endif
 
 static PyObject *
-tabixiter_iternext(TabixIteratorObject *self)
+pairixiter_iternext(PairixIteratorObject *self)
 {
     const char *chunk;
     int len, i;
+    char delimiter = ti_get_conf(self->tbobj->tb->idx)->delimiter;
 
     chunk = ti_read(self->tbobj->tb, self->iter, &len);
+
     if (chunk != NULL) {
         PyObject *ret, *column;
         Py_ssize_t colidx;
@@ -106,7 +112,7 @@ tabixiter_iternext(TabixIteratorObject *self)
         colidx = 0;
         ptr = begin = chunk;
         for (i = len; i > 0; i--, ptr++)
-            if (*ptr == '\t') {
+            if (*ptr == delimiter) {
                 column = PYOBJECT_FROM_STRING_AND_SIZE(begin,
                                                        (Py_ssize_t)(ptr - begin));
                 if (column == NULL || PyList_Append(ret, column) == -1) {
@@ -132,17 +138,17 @@ tabixiter_iternext(TabixIteratorObject *self)
         return NULL;
 }
 
-static PyMethodDef tabixiter_methods[] = {
+static PyMethodDef pairixiter_methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
-static PyTypeObject TabixIterator_Type = {
+static PyTypeObject PairixIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pairix.iter",      /*tp_name*/
-    sizeof(TabixIteratorObject), /*tp_basicsize*/
+    "pypairix.iter",      /*tp_name*/
+    sizeof(PairixIteratorObject), /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
-    (destructor)tabixiter_dealloc,  /*tp_dealloc*/
+    (destructor)pairixiter_dealloc,  /*tp_dealloc*/
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
@@ -163,9 +169,9 @@ static PyTypeObject TabixIterator_Type = {
     0,                          /*tp_clear*/
     0,                          /*tp_richcompare*/
     0,                          /*tp_weaklistoffset*/
-    tabixiter_iter,             /*tp_iter*/
-    (iternextfunc)tabixiter_iternext, /*tp_iternext*/
-    tabixiter_methods,          /*tp_methods*/
+    pairixiter_iter,             /*tp_iter*/
+    (iternextfunc)pairixiter_iternext, /*tp_iternext*/
+    pairixiter_methods,          /*tp_methods*/
     0,                          /*tp_members*/
     0,                          /*tp_getset*/
     0,                          /*tp_base*/
@@ -181,15 +187,17 @@ static PyTypeObject TabixIterator_Type = {
 };
 
 
-/* --- Tabix ----------------------------------------------------------- */
+/* --- Pairix ----------------------------------------------------------- */
 
 static PyObject *
-tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+pairix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    TabixObject *self;
+    PairixObject *self;
     const char *fn, *fnidx=NULL;
     static char *kwnames[]={"fn", "fnidx", NULL};
-    tabix_t *tb;
+    pairix_t *tb;
+    char **blocknames;
+    int i;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|z:open",
                                      kwnames, &fn, &fnidx))
@@ -197,158 +205,244 @@ tabix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     tb = ti_open(fn, fnidx);
     if (tb == NULL) {
-        PyErr_SetString(TabixError, "Can't open the index file.");
+        PyErr_SetString(PairixError, "Can't open the index file.");
         return NULL;
     }
 
-    self = (TabixObject *)type->tp_alloc(type, 0);
+    self = (PairixObject *)type->tp_alloc(type, 0);
     if (self == NULL)
         return NULL;
 
     self->tb = tb;
     self->fn = strdup(fn);
-
+    self->tb->idx = ti_index_load(self->fn);
+    blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
+    self->blocknames = PyList_New(self->nblocks);
+    if(!self->blocknames) { return NULL; }
+    for(i=0;i<self->nblocks;i++){
+      PyObject *val = Py_BuildValue("s",blocknames[i]);
+      if(!val) { Py_DECREF(self->blocknames); return NULL; }
+      PyList_SET_ITEM(self->blocknames,i,val);
+    }
+    free(blocknames);
     return (PyObject *)self;
 }
 
 static void
-tabix_dealloc(TabixObject *self)
+pairix_dealloc(PairixObject *self)
 {
     free(self->fn);
+    Py_DECREF(self->blocknames);
     ti_close(self->tb);
     PyObject_Del(self);
 }
 
 static PyObject *
-tabix_query(TabixObject *self, PyObject *args)
+pairix_query(PairixObject *self, PyObject *args)
 {
     char *name;
-    int begin, end;
+    int begin, end, tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end))
-        return NULL;
-
-    result = ti_query(self->tb, name, begin, end);
-    if (result == NULL) {
-        PyErr_SetString(TabixError, "query failed");
+    if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end)){
+        PyErr_SetString(PairixError, "Argument error! query() takes the following args: <chromosome (str)> <begin (int)> <end (int)>");
         return NULL;
     }
 
-    return tabixiter_create(self, result);
+    tid_test = ti_query_tid(self->tb, name, begin, end);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
+
+    result = ti_query(self->tb, name, begin, end);
+    if (result == NULL) {
+        PyErr_SetString(PairixError, "query failed");
+        return NULL;
+    }
+
+    return pairixiter_create(self, result);
 }
 
 static PyObject *
-tabix_queryi(TabixObject *self, PyObject *args)
+pairix_queryi(PairixObject *self, PyObject *args)
 {
     int tid, begin, end;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end))
+    if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end)){
         return NULL;
+    }
 
     result = ti_queryi(self->tb, tid, begin, end);
     if (result == NULL) {
-        PyErr_SetString(TabixError, "query failed");
+        PyErr_SetString(PairixError, "query failed");
         return NULL;
     }
 
-    return tabixiter_create(self, result);
+    return pairixiter_create(self, result);
 }
 
 static PyObject *
-tabix_querys(TabixObject *self, PyObject *args)
+pairix_querys(PairixObject *self, PyObject *args)
 {
     const char *reg;
+    int tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "s:querys", &reg))
-        return NULL;
-
-    result = ti_querys(self->tb, reg);
-    if (result == NULL) {
-        PyErr_SetString(TabixError, "query failed");
+    if (!PyArg_ParseTuple(args, "s:querys", &reg)){
+        PyErr_SetString(PairixError, "Argument error! querys2D() takes one str formatted as: '{CHR}:{START}-{END}'");
         return NULL;
     }
 
-    return tabixiter_create(self, result);
+    tid_test = ti_querys_tid(self->tb, reg);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
+
+    result = ti_querys(self->tb, reg);
+    if (result == NULL) {
+        PyErr_SetString(PairixError, "query failed");
+        return NULL;
+    }
+
+    return pairixiter_create(self, result);
 }
 
 /* ------- PAIRIX 2D QUERYING METHODS ------- */
 
 static PyObject *
-tabix_query_2D(TabixObject *self, PyObject *args)
+pairix_query_2D(PairixObject *self, PyObject *args)
 {
     char *name, *name2;
-    int begin, end, begin2, end2;
+    int begin, end, begin2, end2, tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "siisii:query_2D", &name, &begin, &end, &name2, &begin2, &end2))
-        return NULL;
-
-    result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
-    if (result == NULL) {
-        PyErr_SetString(TabixError, "query failed");
+    if (!PyArg_ParseTuple(args, "siisii:query2D", &name, &begin, &end, &name2, &begin2, &end2)){
+        PyErr_SetString(PairixError, "Argument error! query2D() takes the following args: <1st_chromosome (str)> <begin (int)> <end (int)> <2nd_chromosome (str)> <begin (int)> <end (int)>");
         return NULL;
     }
 
-    return tabixiter_create(self, result);
+    tid_test = ti_query_2d_tid(self->tb, name, begin, end, name2, begin2, end2);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
+
+    result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
+    if (result == NULL) {
+        PyErr_SetString(PairixError, "query failed");
+        return NULL;
+    }
+
+    return pairixiter_create(self, result);
 }
 
 static PyObject *
-tabix_queryi_2D(TabixObject *self, PyObject *args)
+pairix_queryi_2D(PairixObject *self, PyObject *args)
 {
     int tid, begin, end, begin2, end2;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "iiiii:queryi_2D", &tid, &begin, &end, &begin2, &end2))
+    if (!PyArg_ParseTuple(args, "iiiii:queryi2D", &tid, &begin, &end, &begin2, &end2)){
         return NULL;
+    }
 
     result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
     if (result == NULL) {
-        PyErr_SetString(TabixError, "query failed");
+        PyErr_SetString(PairixError, "query failed");
         return NULL;
     }
 
-    return tabixiter_create(self, result);
+    return pairixiter_create(self, result);
 }
 
 static PyObject *
-tabix_querys_2D(TabixObject *self, PyObject *args)
+pairix_querys_2D(PairixObject *self, PyObject *args)
 {
     const char *reg;
+    int tid_test;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "s:querys_2D", &reg))
+    if (!PyArg_ParseTuple(args, "s:querys2D", &reg)){
+        PyErr_SetString(PairixError, "Argument error! querys2D() takes one str formatted as: '{CHR}:{START}-{END}|{CHR}:{START}-{END}'");
         return NULL;
+    }
+
+    tid_test = ti_querys_tid(self->tb, reg);
+    if (tid_test == -1) {
+        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+        return NULL;
+    }
+    else if (tid_test == -2){
+        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        return NULL;
+    }
+    else if (tid_test == -3){
+        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        return NULL;
+    }
 
     result = ti_querys_2d(self->tb, reg);
     if (result == NULL) {
-        PyErr_SetString(TabixError, "query failed");
+        PyErr_SetString(PairixError, "query failed");
         return NULL;
     }
 
-    return tabixiter_create(self, result);
+    return pairixiter_create(self, result);
 }
 
+
 static PyObject *
-tabix_repr(TabixObject *self)
+pairix_get_blocknames(PairixObject *self)
+{
+  return self->blocknames;
+}
+
+
+static PyObject *
+pairix_repr(PairixObject *self)
 {
 #if PY_MAJOR_VERSION < 3
-    return PyString_FromFormat("<tabix fn=\"%s\">", self->fn);
+    return PyString_FromFormat("<pypairix fn=\"%s\">", self->fn);
 #else
-    return PyUnicode_FromFormat("<tabix fn=\"%s\">", self->fn);
+    return PyUnicode_FromFormat("<pypairix fn=\"%s\">", self->fn);
 #endif
 }
 
-static PyMethodDef tabix_methods[] = {
+static PyMethodDef pairix_methods[] = {
     {
         "query",
-        (PyCFunction)tabix_query,
+        (PyCFunction)pairix_query,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
                   "    >>> tb.query(\"chr1\", 1000, 2000)\n"
-                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
                   "name : str\n"
@@ -360,11 +454,11 @@ static PyMethodDef tabix_methods[] = {
     },
     {
         "queryi",
-        (PyCFunction)tabix_queryi,
+        (PyCFunction)pairix_queryi,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
                   "    >>> tb.queryi(0, 1000, 2000)\n"
-                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
                   "tid : int\n"
@@ -376,11 +470,11 @@ static PyMethodDef tabix_methods[] = {
     },
     {
         "querys",
-        (PyCFunction)tabix_querys,
+        (PyCFunction)pairix_querys,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
                   "    >>> tb.querys(\"chr1:1000-2000\")\n"
-                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
                   "region : str\n"
@@ -388,11 +482,11 @@ static PyMethodDef tabix_methods[] = {
     },
     {
         "query2D",
-        (PyCFunction)tabix_query_2D,
+        (PyCFunction)pairix_query_2D,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
                   "    >>> tb.query(\"chr1\", 1000, 2000)\n"
-                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
                   "name : str\n"
@@ -404,11 +498,11 @@ static PyMethodDef tabix_methods[] = {
     },
     {
         "queryi2D",
-        (PyCFunction)tabix_queryi_2D,
+        (PyCFunction)pairix_queryi_2D,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
                   "    >>> tb.queryi(0, 1000, 2000)\n"
-                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
                   "tid : int\n"
@@ -420,15 +514,21 @@ static PyMethodDef tabix_methods[] = {
     },
     {
         "querys2D",
-        (PyCFunction)tabix_querys_2D,
+        (PyCFunction)pairix_querys_2D,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
                   "    >>> tb.querys(\"chr1:1000-2000\")\n"
-                  "    <tabix.iter at 0x17b86e50>\n\n"
+                  "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
                   "region : str\n"
                   "    Query string like \"seq:start-end\".\n")
+    },
+    {
+       "get_blocknames",
+       (PyCFunction)pairix_get_blocknames,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve list of keys (either chromosomes(1D-indexed) or chromosome pairs(2D-indexed)).\n\n")
     },
     /*
     {
@@ -441,26 +541,22 @@ static PyMethodDef tabix_methods[] = {
     */
     {NULL, NULL}           /* sentinel */
 };
-/*
-	ti_iter_t ti_query(tabix_t *t, const char *name, int beg, int end);
-	ti_iter_t ti_queryi(tabix_t *t, int tid, int beg, int end);
-	ti_iter_t ti_querys(tabix_t *t, const char *reg);
-*/
 
-static PyTypeObject Tabix_Type = {
+
+static PyTypeObject Pairix_Type = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pairix.open",              /*tp_name*/
-    sizeof(TabixObject),        /*tp_basicsize*/
+    "pypairix.open",              /*tp_name*/
+    sizeof(PairixObject),        /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
-    (destructor)tabix_dealloc,  /*tp_dealloc*/
+    (destructor)pairix_dealloc,  /*tp_dealloc*/
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
     0,                          /*tp_compare*/
-    (reprfunc)tabix_repr,       /*tp_repr*/
+    (reprfunc)pairix_repr,       /*tp_repr*/
     0,                          /*tp_as_number*/
     0,                          /*tp_as_sequence*/
     0,                          /*tp_as_mapping*/
@@ -478,7 +574,7 @@ static PyTypeObject Tabix_Type = {
     0,                          /*tp_weaklistoffset*/
     0,                          /*tp_iter*/
     0,                          /*tp_iternext*/
-    tabix_methods,              /*tp_methods*/
+    pairix_methods,              /*tp_methods*/
     0,                          /*tp_members*/
     0,                          /*tp_getset*/
     0,                          /*tp_base*/
@@ -488,27 +584,26 @@ static PyTypeObject Tabix_Type = {
     0,                          /*tp_dictoffset*/
     0,                          /*tp_init*/
     0,                          /*tp_alloc*/
-    (newfunc)tabix_new,         /*tp_new*/
+    (newfunc)pairix_new,         /*tp_new*/
     0,                          /*tp_free*/
     0,                          /*tp_is_gc*/
 };
 /* --------------------------------------------------------------------- */
 
-static PyMethodDef tabix_functions[] = {
+static PyMethodDef pairix_functions[] = {
     {NULL, NULL} /* sentinel */
 };
 
 PyDoc_STRVAR(module_doc,
-"Python interface to tabix, Heng Li's generic indexer for TAB-delimited "
-"genome position filesThis is a template module just for instruction.");
+"Python interface to pairix.");
 
 #if PY_MAJOR_VERSION >= 3
-static struct PyModuleDef tabixmodule = {
+static struct PyModuleDef pypairixmodule = {
     PyModuleDef_HEAD_INIT,
-    "pairix",
+    "pypairix",
     module_doc,
     -1,
-    tabix_functions,
+    pairix_functions,
     NULL,
     NULL,
     NULL,
@@ -517,36 +612,36 @@ static struct PyModuleDef tabixmodule = {
 #endif
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC initpairix(void)
+PyMODINIT_FUNC initpypairix(void)
 #else
-PyMODINIT_FUNC PyInit_pairix(void)
+PyMODINIT_FUNC PyInit_pypairix(void)
 #endif
 {
     PyObject *m;
 
-    if (PyType_Ready(&Tabix_Type) < 0)
+    if (PyType_Ready(&Pairix_Type) < 0)
         goto fail;
-    if (PyType_Ready(&TabixIterator_Type) < 0)
+    if (PyType_Ready(&PairixIterator_Type) < 0)
         goto fail;
 
 #if PY_MAJOR_VERSION < 3
-    m = Py_InitModule3("pairix", tabix_functions, module_doc);
+    m = Py_InitModule3("pypairix", pairix_functions, module_doc);
 #else
-    m = PyModule_Create(&tabixmodule);
+    m = PyModule_Create(&pypairixmodule);
 #endif
     if (m == NULL)
         goto fail;
 
-    if (TabixError == NULL) {
-        TabixError = PyErr_NewException("pairix.TabixError", NULL, NULL);
-        if (TabixError == NULL)
+    if (PairixError == NULL) {
+        PairixError = PyErr_NewException("pypairix.PairixError", NULL, NULL);
+        if (PairixError == NULL)
             goto fail;
     }
-    Py_INCREF(TabixError);
-    PyModule_AddObject(m, "TabixError", TabixError);
+    Py_INCREF(PairixError);
+    PyModule_AddObject(m, "PairixError", PairixError);
 
-    PyModule_AddObject(m, "open", (PyObject *)&Tabix_Type);
-    PyModule_AddObject(m, "iter", (PyObject *)&TabixIterator_Type);
+    PyModule_AddObject(m, "open", (PyObject *)&Pairix_Type);
+    PyModule_AddObject(m, "iter", (PyObject *)&PairixIterator_Type);
 
 #if PY_MAJOR_VERSION >= 3
     return m;
