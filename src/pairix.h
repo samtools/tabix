@@ -74,17 +74,22 @@ typedef struct {
 typedef struct {
     pairix_t *t;
     ti_iter_t iter;
-    ti_intv_t *intv;
     int *len;
     char *s;  // This points to iter->str.s. It's redundant but it allows us to flush the string without touching iter->str.s itself.
 } iter_unit;
 
 typedef struct {
-    iter_unit *iu;
+    iter_unit **iu;
     int n;
     char first;
 } merged_iter_t;
 
+typedef struct {
+    pairix_t *t;
+    ti_iter_t *iter;
+    int n;
+    int curr;
+} sequential_iter_t;
 
 
 extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
@@ -107,14 +112,18 @@ extern "C" {
 	ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
 	ti_iter_t ti_querys_2d(pairix_t *t, const char *reg);
+        sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs);
+        sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg);
+
 	int ti_query_tid(pairix_t *t, const char *name, int beg, int end);
 	int ti_querys_tid(pairix_t *t, const char *reg);
 	int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	int ti_querys_2d_tid(pairix_t *t, const char *reg);
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
         const char *merged_ti_read(merged_iter_t *miter, int *len);
+        const char *sequential_ti_read(sequential_iter_t *siter, int *len);
         int pairs_merger(char **fn, int n, BGZF *bzfp);
-        void stream_1d(char *fn);
+        int stream_1d(char *fn);
 
 	/* Destroy the iterator */
 	void ti_iter_destroy(ti_iter_t iter);
@@ -165,16 +174,56 @@ extern "C" {
 	const ti_conf_t *ti_get_conf(ti_index_t *idx);
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
+        /* convert string 'region1|region2' to 'region2|region1' */
+        char* flip_region ( char* s);
+
         /* create an empty merge_iter_t struct */
         merged_iter_t *create_merged_iter(int n);
  
         /* fill in an existing (allocated) iter_unit struct from an iter struct */
         void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu);
 
+        /* compare two iter_unit structs, compatible with qsort */
         int compare_iter_unit (const void *a, const void *b);
-        int strcmp2(const void* a, const void* b);
+
+        /* strcmp, argument type modified to be compatible with qsort */
+        int strcmp1d(const void* a, const void* b);
+
+        /* double strcmp on the two parts (for string 'xx|yy' vs 'zz|ww' compare 'xx' vs 'zz' first and then 'yy' vs 'ww') */
+        int strcmp2d(const void* a, const void* b);
+
+        /* return a uniqified array given an array of strings (generic), returned array must be fried at both array level and element level */
+        char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq);
+
+        /* given an array of pairix_t structs, get an array of unique key names, 
+           the returned array must be freed at both array level and element level */
         char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq);
-        char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq);
+
+        /* get mate1 chromosome list given a list of chromosome pairs, returned array must be freed at both array level and element level. */
+        char **get_seq1_list_from_seqpair_list(char** seqpair_list, int n_seqpair_list, int *pn_seq1);
+
+        /* get a sub-list of seq (chrpair) names given seq1, returned array is an array of pointers to the element of the original array */
+        char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* get a sub-list of seq (chrpair) names given seq2, returned array is an array of pointers to the element of the original array */
+        char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* get a sub-list of seq2 (chr2) names given seq1, returned array must be freed at both array level and element level. */
+        char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* get a sub-list of seq1 (chr1) names given seq2, returned array must be freed at both array level and element level. */ 
+        char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list);
+
+        /* initialize an empty sequential_iter associated with a pairix_t struct */
+        sequential_iter_t *create_sequential_iter(pairix_t *t);
+
+        /* destructor for sequential_iter */
+        void destroy_sequential_iter(sequential_iter_t *siter);
+
+        /* add an iter to sequential_iter - the array size is dynamically incremented */
+        void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter);
+
+
 
         /* bgzip function */
         void fail(BGZF *fp);
