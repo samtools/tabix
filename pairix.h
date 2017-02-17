@@ -176,7 +176,7 @@ extern "C" {
 
         /* convert string 'region1|region2' to 'region2|region1' */
         char* flip_region ( char* s);
-=======
+
         /* create an empty merge_iter_t struct */
         merged_iter_t *create_merged_iter(int n);
  

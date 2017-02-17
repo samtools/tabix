@@ -16,6 +16,8 @@
 #define TAD_LIDX_SHIFT    14
 #define REGION_SPLIT_CHARACTER   '|'
 #define DEFAULT_DELIMITER '\t'
+#define MAX_REGION_STR_LEN 10000
+
 
 typedef struct {
 	uint64_t u, v;
@@ -1599,19 +1601,19 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
 
 /* convert string 'region1|region2' to 'region2|region1' */
 char *flip_region ( char* s) {
-    char s_flp[MAX_REGION_STR_LEN]
+    char s_flp[MAX_REGION_STR_LEN];
+    int l, i, l2, split_pos;  
     l = strlen(s);
-    for(i = 0; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
+    for(i = 0; i != l; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
     s[i]=0;
     split_pos = i;
-    l2 = l-1-i
-    strcpy(s_flp, s + i + 1)
-    s_flp[l2] = REGION_SPLIT_CHARACTER
-    strcpy(s_flp + l2 + 1, s)
-    return(s_flp)
+    l2 = l-1-i;
+    strcpy(s_flp, s + i + 1);
+    s_flp[l2] = REGION_SPLIT_CHARACTER;
+    strcpy(s_flp + l2 + 1, s);
+    return(s_flp);
 }
 
-=======
 // given a chromosome for mate1 (seq1='chr1') return the array containing all seqpairs matching seq1 ('chr1|chr1', 'chr1|chr2', ... )
 // the returned subarray contains pointers to the original seqpair_list elements.
 char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
