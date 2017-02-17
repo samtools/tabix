@@ -213,15 +213,27 @@ class TabixTest2D_reverse(unittest.TestCase):
     pr = pypairix.open(TEST_FILE_2D)
 
     def test_query2_rev(self):
-        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        # 1 is included as last argument to test flipping chromosome order
+        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2, 1)
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
     def test_querys_2_rev(self):
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        it = self.pr.querys2D(query)
+        # 1 is included as last argument to test flipping chromosome order
+        it = self.pr.querys2D(query, 1)
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
+
+    def test_query2_rev_fail(self):
+        # do not include 1 to test flipped order of chrs; expect this to hit a PairixError
+        try:
+            it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+            # should fail here because we want this to fail
+            raise pypairix.PairixError('ERROR! Autoflip was not specified yet this still passed')
+        except pypairix.PairixError:
+            # if we make it here, pass the test (expecting an error)
+            self.assertEqual(1,1)
 
 
 ## 2D query on 2D indexed file with chromosomes using a 4DN pairs file

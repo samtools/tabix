@@ -332,29 +332,34 @@ static PyObject *
 pairix_query_2D(PairixObject *self, PyObject *args)
 {
     char *name, *name2;
-    int begin, end, begin2, end2, tid_test, tid_test_rev;
+    int begin, end, begin2, end2, tid_test, tid_test_rev, flip;
     ti_iter_t result;
+    flip = 0;
 
-    if (!PyArg_ParseTuple(args, "siisii:query2D", &name, &begin, &end, &name2, &begin2, &end2)){
-        PyErr_SetString(PairixError, "Argument error! query2D() takes the following args: <1st_chromosome (str)> <begin (int)> <end (int)> <2nd_chromosome (str)> <begin (int)> <end (int)>");
+    if (!PyArg_ParseTuple(args, "siisii|i:query2D", &name, &begin, &end, &name2, &begin2, &end2, &flip)){
+        PyErr_SetString(PairixError, "Argument error! query2D() takes the following args: <1st_chromosome (str)> <begin (int)> <end (int)> <2nd_chromosome (str)> <begin (int)> <end (int)>. Optionally, also include an integer = 1 to test chromsomes in flipped order on an error.");
         return NULL;
     }
 
     tid_test = ti_query_2d_tid(self->tb, name, begin, end, name2, begin2, end2);
     if (tid_test == -1) {
-        // Test if reversing chromosome order fixes the issues
-        tid_test_rev = ti_query_2d_tid(self->tb, name2, begin2, end2, name, begin, end);
-        if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
-            result = ti_query_2d(self->tb, name2, begin2, end2, name, begin, end);
-            if (result == NULL) {
-                PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-                return NULL;
-            }else{
-                return pairixiter_create(self, result);
+        if (flip == 1){
+            // Test if reversing chromosome order fixes the issues
+            tid_test_rev = ti_query_2d_tid(self->tb, name2, begin2, end2, name, begin, end);
+            if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
+                result = ti_query_2d(self->tb, name2, begin2, end2, name, begin, end);
+                if (result == NULL) {
+                    PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+                    return NULL;
+                }else{
+                    return pairixiter_create(self, result);
+                }
             }
         }
-        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-        return NULL;
+        else{
+            PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
+            return NULL;
+        }
     }
     else if (tid_test == -2){
         PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
@@ -397,29 +402,35 @@ static PyObject *
 pairix_querys_2D(PairixObject *self, PyObject *args)
 {
     const char *reg, *reg2;
-    int tid_test, tid_test_rev;
+    int tid_test, tid_test_rev, flip;
     ti_iter_t result;
 
-    if (!PyArg_ParseTuple(args, "s:querys2D", &reg)){
-        PyErr_SetString(PairixError, "Argument error! querys2D() takes one str formatted as: '{CHR}:{START}-{END}|{CHR}:{START}-{END}'");
+    flip = 0;
+
+    if (!PyArg_ParseTuple(args, "s|i:querys2D", &reg, &flip)){
+        PyErr_SetString(PairixError, "Argument error! querys2D() takes a str formatted as: '{CHR}:{START}-{END}|{CHR}:{START}-{END}' Optionally, also include an integer = 1 to test chromsomes in flipped order on an error.");
         return NULL;
     }
 
     tid_test = ti_querys_tid(self->tb, reg);
     if (tid_test == -1) {
-        reg2 = flip_region(reg);
-        tid_test_rev = ti_querys_tid(self->tb, reg2);
-        if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
-            result = ti_querys_2d(self->tb, reg2);
-            if (result == NULL) {
-                PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-                return NULL;
-            }else{
-                return pairixiter_create(self, result);
+        if(flip == 1){
+            reg2 = flip_region(reg);
+            tid_test_rev = ti_querys_tid(self->tb, reg2);
+            if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
+                result = ti_querys_2d(self->tb, reg2);
+                if (result == NULL) {
+                    PyErr_SetString(PairixError, "Input error! Autoflip failed. Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+                    return NULL;
+                }else{
+                    return pairixiter_create(self, result);
+                }
             }
         }
-        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-        return NULL;
+        else{
+            PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
+            return NULL;
+        }
     }
     else if (tid_test == -2){
         PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
@@ -438,6 +449,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
 
     return pairixiter_create(self, result);
 }
+
 
 static PyObject *
 pairix_get_blocknames(PairixObject *self)
@@ -506,7 +518,7 @@ static PyMethodDef pairix_methods[] = {
         (PyCFunction)pairix_query_2D,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
-                  "    >>> tb.query(\"chr1\", 1000, 2000)\n"
+                  "    >>> pr.query2D(\"chr1\", 1000, 2000, \"chr2\", 1, 10000)\n"
                   "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
@@ -515,14 +527,22 @@ static PyMethodDef pairix_methods[] = {
                   "start : int\n"
                   "    Start of the query region.\n"
                   "end : int\n"
-                  "    End of the query region.\n")
+                  "    End of the query region.\n"
+                  "name2 : str\n"
+                  "    Name of the sequence in the file.\n"
+                  "start2 : int\n"
+                  "    Start of the query region.\n"
+                  "end2 : int\n"
+                  "    End of the query region.\n"
+                  "flip value: int\n"
+                  "    If == 1, will attempt to flip chromsomes order on an error.\n")
     },
     {
         "queryi2D",
         (PyCFunction)pairix_queryi_2D,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
-                  "    >>> tb.queryi(0, 1000, 2000)\n"
+                  "    >>> pr.queryi(0, 1000, 2000)\n"
                   "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
@@ -538,12 +558,14 @@ static PyMethodDef pairix_methods[] = {
         (PyCFunction)pairix_querys_2D,
         METH_VARARGS,
         PyDoc_STR("Retrieve items within a region.\n\n"
-                  "    >>> tb.querys(\"chr1:1000-2000\")\n"
+                  "    >>> pr.querys2D(\"chr1:1000-2000|chr2:1-10000\")\n"
                   "    <pypairix.iter at 0x17b86e50>\n\n"
                   "Parameters\n"
                   "----------\n"
                   "region : str\n"
-                  "    Query string like \"seq:start-end\".\n")
+                  "    Query string like \"chr1:start-end|chr2:start-end\".\n"
+                  "flip value: int\n"
+                  "    If == 1, will attempt to flip chromsomes order on an error.\n")
     },
     {
        "get_blocknames",
