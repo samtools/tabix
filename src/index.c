@@ -1597,7 +1597,6 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
     return(sublist);
 }
 
-<<<<<<< HEAD
 /* convert string 'region1|region2' to 'region2|region1' */
 char *flip_region ( char* s) {
     char s_flp[MAX_REGION_STR_LEN]
@@ -1844,7 +1843,4 @@ int stream_1d(char *fn)
 
     return (0);   
 }
-
-
->>>>>>> dev6
 
