@@ -396,7 +396,7 @@ pairix_queryi_2D(PairixObject *self, PyObject *args)
 static PyObject *
 pairix_querys_2D(PairixObject *self, PyObject *args)
 {
-    const char *reg;
+    const char *reg, *reg2;
     int tid_test;
     ti_iter_t result;
 
@@ -407,6 +407,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
 
     tid_test = ti_querys_tid(self->tb, reg);
     if (tid_test == -1) {
+        reg2 = flip_region(reg);
         PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
         return NULL;
     }

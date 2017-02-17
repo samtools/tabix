@@ -337,6 +337,12 @@ int main(int argc, char *argv[])
                                 ti_interval_t intv;
 				const ti_conf_t *conf_ = idxconf? idxconf : &conf; // use the index file if available
 				for (i = optind + 1; i < argc; ++i) {
+                                        sequential_iter_t *siter = ti_querys_2d_general(t,argv[i]);
+                                        while((s = sequential_ti_read(siter, &len)) != 0){
+                                           fputs(s, stdout); fputc('\n',stdout);
+                                        }
+                                        destroy_sequential_iter(siter);
+                                        /*
 					int tid, beg, end, beg2, end2;
 					if (ti_parse_region2d(t->idx, argv[i], &tid, &beg, &end, &beg2, &end2) == 0) {
 						iter = ti_queryi_2d(t, tid, beg, end, beg2, end2);
@@ -345,6 +351,7 @@ int main(int argc, char *argv[])
                                                 }
 						ti_iter_destroy(iter);
 					}
+                                        */
             	    // else fprintf(stderr, "[main] invalid region: unknown target name or minus interval.\n");
 				}
 			}
