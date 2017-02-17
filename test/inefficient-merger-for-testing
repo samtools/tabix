@@ -1,0 +1,22 @@
+#!/bin/bash
+
+outdir=$1; shift
+outprefix=$1; shift
+
+[ -d $outdir ] || mkdir -p $outdir
+
+rm -f $outdir/$outprefix.pairs
+touch $outdir/$outprefix.pairs
+for input_pair in $@
+do
+  echo "gunzip -c $input_pair >> $outdir/$outprefix.pairs"
+  gunzip -c $input_pair >> $outdir/$outprefix.pairs
+done
+
+#sort -k2,2 -k4,4 -k3,3g -k5,5g $outdir/$outprefix.pairs > $outdir/$outprefix.bsorted.pairs
+sort -k2,2 -k6,6 -k3,3g -k7,7g $outdir/$outprefix.pairs > $outdir/$outprefix.bsorted.pairs
+bin/bgzip -f $outdir/$outprefix.bsorted.pairs
+#pairix -s2 -d4 -b3 -e3 -u5 $outdir/$outprefix.bsorted.pairs.gz
+bin/pairix -T -s2 -d6 -b3 -e3 -u7 $outdir/$outprefix.bsorted.pairs.gz
+
+

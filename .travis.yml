@@ -1,0 +1,13 @@
+language: c python 
+sudo: true
+compiler: gcc
+script: 
+ - make
+ - python setup.py install
+ - python test/test.py
+ - source test/test_c.sh
+install:
+ - pip install coveralls
+ - pip install codacy-coverage
+after_success:
+- coveralls
