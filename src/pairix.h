@@ -172,6 +172,19 @@ extern "C" {
 	const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly);
 
 	const ti_conf_t *ti_get_conf(ti_index_t *idx);
+        
+        /* get column index, 0-based */
+        int ti_get_sc(ti_index_t *idx);
+        int ti_get_sc2(ti_index_t *idx);
+        int ti_get_bc(ti_index_t *idx);
+        int ti_get_bc2(ti_index_t *idx);
+        int ti_get_ec(ti_index_t *idx);
+        int ti_get_ec2(ti_index_t *idx);
+
+        /* get delimiter */
+        char ti_get_delimiter(ti_index_t *idx);
+
+
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
         /* convert string 'region1|region2' to 'region2|region1' */

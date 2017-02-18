@@ -97,7 +97,7 @@ pairixiter_iternext(PairixIteratorObject *self)
 {
     const char *chunk;
     int len, i;
-    char delimiter = ti_get_conf(self->tbobj->tb->idx)->delimiter;
+    char delimiter = ti_get_delimiter(self->tbobj->tb->idx);
 
     chunk = ti_read(self->tbobj->tb, self->iter, &len);
 
@@ -434,6 +434,42 @@ pairix_get_blocknames(PairixObject *self)
   return self->blocknames;
 }
 
+static PyObject *
+pairix_get_chr1_col(PairixObject *self)
+{
+  return Py_BuildValue("i", ti_get_sc(self->tb->idx));
+}
+
+static PyObject *
+pairix_get_chr2_col(PairixObject *self)
+{
+  return Py_BuildValue("i", ti_get_sc2(self->tb->idx));
+}
+
+static PyObject *
+pairix_get_startpos1_col(PairixObject *self)
+{
+  return Py_BuildValue("i", ti_get_bc(self->tb->idx));
+}
+
+static PyObject *
+pairix_get_startpos2_col(PairixObject *self)
+{
+  return Py_BuildValue("i", ti_get_bc2(self->tb->idx));
+}
+
+static PyObject *
+pairix_get_endpos1_col(PairixObject *self)
+{
+  return Py_BuildValue("i", ti_get_ec(self->tb->idx));
+}
+
+static PyObject *
+pairix_get_endpos2_col(PairixObject *self)
+{
+  return Py_BuildValue("i", ti_get_ec2(self->tb->idx));
+}
+
 
 static PyObject *
 pairix_repr(PairixObject *self)
@@ -549,6 +585,42 @@ static PyMethodDef pairix_methods[] = {
        (PyCFunction)pairix_get_blocknames,
         METH_VARARGS,
         PyDoc_STR("Retrieve list of keys (either chromosomes(1D-indexed) or chromosome pairs(2D-indexed)).\n\n")
+    },
+    {
+       "get_chr1_col",
+       (PyCFunction)pairix_get_chr1_col,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve the 0-based column index of the first chromosome.\n\n") 
+    },
+    {
+       "get_chr2_col",
+       (PyCFunction)pairix_get_chr2_col,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve the 0-based column index of the second chromosome.\n\n") 
+    },
+    {
+       "get_startpos1_col",
+       (PyCFunction)pairix_get_startpos1_col,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve the 0-based column index of the start position on the first chromosome.\n\n") 
+    },
+    {
+       "get_startpos2_col",
+       (PyCFunction)pairix_get_startpos2_col,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve the 0-based column index of the start potision on the second chromosome.\n\n") 
+    },
+    {
+       "get_endpos1_col",
+       (PyCFunction)pairix_get_endpos1_col,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve the 0-based column index of the end position of the first chromosome.\n\n") 
+    },
+    {
+       "get_endpos2_col",
+       (PyCFunction)pairix_get_endpos2_col,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve the 0-based column index of the end position of the second chromosome.\n\n") 
     },
     /*
     {

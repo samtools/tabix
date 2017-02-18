@@ -1076,6 +1076,16 @@ int ti_fetch_2d(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, int 
 
 const ti_conf_t *ti_get_conf(ti_index_t *idx) { return idx? &idx->conf : 0; }
 
+/* Get 0-based column index and delimiter */
+int ti_get_sc(ti_index_t *idx) { return idx? idx->conf.sc-1 : -1; }
+int ti_get_sc2(ti_index_t *idx) { return idx? idx->conf.sc2-1 : -1; }
+int ti_get_bc(ti_index_t *idx) { return idx? idx->conf.bc-1 : -1; }
+int ti_get_bc2(ti_index_t *idx) { return idx? idx->conf.bc2-1 : -1; }
+int ti_get_ec(ti_index_t *idx) { return idx? idx->conf.ec-1 : -1; }
+int ti_get_ec2(ti_index_t *idx) { return idx? idx->conf.ec2-1 : -1; }
+char ti_get_delimiter(ti_index_t *idx) { return idx? idx->conf.delimiter : 0; }
+
+
 /*******************
  * High-level APIs *
  *******************/
