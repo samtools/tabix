@@ -288,10 +288,45 @@ class TabixTest2DSpace(unittest.TestCase):
 
 
 class TabixTestBlocknames(unittest.TestCase):
-    pr = pypairix.open(TEST_FILE_2D)
 
     def test_blocknames(self):
-      print (str(self.pr.get_blocknames()))
+
+        # block list obtained from get_blocknames()
+        pr = pypairix.open(TEST_FILE_2D)
+        retrieved_blocklist = pr.get_blocknames()
+        retrieved_blocklist.sort()
+
+        # true block list
+        blocklist=[]
+        f_type = find_pairs_type(TEST_FILE_2D)
+        regions = read_pairs(TEST_FILE_2D, f_type)
+        for a in regions: 
+            blocklist.append(a[0] + '|' + a[3])
+        blocklist_uniq = list(set(blocklist))
+        blocklist_uniq.sort()
+
+        self.assertEqual(retrieved_blocklist, blocklist_uniq)
+
+
+class TabixTestGetColumnIndex(unittest.TestCase):
+    
+    def test_columnindex(self):
+        pr = pypairix.open(TEST_FILE_2D)
+        pr2 = pypairix.open(TEST_FILE_2D_4DN)
+
+        self.assertEqual(pr.get_chr1_col(),1)
+        self.assertEqual(pr.get_chr2_col(),5)
+        self.assertEqual(pr.get_startpos1_col(),2)
+        self.assertEqual(pr.get_startpos2_col(),6)
+        self.assertEqual(pr.get_endpos1_col(),2)
+        self.assertEqual(pr.get_endpos2_col(),6)
+
+        self.assertEqual(pr2.get_chr1_col(),1)
+        self.assertEqual(pr2.get_chr2_col(),3)
+        self.assertEqual(pr2.get_startpos1_col(),2)
+        self.assertEqual(pr2.get_startpos2_col(),4)
+        self.assertEqual(pr2.get_endpos1_col(),2)
+        self.assertEqual(pr2.get_endpos2_col(),4)
 
 
 if __name__ == '__main__':
