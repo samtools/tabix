@@ -34,6 +34,7 @@
 #include "pairix.h"
 
 static PyObject *PairixError;
+static PyObject *PairixWarning;
 
 typedef struct {
     PyObject_HEAD
@@ -350,7 +351,7 @@ pairix_query_2D(PairixObject *self, PyObject *args)
             if (flip == 1){
                 if (result == NULL) {
                    // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-                   PyErr_WarnEx(PairixError, "Warning: cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.",1);
+                   PyErr_WarnEx(PairixWarning, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.",1);
                    return pairixiter_create(self, NULL);
                 }else{
                     return pairixiter_create(self, result);
@@ -358,7 +359,7 @@ pairix_query_2D(PairixObject *self, PyObject *args)
             }
             else{
                 // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
-                PyErr_WarnEx(PairixError, "Warning: Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.",1);
+                PyErr_WarnEx(PairixWarning, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.",1);
                 return pairixiter_create(self, NULL);
             }
         }
@@ -423,7 +424,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
             if (flip == 1){
                 if (result == NULL) {
                    // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-                   PyErr_WarnEx(PairixError, "Warning: cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.",1);
+                   PyErr_WarnEx(PairixWarning, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.",1);
                    return pairixiter_create(self, NULL);
                 }else{
                     return pairixiter_create(self, result);
@@ -431,7 +432,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
             }
             else{
                 // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
-                PyErr_WarnEx(PairixError, "Warning: Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.",1);
+                PyErr_WarnEx(PairixWarning, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.",1);
                 return pairixiter_create(self, NULL);
             }
         }
@@ -686,6 +687,14 @@ PyMODINIT_FUNC PyInit_pypairix(void)
     }
     Py_INCREF(PairixError);
     PyModule_AddObject(m, "PairixError", PairixError);
+
+    if (PairixWarning == NULL) {
+        PairixWarning = PyErr_NewException("pypairix.PairixWarning", NULL, NULL);
+        if (PairixWarning == NULL)
+            goto fail;
+    }
+    Py_INCREF(PairixWarning);
+    PyModule_AddObject(m, "PairixWarning", PairixWarning);
 
     PyModule_AddObject(m, "open", (PyObject *)&Pairix_Type);
     PyModule_AddObject(m, "iter", (PyObject *)&PairixIterator_Type);
