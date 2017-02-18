@@ -211,6 +211,15 @@ tb=pypairix.open("textfile.gz")
 chrplist = tb.get_blocknames()
 print str(chrplist)
 
+# get the column index (0-based)
+tb=pypairix.open("textfile.gz")
+print( tb.get_chr1_col() )
+print( tb.get_chr2_col() )
+print( tb.get_startpos1_col() )
+print( tb.get_startpos2_col() )
+print( tb.get_endpos1_col() )
+print( tb.get_endpos2_col() )
+
 ```
 
 ## Rpairix
