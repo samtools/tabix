@@ -180,32 +180,48 @@ python test/test.py
 # to import and use python module pypairix, add the following in your python script.
 import pypairix
 
-# 2D query usage example 1
+# 2D query usage example 1 with `query2D(chrom, start, end, chrom2, start2, end2)`
 tb=pypairix.open("textfile.gz")
 it = tb.query2D(chrom, start, end, chrom2, start2, end2)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
+for x in it:
+   print(x)
 
-# 2D query usage example 2
+# 2D query usage example 1 with *autoflip* with `query2D(chrom, start, end, chrom2, start2, end2, 1)`
+# Autoflip: if the queried chromosome pair does not exist in the pairs file, query the flipped pair.
+tb=pypairix.open("textfile.gz")
+it = tb.query2D(chrom2, start2, end2, chrom1, start1, end1, 1)
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+for x in it:
+   print(x)
+
+# 2D query usage example 2 with `querys2D(querystr)`
 tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}|{}:{}-{}'.format(chrom, start, end, chrom2, start2, end2)
 it = tb.querys2D(querystr)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
-
+for x in it:
+   print(x)
+   
+# 2D query usage example 3, with *autoflip* with `querys2D(querystr, 1)`
+# Autoflip: if the queried chromosome pair does not exist in the pairs file, query the flipped pair.
+tb=pypairix.open("textfile.gz")
+querystr='{}:{}-{}|{}:{}-{}'.format(chrom2, start2, end2, chrom, start, end)
+it = tb.querys2D(querystr, 1)
+for x in it:
+   print(x)
+   
 # 1D query usage example 1
 tb=pypairix.open("textfile.gz")
 it = tb.query(chrom, start, end)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
-
+for x in it:
+   print(x)
+   
 # 1D query usage example 2
 tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}'.format(chrom, start, end)
 it = tb.querys2D(querystr)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
-
+for x in it:
+   print(x)
+   
 # get the list of (chr-pair) blocks
 tb=pypairix.open("textfile.gz")
 chrplist = tb.get_blocknames()
