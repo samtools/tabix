@@ -1611,6 +1611,7 @@ char *flip_region ( char* s) {
     strcpy(s_flp, s + i + 1);
     s_flp[l2] = REGION_SPLIT_CHARACTER;
     strcpy(s_flp + l2 + 1, s);
+    s[i]= REGION_SPLIT_CHARACTER;
     return(s_flp);
 }
 
@@ -1791,7 +1792,7 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
            iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
            create_iter_unit(tbs[j], iter, miter->iu[j]);
         }
-        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+        while ( ( s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
         //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
         destroy_merged_iter(miter); miter=NULL;     
       }
@@ -1831,7 +1832,7 @@ int stream_1d(char *fn)
            iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
            create_iter_unit(tbs_copies[j], iter, miter->iu[j]);
        }
-       while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+       while ( (s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
        destroy_merged_iter(miter); miter=NULL;     
        for(j=0;j<n_chr1pairs;j++) ti_close(tbs_copies[j]);
        free(tbs_copies); tbs_copies=NULL;

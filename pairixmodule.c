@@ -247,30 +247,25 @@ pairix_query(PairixObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end)){
         PyErr_SetString(PairixError, "Argument error! query() takes the following args: <chromosome (str)> <begin (int)> <end (int)>");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
 
     tid_test = ti_query_tid(self->tb, name, begin, end);
     if (tid_test == -1) {
-        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-        return NULL;
+        PyErr_WarnEx(PairixWarning, "Cannot find matching chromosome name. Check that chromosome naming conventions match between your query and input file.",1);
+        return pairixiter_create(self, NULL);
     }
     else if (tid_test == -2){
         PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
         PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
 
     result = ti_query(self->tb, name, begin, end);
-    if (result == NULL) {
-        PyErr_SetString(PairixError, "query failed");
-        return NULL;
-    }
-
-    return pairixiter_create(self, result);
+    return pairixiter_create(self, result); // result may be null but that's okay.
 }
 
 static PyObject *
@@ -280,16 +275,12 @@ pairix_queryi(PairixObject *self, PyObject *args)
     ti_iter_t result;
 
     if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end)){
-        return NULL;
+        PyErr_SetString(PairixError, "Argument error! queryi() takes three integers: tid, begin and end");
+        return pairixiter_create(self, NULL);
     }
 
     result = ti_queryi(self->tb, tid, begin, end);
-    if (result == NULL) {
-        PyErr_SetString(PairixError, "query failed");
-        return NULL;
-    }
-
-    return pairixiter_create(self, result);
+    return pairixiter_create(self, result);  // result may be null but that's okay
 }
 
 static PyObject *
@@ -301,30 +292,25 @@ pairix_querys(PairixObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "s:querys", &reg)){
         PyErr_SetString(PairixError, "Argument error! querys2D() takes one str formatted as: '{CHR}:{START}-{END}'");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
 
     tid_test = ti_querys_tid(self->tb, reg);
     if (tid_test == -1) {
-        PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-        return NULL;
+        PyErr_WarnEx(PairixWarning, "Cannot find matching chromosome name. Check that chromosome naming conventions match between your query and input file.", 1);
+        return pairixiter_create(self, NULL);
     }
     else if (tid_test == -2){
         PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
         PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
 
     result = ti_querys(self->tb, reg);
-    if (result == NULL) {
-        PyErr_SetString(PairixError, "query failed");
-        return NULL;
-    }
-
-    return pairixiter_create(self, result);
+    return pairixiter_create(self, result); // result may be null but that's okay
 }
 
 /* ------- PAIRIX 2D QUERYING METHODS ------- */
@@ -338,8 +324,8 @@ pairix_query_2D(PairixObject *self, PyObject *args)
     flip = 0;
 
     if (!PyArg_ParseTuple(args, "siisii|i:query2D", &name, &begin, &end, &name2, &begin2, &end2, &flip)){
-        PyErr_SetString(PairixError, "Argument error! query2D() takes the following args: <1st_chromosome (str)> <begin (int)> <end (int)> <2nd_chromosome (str)> <begin (int)> <end (int)>. Optionally, also include an integer = 1 to test chromsomes in flipped order on an error.");
-        return NULL; 
+        PyErr_SetString(PairixError, "Argument error! query2D() takes the following args: <1st_chromosome (str)> <begin (int)> <end (int)> <2nd_chromosome (str)> <begin (int)> <end (int)> [<autoflip>]. Optionally, include an integer = 1 to test chromsomes in flipped order on an error (autoflip).");
+        return pairixiter_create(self, NULL);
     }
 
     tid_test = ti_query_2d_tid(self->tb, name, begin, end, name2, begin2, end2);
@@ -374,12 +360,7 @@ pairix_query_2D(PairixObject *self, PyObject *args)
     }
 
     result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
-    if (result == NULL) {
-        // PyErr_SetString(PairixError, "query failed");
-        return pairixiter_create(self, NULL);
-    }
-
-    return pairixiter_create(self, result);
+    return pairixiter_create(self, result); // result may be null but that's okay
 }
 
 static PyObject *
@@ -389,16 +370,12 @@ pairix_queryi_2D(PairixObject *self, PyObject *args)
     ti_iter_t result;
 
     if (!PyArg_ParseTuple(args, "iiiii:queryi2D", &tid, &begin, &end, &begin2, &end2)){
-        return NULL;
-    }
-
-    result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
-    if (result == NULL) {
-        // PyErr_SetString(PairixError, "query failed");
+        PyErr_SetString(PairixError, "Argument error! queryi2D() takes five integers: tid, begin, end, begin2 and end2");
         return pairixiter_create(self, NULL);
     }
 
-    return pairixiter_create(self, result);
+    result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
+    return pairixiter_create(self, result);  // result may be null but that's okay
 }
 
 static PyObject *
@@ -411,8 +388,8 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
     flip = 0;
 
     if (!PyArg_ParseTuple(args, "s|i:querys2D", &reg, &flip)){
-        PyErr_SetString(PairixError, "Argument error! querys2D() takes a str formatted as: '{CHR}:{START}-{END}|{CHR}:{START}-{END}' Optionally, also include an integer = 1 to test chromsomes in flipped order on an error.");
-        return NULL;
+        PyErr_SetString(PairixError, "Argument error! querys2D() takes the following args: <query_str> [<autoflip>]. Query_str is a str formatted as: '{CHR}:{START}-{END}|{CHR}:{START}-{END}' Optionally, include an integer = 1 to test chromsomes in flipped order on an error (autoflip).");
+        return pairixiter_create(self, NULL);
     }
 
     tid_test = ti_querys_tid(self->tb, reg);
@@ -447,12 +424,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
     }
 
     result = ti_querys_2d(self->tb, reg);
-    if (result == NULL) {
-        // PyErr_SetString(PairixError, "query failed");
-        return pairixiter_create(self, result);
-    }
-
-    return pairixiter_create(self, result);
+    return pairixiter_create(self, result);  // result may be null but that's okay
 }
 
 
