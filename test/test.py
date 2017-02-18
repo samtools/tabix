@@ -134,7 +134,7 @@ def build_it_result(it, f_type):
 
 
 ## 1D query on 1D indexed file
-class TabixTest(unittest.TestCase):
+class PairixTest(unittest.TestCase):
     regions = read_vcf(TEST_FILE_1D)
     chrom = 'chr10'
     start = 25944
@@ -156,7 +156,7 @@ class TabixTest(unittest.TestCase):
 
 
 ## semi-2D query on 2D indexed file
-class TabixTest_2(unittest.TestCase):
+class PairixTest_2(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D)
     regions = read_pairs(TEST_FILE_2D, f_type)
     chrom = '10'
@@ -174,7 +174,7 @@ class TabixTest_2(unittest.TestCase):
 
 
 ## 2D query on 2D indexed file
-class TabixTest2D(unittest.TestCase):
+class PairixTest2D(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D)
     regions = read_pairs(TEST_FILE_2D, f_type)
     chrom = '10'
@@ -199,7 +199,7 @@ class TabixTest2D(unittest.TestCase):
 
 
 ## 2D query on 2D indexed file with chromosomes input in reverse order
-class TabixTest2D_reverse(unittest.TestCase):
+class PairixTest2D_reverse(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D)
     regions = read_pairs(TEST_FILE_2D, f_type)
     chrom2 = '10'
@@ -237,7 +237,7 @@ class TabixTest2D_reverse(unittest.TestCase):
 
 
 ## 2D query on 2D indexed file with chromosomes using a 4DN pairs file
-class TabixTest2D_4DN(unittest.TestCase):
+class PairixTest2D_4DN(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D_4DN)
     regions = read_pairs(TEST_FILE_2D_4DN, f_type)
     chrom = 'chr21'
@@ -263,7 +263,7 @@ class TabixTest2D_4DN(unittest.TestCase):
 
 
 ## 2D query on 2D indexed space-delimited file
-class TabixTest2DSpace(unittest.TestCase):
+class PairixTest2DSpace(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D_SPACE, ' ')
     regions = read_pairs(TEST_FILE_2D_SPACE, f_type, ' ')
     chrom = '10'
@@ -287,7 +287,7 @@ class TabixTest2DSpace(unittest.TestCase):
         self.assertEqual(self.result, pr_result)
 
 
-class TabixTestBlocknames(unittest.TestCase):
+class PairixTestBlocknames(unittest.TestCase):
 
     def test_blocknames(self):
 
@@ -300,7 +300,7 @@ class TabixTestBlocknames(unittest.TestCase):
         blocklist=[]
         f_type = find_pairs_type(TEST_FILE_2D)
         regions = read_pairs(TEST_FILE_2D, f_type)
-        for a in regions: 
+        for a in regions:
             blocklist.append(a[0] + '|' + a[3])
         blocklist_uniq = list(set(blocklist))
         blocklist_uniq.sort()
@@ -308,8 +308,8 @@ class TabixTestBlocknames(unittest.TestCase):
         self.assertEqual(retrieved_blocklist, blocklist_uniq)
 
 
-class TabixTestGetColumnIndex(unittest.TestCase):
-    
+class PairixTestGetColumnIndex(unittest.TestCase):
+ 
     def test_columnindex(self):
         pr = pypairix.open(TEST_FILE_2D)
         pr2 = pypairix.open(TEST_FILE_2D_4DN)
