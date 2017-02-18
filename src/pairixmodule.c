@@ -338,42 +338,44 @@ pairix_query_2D(PairixObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "siisii|i:query2D", &name, &begin, &end, &name2, &begin2, &end2, &flip)){
         PyErr_SetString(PairixError, "Argument error! query2D() takes the following args: <1st_chromosome (str)> <begin (int)> <end (int)> <2nd_chromosome (str)> <begin (int)> <end (int)>. Optionally, also include an integer = 1 to test chromsomes in flipped order on an error.");
-        return NULL;
+        return NULL; 
     }
 
     tid_test = ti_query_2d_tid(self->tb, name, begin, end, name2, begin2, end2);
     if (tid_test == -1) {
-        if (flip == 1){
-            // Test if reversing chromosome order fixes the issues
-            tid_test_rev = ti_query_2d_tid(self->tb, name2, begin2, end2, name, begin, end);
-            if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
-                result = ti_query_2d(self->tb, name2, begin2, end2, name, begin, end);
+        // Test if reversing chromosome order fixes the issues
+        tid_test_rev = ti_query_2d_tid(self->tb, name2, begin2, end2, name, begin, end);
+        if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
+            result = ti_query_2d(self->tb, name2, begin2, end2, name, begin, end);
+            if (flip == 1){
                 if (result == NULL) {
-                    PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-                    return NULL;
+                   // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+                   PyErr_WarnEx(PairixError, "Warning: cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.",1);
+                   return pairixiter_create(self, NULL);
                 }else{
                     return pairixiter_create(self, result);
                 }
             }
-        }
-        else{
-            PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
-            return NULL;
+            else{
+                // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
+                PyErr_WarnEx(PairixError, "Warning: Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.",1);
+                return pairixiter_create(self, NULL);
+            }
         }
     }
     else if (tid_test == -2){
         PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
         PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
 
     result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
     if (result == NULL) {
-        PyErr_SetString(PairixError, "query failed");
-        return NULL;
+        // PyErr_SetString(PairixError, "query failed");
+        return pairixiter_create(self, NULL);
     }
 
     return pairixiter_create(self, result);
@@ -391,8 +393,8 @@ pairix_queryi_2D(PairixObject *self, PyObject *args)
 
     result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
     if (result == NULL) {
-        PyErr_SetString(PairixError, "query failed");
-        return NULL;
+        // PyErr_SetString(PairixError, "query failed");
+        return pairixiter_create(self, NULL);
     }
 
     return pairixiter_create(self, result);
@@ -414,37 +416,39 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
 
     tid_test = ti_querys_tid(self->tb, reg);
     if (tid_test == -1) {
-        if(flip == 1){
-            reg2 = flip_region(reg);
-            tid_test_rev = ti_querys_tid(self->tb, reg2);
-            if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
-                result = ti_querys_2d(self->tb, reg2);
+        reg2 = flip_region(reg);
+        tid_test_rev = ti_querys_tid(self->tb, reg2);
+        if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
+            result = ti_querys_2d(self->tb, reg2);
+            if (flip == 1){
                 if (result == NULL) {
-                    PyErr_SetString(PairixError, "Input error! Autoflip failed. Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
-                    return NULL;
+                   // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
+                   PyErr_WarnEx(PairixError, "Warning: cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.",1);
+                   return pairixiter_create(self, NULL);
                 }else{
                     return pairixiter_create(self, result);
                 }
             }
-        }
-        else{
-            PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
-            return NULL;
+            else{
+                // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
+                PyErr_WarnEx(PairixError, "Warning: Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.",1);
+                return pairixiter_create(self, NULL);
+            }
         }
     }
     else if (tid_test == -2){
         PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
         PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
-        return NULL;
+        return pairixiter_create(self, NULL);
     }
 
     result = ti_querys_2d(self->tb, reg);
     if (result == NULL) {
-        PyErr_SetString(PairixError, "query failed");
-        return NULL;
+        // PyErr_SetString(PairixError, "query failed");
+        return pairixiter_create(self, result);
     }
 
     return pairixiter_create(self, result);
