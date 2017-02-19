@@ -47,7 +47,7 @@ typedef struct {
 typedef struct {
     PyObject_HEAD
     PairixObject *tbobj;
-    ti_iter_t iter;
+    sequential_iter_t *iter;
 } PairixIteratorObject;
 
 
@@ -56,7 +56,7 @@ static PyTypeObject Pairix_Type, PairixIterator_Type;
 /* --- PairixIterator --------------------------------------------------- */
 
 static PyObject *
-pairixiter_create(PairixObject *parentidx, ti_iter_t iter)
+pairixiter_create(PairixObject *parentidx, sequential_iter_t *iter)
 {
     PairixIteratorObject *self;
 
@@ -74,7 +74,7 @@ pairixiter_create(PairixObject *parentidx, ti_iter_t iter)
 static void
 pairixiter_dealloc(PairixIteratorObject *self)
 {
-    ti_iter_destroy(self->iter);
+    destroy_sequential_iter(self->iter);
     Py_DECREF(self->tbobj);
     PyObject_Del(self);
 }
@@ -99,7 +99,7 @@ pairixiter_iternext(PairixIteratorObject *self)
     int len, i;
     char delimiter = ti_get_delimiter(self->tbobj->tb->idx);
 
-    chunk = ti_read(self->tbobj->tb, self->iter, &len);
+    chunk = sequential_ti_read(self->iter, &len);
 
     if (chunk != NULL) {
         PyObject *ret, *column;
@@ -243,7 +243,7 @@ pairix_query(PairixObject *self, PyObject *args)
 {
     char *name;
     int begin, end, tid_test;
-    ti_iter_t result;
+    sequential_iter_t *result;
 
     if (!PyArg_ParseTuple(args, "sii:query", &name, &begin, &end)){
         PyErr_SetString(PairixError, "Argument error! query() takes the following args: <chromosome (str)> <begin (int)> <end (int)>");
@@ -256,15 +256,15 @@ pairix_query(PairixObject *self, PyObject *args)
         return pairixiter_create(self, NULL);
     }
     else if (tid_test == -2){
-        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        PyErr_WarnEx(PairixWarning, "The start coordinate must be less than the end coordinate.", 1);
         return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
-        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        PyErr_WarnEx(PairixWarning, "The specific cause could not be found. Please adjust your arguments.", 1);
         return pairixiter_create(self, NULL);
     }
 
-    result = ti_query(self->tb, name, begin, end);
+    result = ti_query_general(self->tb, name, begin, end);
     return pairixiter_create(self, result); // result may be null but that's okay.
 }
 
@@ -272,14 +272,14 @@ static PyObject *
 pairix_queryi(PairixObject *self, PyObject *args)
 {
     int tid, begin, end;
-    ti_iter_t result;
+    sequential_iter_t *result;
 
     if (!PyArg_ParseTuple(args, "iii:queryi", &tid, &begin, &end)){
         PyErr_SetString(PairixError, "Argument error! queryi() takes three integers: tid, begin and end");
         return pairixiter_create(self, NULL);
     }
 
-    result = ti_queryi(self->tb, tid, begin, end);
+    result = ti_queryi_general(self->tb, tid, begin, end);
     return pairixiter_create(self, result);  // result may be null but that's okay
 }
 
@@ -288,7 +288,7 @@ pairix_querys(PairixObject *self, PyObject *args)
 {
     const char *reg;
     int tid_test;
-    ti_iter_t result;
+    sequential_iter_t *result;
 
     if (!PyArg_ParseTuple(args, "s:querys", &reg)){
         PyErr_SetString(PairixError, "Argument error! querys2D() takes one str formatted as: '{CHR}:{START}-{END}'");
@@ -301,15 +301,15 @@ pairix_querys(PairixObject *self, PyObject *args)
         return pairixiter_create(self, NULL);
     }
     else if (tid_test == -2){
-        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        PyErr_WarnEx(PairixWarning, "The start coordinate must be less than the end coordinate.", 1);
         return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
-        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        PyErr_WarnEx(PairixWarning, "The specific cause could not be found. Please adjust your arguments.", 1);
         return pairixiter_create(self, NULL);
     }
 
-    result = ti_querys(self->tb, reg);
+    result = ti_querys_general(self->tb, reg);
     return pairixiter_create(self, result); // result may be null but that's okay
 }
 
@@ -320,7 +320,7 @@ pairix_query_2D(PairixObject *self, PyObject *args)
 {
     char *name, *name2;
     int begin, end, begin2, end2, tid_test, tid_test_rev, flip;
-    ti_iter_t result;
+    sequential_iter_t *result;
     flip = 0;
 
     if (!PyArg_ParseTuple(args, "siisii|i:query2D", &name, &begin, &end, &name2, &begin2, &end2, &flip)){
@@ -351,15 +351,15 @@ pairix_query_2D(PairixObject *self, PyObject *args)
         }
     }
     else if (tid_test == -2){
-        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        PyErr_WarnEx(PairixWarning, "The start coordinate must be less than the end coordinate.", 1);
         return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
-        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        PyErr_WarnEx(PairixWarning, "The specific cause could not be found. Please adjust your arguments.", 1);
         return pairixiter_create(self, NULL);
     }
 
-    result = ti_query_2d(self->tb, name, begin, end, name2, begin2, end2);
+    result = ti_query_2d_general(self->tb, name, begin, end, name2, begin2, end2);
     return pairixiter_create(self, result); // result may be null but that's okay
 }
 
@@ -367,14 +367,14 @@ static PyObject *
 pairix_queryi_2D(PairixObject *self, PyObject *args)
 {
     int tid, begin, end, begin2, end2;
-    ti_iter_t result;
+    sequential_iter_t *result;
 
     if (!PyArg_ParseTuple(args, "iiiii:queryi2D", &tid, &begin, &end, &begin2, &end2)){
         PyErr_SetString(PairixError, "Argument error! queryi2D() takes five integers: tid, begin, end, begin2 and end2");
         return pairixiter_create(self, NULL);
     }
 
-    result = ti_queryi_2d(self->tb, tid, begin, end, begin2, end2);
+    result = ti_queryi_2d_general(self->tb, tid, begin, end, begin2, end2);
     return pairixiter_create(self, result);  // result may be null but that's okay
 }
 
@@ -383,7 +383,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
 {
     const char *reg, *reg2;
     int tid_test, tid_test_rev, flip;
-    ti_iter_t result;
+    sequential_iter_t *result;
 
     flip = 0;
 
@@ -397,7 +397,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
         reg2 = flip_region(reg);
         tid_test_rev = ti_querys_tid(self->tb, reg2);
         if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
-            result = ti_querys_2d(self->tb, reg2);
+            result = ti_querys_2d_general(self->tb, reg2);
             if (flip == 1){
                 if (result == NULL) {
                    // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
@@ -415,15 +415,15 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
         }
     }
     else if (tid_test == -2){
-        PyErr_SetString(PairixError, "Input error! The start coordinate must be less than the end coordinate.");
+        PyErr_WarnEx(PairixWarning, "The start coordinate must be less than the end coordinate.", 1);
         return pairixiter_create(self, NULL);
     }
     else if (tid_test == -3){
-        PyErr_SetString(PairixError, "Input error! The specific cause could not be found. Please adjust your arguments.");
+        PyErr_WarnEx(PairixWarning, "The specific cause could not be found. Please adjust your arguments.", 1);
         return pairixiter_create(self, NULL);
     }
 
-    result = ti_querys_2d(self->tb, reg);
+    result = ti_querys_2d_general(self->tb, reg);
     return pairixiter_create(self, result);  // result may be null but that's okay
 }
 

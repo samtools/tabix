@@ -107,10 +107,15 @@ extern "C" {
 	int ti_lazy_index_load(pairix_t *t);
 	void ti_close(pairix_t *t);
 	ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end);
+	sequential_iter_t *ti_query_general(pairix_t *t, const char *name, int beg, int end);
 	ti_iter_t ti_queryi(pairix_t *t, int tid, int beg, int end);
+	sequential_iter_t *ti_queryi_general(pairix_t *t, int tid, int beg, int end);
 	ti_iter_t ti_querys(pairix_t *t, const char *reg);
+	sequential_iter_t *ti_querys_general(pairix_t *t, const char *reg);
 	ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
+	sequential_iter_t *ti_query_2d_general(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
+	sequential_iter_t *ti_queryi_2d_general(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
 	ti_iter_t ti_querys_2d(pairix_t *t, const char *reg);
         sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs);
         sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg);
