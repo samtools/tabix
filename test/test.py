@@ -309,7 +309,7 @@ class PairixTestBlocknames(unittest.TestCase):
 
 
 class PairixTestGetColumnIndex(unittest.TestCase):
- 
+
     def test_columnindex(self):
         pr = pypairix.open(TEST_FILE_2D)
         pr2 = pypairix.open(TEST_FILE_2D_4DN)
