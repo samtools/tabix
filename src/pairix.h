@@ -242,6 +242,9 @@ extern "C" {
         void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter);
 
 
+        /* convert a bedline to a region string */
+        char *bedline2region(char *s);
+
 
         /* bgzip function */
         void fail(BGZF *fp);

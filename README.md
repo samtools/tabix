@@ -78,7 +78,11 @@ pairix textfile.gz '<chr>:<start>-<end>' '<chr>:<start>-<end>' ...
 pairix textfile.gz '<chr1>:<start1>-<end1>|<chr2>:<start2>-<end2>' ...    # make sure to quote, so '|' is not interpreted as a pipe.
 pairix textfile.gz '*|<chr2>:<start2>-<end2>'  # wild card is accepted for 1D query on 2D indexed file
 pairix textfile.gz '<chr1>:<start1>-<end1>|*' # wild card is accepted for 1D query on 2D indexed file
+
+# using a file listing query regions
+pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one region string per line
 ```
+
 
 ### Usage examples for pairix
 
@@ -147,6 +151,46 @@ Wild-card 2D query
 pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '*|X:1-100000'
 0	9	22476476	53674	0	X	89297	48
 0	X	63311	5	16	X	63619	9
+```
+Query using a region file
+```
+cat samples/test.regions
+1:1-50000|*
+*|1:1-50000
+2:1-20000|*
+*|2:1-20000
+
+cat samples/test.regions2
+X:100000000-110000000|Y
+19:1-100000|19
+
+bin/pairix -L samples/merged_nodup.tab.chrblock_sorted.txt.gz samples/test.regions samples/test.regions2 
+0	1	49819	93	0	1	16858344	44945
+0	1	47453	88	16	12	109768910	264269
+0	1	49846	93	16	15	102113049	209310
+0	1	14193	10	0	19	96878	91
+0	1	46016	83	16	19	143271	206
+16	1	47275	88	0	19	132002	177
+0	1	30682	42	0	2	114339365	270954
+0	1	27773	36	0	5	94801059	216578
+0	1	14739	11	0	6	680844	1375
+16	1	35953	55	0	8	134895258	320847
+0	1	11874	1	0	9	37955	61
+0	1	23130	24	16	9	222022	522
+0	2	11515	1	0	2	34525962	85272
+0	2	12414	4	0	2	10749205	25199
+0	2	12425	4	0	2	4744972	10823
+16	2	13903	8	16	2	23565	23
+16	2	18160	15	16	2	1088999	2416
+0	2	46232622	114234	16	2	18991	16
+16	X	100209702	238332	16	Y	4980527	5149
+16	X	101332548	241383	16	Y	4976318	5140
+16	X	101970869	243096	16	Y	13486006	17447
+0	X	104330885	249120	16	Y	4954898	5086
+16	X	105912475	252781	16	Y	4407051	3848
+16	X	109996502	262800	0	Y	4298896	3612
+0	19	72103	23	16	19	152131	231
+0	19	96128	86	16	19	80581	44
 ```
 
 
