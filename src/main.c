@@ -258,7 +258,6 @@ int main(int argc, char *argv[])
         }
         if ( print_only_header )
         {
-            ti_iter_t iter;
             const char *s;
             int len;
             if (ti_lazy_index_load(t) < 0) {
@@ -266,27 +265,26 @@ int main(int argc, char *argv[])
                 return 1;
             }
             const ti_conf_t *idxconf = ti_get_conf(t->idx);
-            iter = ti_query(t, 0, 0, 0);
-            while ((s = ti_read(t, iter, &len)) != 0) {
+            sequential_iter_t *siter = ti_query_general(t, 0, 0, 0);
+            while ((s = sequential_ti_read(siter, &len)) != 0) {
                 if ((int)(*s) != idxconf->meta_char) break;
                 fputs(s, stdout); fputc('\n', stdout);
             }
-            ti_iter_destroy(iter);
+            destroy_sequential_iter(siter);
             return 0;
         }
 
         if (argc == optind+2 && strcmp(argv[optind+1], ".") == 0) { // retrieve all
-            ti_iter_t iter;
             const char *s;
             int len;
-            iter = ti_query(t, 0, 0, 0);
-            while ((s = ti_read(t, iter, &len)) != 0) {
+            sequential_iter_t *siter = ti_query_general(t, 0, 0, 0);
+            while ((s = sequential_ti_read(siter, &len)) != 0) {
                 fputs(s, stdout); fputc('\n', stdout);
             }
-            ti_iter_destroy(iter);
+            destroy_sequential_iter(siter);
+
         } else { // retrieve from specified regions
             int i, len;
-            ti_iter_t iter;
             const char *s;
             const ti_conf_t *idxconf;
             
@@ -299,12 +297,12 @@ int main(int argc, char *argv[])
             if ( print_header )
             {
                 // If requested, print the header lines here
-                iter = ti_query(t, 0, 0, 0);
-                while ((s = ti_read(t, iter, &len)) != 0) {
+                sequential_iter_t *siter = ti_query_general(t, 0, 0, 0);
+                while ((s = sequential_ti_read(siter, &len)) != 0) {
                     if ((int)(*s) != idxconf->meta_char) break;
                     fputs(s, stdout); fputc('\n', stdout);
                 }
-                ti_iter_destroy(iter);
+                destroy_sequential_iter(siter);
                 bgzf_seek(t->fp, 0, SEEK_SET);
             }
 
@@ -329,17 +327,6 @@ int main(int argc, char *argv[])
                         fputs(s, stdout); fputc('\n',stdout);
                     }
                     destroy_sequential_iter(siter);
-                    /*
-                    int tid, beg, end, beg2, end2;
-                    if (ti_parse_region2d(t->idx, argv[i], &tid, &beg, &end, &beg2, &end2) == 0) {
-                        iter = ti_queryi_2d(t, tid, beg, end, beg2, end2);
-                        while ((s = ti_read(t, iter, &len)) != 0){
-                           fputs(s, stdout); fputc('\n', stdout);
-                        }
-                        ti_iter_destroy(iter);
-                    }
-                    else fprintf(stderr, "[main] invalid region: unknown target name or minus interval.\n");
-                    */
                 }
             }
         }
