@@ -333,7 +333,7 @@ pairix_query_2D(PairixObject *self, PyObject *args)
         // Test if reversing chromosome order fixes the issues
         tid_test_rev = ti_query_2d_tid(self->tb, name2, begin2, end2, name, begin, end);
         if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
-            result = ti_query_2d(self->tb, name2, begin2, end2, name, begin, end);
+            result = ti_query_2d_general(self->tb, name2, begin2, end2, name, begin, end);
             if (flip == 1){
                 if (result == NULL) {
                    // PyErr_SetString(PairixError, "Input error! Cannot find matching chromosome names. Check that chromosome naming conventions match between your query and input file.");
