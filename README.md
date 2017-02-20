@@ -70,7 +70,14 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 
 # querying
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
-pairix textfile.gz '<chr1>:<start1>-<end1>[|<chr2>:<start2>-<end2>]'    # make sure to quote, so '|' is not interpreted as a pipe.
+
+# for 1D indexed file
+pairix textfile.gz '<chr>:<start>-<end>' '<chr>:<start>-<end>' ...
+
+# for 2D indexed file
+pairix textfile.gz '<chr1>:<start1>-<end1>|<chr2>:<start2>-<end2>' ...    # make sure to quote, so '|' is not interpreted as a pipe.
+pairix textfile.gz '*|<chr2>:<start2>-<end2>'  # wild card is accepted for 1D query on 2D indexed file
+pairix textfile.gz '<chr1>:<start1>-<end1>|*' # wild card is accepted for 1D query on 2D indexed file
 ```
 
 ### Usage examples for pairix
@@ -135,6 +142,13 @@ pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '1:1-10000000|20:50000000
 0	3	7272964	17297	0	X	88560374	211726
 16	3	8402388	19935	16	X	77717595	187377
 ```
+Wild-card 2D query
+```
+pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '*|X:1-100000'
+0	9	22476476	53674	0	X	89297	48
+0	X	63311	5	16	X	63619	9
+```
+
 
 #### 2D indexing & query on a space-delimited file
 The -T option is for space-delimited files.
@@ -193,6 +207,13 @@ it = tb.querys2D(querystr)
 tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
 print tb_result
 
+# 2D query usage example with wild card
+tb=pypairix.open("textfile.gz")
+querystr='{}:{}-{}|*'.format(chrom, start, end)
+it = tb.querys2D(querystr)
+tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
+print tb_result
+
 # 1D query usage example 1
 tb=pypairix.open("textfile.gz")
 it = tb.query(chrom, start, end)
@@ -219,7 +240,6 @@ print( tb.get_startpos1_col() )
 print( tb.get_startpos2_col() )
 print( tb.get_endpos1_col() )
 print( tb.get_endpos2_col() )
-
 ```
 
 ## Rpairix
