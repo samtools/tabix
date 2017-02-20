@@ -256,6 +256,7 @@ pairix_query(PairixObject *self, PyObject *args)
         return pairixiter_create(self, NULL);
     }
     else if (tid_test == -2){
+        fprintf(stderr, "beg=%d, end=%d\n", begin,end);  // SOO
         PyErr_WarnEx(PairixWarning, "The start coordinate must be less than the end coordinate.", 1);
         return pairixiter_create(self, NULL);
     }

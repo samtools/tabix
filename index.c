@@ -1326,6 +1326,7 @@ int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 	if (ti_lazy_index_load(t) != 0) return -3;
 	if (ti_get_tid(t->idx, name) <0) return -1;
         if (beg > end) return -2;
+        else return 0;
 }
 
 int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
