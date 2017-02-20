@@ -1912,12 +1912,3 @@ int stream_1d(char *fn)
 }
 
 
-char *bedline2region(char *s){
-    int i,k,j,l;
-    l=strlen(s);
-    for(i=0;i<l;i++) if(s[i]=='\t') { k=i; s[i]=':'; }
-    for(i=k+1;i<l;i++) if(s[i]=='\t') { j=i; s[i]='-'; }
-    for(i=j+1;i<l;i++) if(s[i]=='\t' || s[i]=='\n') { s[i]=0; }
-    return(s); 
-}
-
