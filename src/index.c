@@ -1154,12 +1154,13 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
             *(regions[i] + strlen(regions[i])) = REGION_SPLIT_CHARACTER; 
             strcat(regions[i], chr2);
          }
+         free(chrpairlist);
+         for(i=0;i<n_sub_list;i++) free(chr1list[i]);
+         free(chr1list);
 
          // multi-region query
          sequential_iter_t *siter = ti_querys_2d_multi(t, regions, n_sub_list);
-         free(chrpairlist);
-         for(i=0;i<n_sub_list;i++) { free(chr1list[i]); free(regions[i]); }
-         free(chr1list);
+         for(i=0;i<n_sub_list;i++) free(regions[i]);
          free(regions);
          return(siter);
 
@@ -1181,13 +1182,15 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
             *(regions[i] + strlen(regions[i])) = REGION_SPLIT_CHARACTER;
             strcat(regions[i], chr2list[i]);
          }
+         free(chrpairlist);
+         for(i=0;i<n_sub_list;i++) free(chr2list[i]);
+         free(chr2list);
 
          sequential_iter_t *siter = ti_querys_2d_multi(t, regions, n_sub_list);
-         free(chrpairlist);
-         for(i=0;i<n_sub_list;i++) { free(chr1list[i]); free(regions[i]); }
-         free(chr2list);
+         for(i=0;i<n_sub_list;i++) free(regions[i]);
          free(regions);
          return(siter);
+
       } else {  // no wildcard
          sequential_iter_t *siter = create_sequential_iter(t);
          add_to_sequential_iter ( siter, ti_querys_2d(t,reg) );
@@ -1907,4 +1910,5 @@ int stream_1d(char *fn)
 
     return (0);   
 }
+
 

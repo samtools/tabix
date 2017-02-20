@@ -13,7 +13,6 @@
 
 int main(int argc, char *argv[])
 {
-    int i;
     //BGZF *bzfp;
     //int f_dst;
 
