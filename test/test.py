@@ -23,6 +23,7 @@ import unittest
 import gzip
 import sys
 import pypairix
+import warnings
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_2D_4DN = 'samples/4dn.bsorted.chr21_22_only.pairs.gz'
@@ -197,6 +198,17 @@ class PairixTest2D(unittest.TestCase):
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
+    def test_querys_2_bad_order(self):
+        # build the query with coordinates in the wrong order
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.end, self.start, self.chrom2, self.start2, self.end2)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # trigger a warning
+            it = self.pr.querys2D(query)
+            # verify some things about the warning
+            assert len(w) == 1
+            assert issubclass(w[-1].category, pypairix.PairixWarning)
+
 
 ## 2D query on 2D indexed file with chromosomes input in reverse order
 class PairixTest2D_reverse(unittest.TestCase):
@@ -226,14 +238,14 @@ class PairixTest2D_reverse(unittest.TestCase):
         self.assertEqual(self.result, pr_result)
 
     def test_query2_rev_fail(self):
-        # do not include 1 to test flipped order of chrs; expect this to hit a PairixError
-        try:
+        # do not include 1 to test flipped order of chrs; expect this to hit a PairixWarning
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # trigger a warning
             it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-            # should fail here because we want this to fail
-            raise pypairix.PairixError('ERROR! Autoflip was not specified yet this still passed')
-        except pypairix.PairixError:
-            # if we make it here, pass the test (expecting an error)
-            self.assertEqual(1,1)
+            # verify some things about the warning
+            assert len(w) == 1
+            assert issubclass(w[-1].category, pypairix.PairixWarning)
 
 
 ## 2D query on 2D indexed file with chromosomes using a 4DN pairs file
