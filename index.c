@@ -1348,6 +1348,7 @@ int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char 
         if(ti_get_tid(t->idx, namepair) <0) return -1;
         if (beg > end) return -2;
         if (beg2 > end2) return -2;
+        else return 0;
 }
 
 
