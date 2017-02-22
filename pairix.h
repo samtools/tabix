@@ -107,10 +107,15 @@ extern "C" {
 	int ti_lazy_index_load(pairix_t *t);
 	void ti_close(pairix_t *t);
 	ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end);
+	sequential_iter_t *ti_query_general(pairix_t *t, const char *name, int beg, int end);
 	ti_iter_t ti_queryi(pairix_t *t, int tid, int beg, int end);
+	sequential_iter_t *ti_queryi_general(pairix_t *t, int tid, int beg, int end);
 	ti_iter_t ti_querys(pairix_t *t, const char *reg);
+	sequential_iter_t *ti_querys_general(pairix_t *t, const char *reg);
 	ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
+	sequential_iter_t *ti_query_2d_general(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2);
 	ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
+	sequential_iter_t *ti_queryi_2d_general(pairix_t *t, int tid, int beg, int end, int beg2, int end2);
 	ti_iter_t ti_querys_2d(pairix_t *t, const char *reg);
         sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs);
         sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg);
@@ -172,10 +177,23 @@ extern "C" {
 	const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly);
 
 	const ti_conf_t *ti_get_conf(ti_index_t *idx);
+        
+        /* get column index, 0-based */
+        int ti_get_sc(ti_index_t *idx);
+        int ti_get_sc2(ti_index_t *idx);
+        int ti_get_bc(ti_index_t *idx);
+        int ti_get_bc2(ti_index_t *idx);
+        int ti_get_ec(ti_index_t *idx);
+        int ti_get_ec2(ti_index_t *idx);
+
+        /* get delimiter */
+        char ti_get_delimiter(ti_index_t *idx);
+
+
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
         /* convert string 'region1|region2' to 'region2|region1' */
-        char* flip_region ( char* s);
+        char* flip_region(char *s);
 
         /* create an empty merge_iter_t struct */
         merged_iter_t *create_merged_iter(int n);
@@ -222,7 +240,6 @@ extern "C" {
 
         /* add an iter to sequential_iter - the array size is dynamically incremented */
         void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter);
-
 
 
         /* bgzip function */

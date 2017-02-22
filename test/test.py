@@ -23,6 +23,7 @@ import unittest
 import gzip
 import sys
 import pypairix
+import warnings
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_2D_4DN = 'samples/4dn.bsorted.chr21_22_only.pairs.gz'
@@ -134,7 +135,7 @@ def build_it_result(it, f_type):
 
 
 ## 1D query on 1D indexed file
-class TabixTest(unittest.TestCase):
+class PairixTest(unittest.TestCase):
     regions = read_vcf(TEST_FILE_1D)
     chrom = 'chr10'
     start = 25944
@@ -156,7 +157,7 @@ class TabixTest(unittest.TestCase):
 
 
 ## semi-2D query on 2D indexed file
-class TabixTest_2(unittest.TestCase):
+class PairixTest_2(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D)
     regions = read_pairs(TEST_FILE_2D, f_type)
     chrom = '10'
@@ -174,7 +175,7 @@ class TabixTest_2(unittest.TestCase):
 
 
 ## 2D query on 2D indexed file
-class TabixTest2D(unittest.TestCase):
+class PairixTest2D(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D)
     regions = read_pairs(TEST_FILE_2D, f_type)
     chrom = '10'
@@ -197,9 +198,20 @@ class TabixTest2D(unittest.TestCase):
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
+    def test_querys_2_bad_order(self):
+        # build the query with coordinates in the wrong order
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.end, self.start, self.chrom2, self.start2, self.end2)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # trigger a warning
+            it = self.pr.querys2D(query)
+            # verify some things about the warning
+            assert len(w) == 1
+            assert issubclass(w[-1].category, pypairix.PairixWarning)
+
 
 ## 2D query on 2D indexed file with chromosomes input in reverse order
-class TabixTest2D_reverse(unittest.TestCase):
+class PairixTest2D_reverse(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D)
     regions = read_pairs(TEST_FILE_2D, f_type)
     chrom2 = '10'
@@ -226,18 +238,18 @@ class TabixTest2D_reverse(unittest.TestCase):
         self.assertEqual(self.result, pr_result)
 
     def test_query2_rev_fail(self):
-        # do not include 1 to test flipped order of chrs; expect this to hit a PairixError
-        try:
+        # do not include 1 to test flipped order of chrs; expect this to hit a PairixWarning
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # trigger a warning
             it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-            # should fail here because we want this to fail
-            raise pypairix.PairixError('ERROR! Autoflip was not specified yet this still passed')
-        except pypairix.PairixError:
-            # if we make it here, pass the test (expecting an error)
-            self.assertEqual(1,1)
+            # verify some things about the warning
+            assert len(w) == 1
+            assert issubclass(w[-1].category, pypairix.PairixWarning)
 
 
 ## 2D query on 2D indexed file with chromosomes using a 4DN pairs file
-class TabixTest2D_4DN(unittest.TestCase):
+class PairixTest2D_4DN(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D_4DN)
     regions = read_pairs(TEST_FILE_2D_4DN, f_type)
     chrom = 'chr21'
@@ -263,7 +275,7 @@ class TabixTest2D_4DN(unittest.TestCase):
 
 
 ## 2D query on 2D indexed space-delimited file
-class TabixTest2DSpace(unittest.TestCase):
+class PairixTest2DSpace(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_2D_SPACE, ' ')
     regions = read_pairs(TEST_FILE_2D_SPACE, f_type, ' ')
     chrom = '10'
@@ -287,11 +299,46 @@ class TabixTest2DSpace(unittest.TestCase):
         self.assertEqual(self.result, pr_result)
 
 
-class TabixTestBlocknames(unittest.TestCase):
-    pr = pypairix.open(TEST_FILE_2D)
+class PairixTestBlocknames(unittest.TestCase):
 
     def test_blocknames(self):
-      print (str(self.pr.get_blocknames()))
+
+        # block list obtained from get_blocknames()
+        pr = pypairix.open(TEST_FILE_2D)
+        retrieved_blocklist = pr.get_blocknames()
+        retrieved_blocklist.sort()
+
+        # true block list
+        blocklist=[]
+        f_type = find_pairs_type(TEST_FILE_2D)
+        regions = read_pairs(TEST_FILE_2D, f_type)
+        for a in regions:
+            blocklist.append(a[0] + '|' + a[3])
+        blocklist_uniq = list(set(blocklist))
+        blocklist_uniq.sort()
+
+        self.assertEqual(retrieved_blocklist, blocklist_uniq)
+
+
+class PairixTestGetColumnIndex(unittest.TestCase):
+
+    def test_columnindex(self):
+        pr = pypairix.open(TEST_FILE_2D)
+        pr2 = pypairix.open(TEST_FILE_2D_4DN)
+
+        self.assertEqual(pr.get_chr1_col(),1)
+        self.assertEqual(pr.get_chr2_col(),5)
+        self.assertEqual(pr.get_startpos1_col(),2)
+        self.assertEqual(pr.get_startpos2_col(),6)
+        self.assertEqual(pr.get_endpos1_col(),2)
+        self.assertEqual(pr.get_endpos2_col(),6)
+
+        self.assertEqual(pr2.get_chr1_col(),1)
+        self.assertEqual(pr2.get_chr2_col(),3)
+        self.assertEqual(pr2.get_startpos1_col(),2)
+        self.assertEqual(pr2.get_startpos2_col(),4)
+        self.assertEqual(pr2.get_endpos1_col(),2)
+        self.assertEqual(pr2.get_endpos2_col(),4)
 
 
 if __name__ == '__main__':

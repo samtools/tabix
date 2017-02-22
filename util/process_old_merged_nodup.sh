@@ -6,5 +6,3 @@ cp /home/sw229/Storage/HiC_SV/data/HiC_data/GM12878/pairFile/GM12878_insitu_DpnI
 sort -k3,3 -k7,7 -k4,4 -k8,8 $input > sort -k3,3 -k7,7 -k4,4 -k8,8 $input.bsorted
 bgzip -f $input.bsorted
 pairix -f -s3 -d7 -b4 -e4 -u8 -T $input.bsorted.gz
-
-

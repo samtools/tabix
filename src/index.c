@@ -803,7 +803,7 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 	} else *end = 1<<29;
 	if (*begin > 0) --*begin;
 	free(s);
-	if (*begin > *end) return -1;
+	if (*begin > *end) return -2;
 
 	return 0;
 }
@@ -831,8 +831,8 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 
         if(i == k) { //1d query
           *begin2=-1; *end2=-1;
-          if(ti_parse_region(idx,str,tid,begin,end)==0) {  free(s); return 0; }
-          else {free(s); return -1; }
+          int res = ti_parse_region(idx,str,tid,begin,end);
+          free(s); return (res);
 
         }else{ //2d query
           coord1s=0; coord1e=i; coord2s=i+1; coord2e=k;
@@ -1076,6 +1076,16 @@ int ti_fetch_2d(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, int 
 
 const ti_conf_t *ti_get_conf(ti_index_t *idx) { return idx? &idx->conf : 0; }
 
+/* Get 0-based column index and delimiter */
+int ti_get_sc(ti_index_t *idx) { return idx? idx->conf.sc-1 : -1; }
+int ti_get_sc2(ti_index_t *idx) { return idx? idx->conf.sc2-1 : -1; }
+int ti_get_bc(ti_index_t *idx) { return idx? idx->conf.bc-1 : -1; }
+int ti_get_bc2(ti_index_t *idx) { return idx? idx->conf.bc2-1 : -1; }
+int ti_get_ec(ti_index_t *idx) { return idx? idx->conf.ec-1 : -1; }
+int ti_get_ec2(ti_index_t *idx) { return idx? idx->conf.ec2-1 : -1; }
+char ti_get_delimiter(ti_index_t *idx) { return idx? idx->conf.delimiter : 0; }
+
+
 /*******************
  * High-level APIs *
  *******************/
@@ -1118,7 +1128,7 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
 {
    int n_seqpair_list;
    int n_sub_list;
-   char *sp, *chr1, *chr2, **chr1list, **chr1pairlist, **chrpairlist;
+   char *sp, *chr1, *chr2, **chr1list, **chr2list, **chrpairlist;
    char *chrend;
    char chronly=1;
    int i;
@@ -1133,10 +1143,8 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
             *chrend=0; chronly=0;  
          }
          char **chrpairlist = ti_seqname(t->idx, &n_seqpair_list);
-         fprintf(stderr,"chr2 = %s, n_seqpair_list = %d\n", chr2, n_seqpair_list); //debugging
          chr1list = get_seq1_list_for_given_seq2(chr2, chrpairlist, n_seqpair_list, &n_sub_list);
          if(chronly==0) *chrend=':';  // revert to original region string including beg and end
-         fprintf(stderr, "chr2 = %s, n_sub_list = %d\n", chr2, n_sub_list); // debugging
          // create an array of regions in string.
          char **regions = malloc(n_sub_list * sizeof(char*));
          for(i=0;i<n_sub_list;i++){
@@ -1145,30 +1153,44 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
             *(regions[i] + strlen(regions[i]) + 1) = 0;
             *(regions[i] + strlen(regions[i])) = REGION_SPLIT_CHARACTER; 
             strcat(regions[i], chr2);
-            fprintf(stderr,"region=%s\n", regions[i]);  //debugging
          }
+         free(chrpairlist);
+         for(i=0;i<n_sub_list;i++) free(chr1list[i]);
+         free(chr1list);
 
          // multi-region query
          sequential_iter_t *siter = ti_querys_2d_multi(t, regions, n_sub_list);
-         free(chrpairlist);
-         for(i=0;i<n_sub_list;i++) { free(chr1list[i]); free(regions[i]); }
-         free(chr1list);
+         for(i=0;i<n_sub_list;i++) free(regions[i]);
          free(regions);
          return(siter);
 
-      } else if(sp == strlen(reg)-2 && sp[1]=='*'){  // 'c:s-e|*'
-         sp=0; char *chr1 = reg;
+      } else if(strlen(sp) == 2 && sp[1]=='*'){  // 'c:s-e|*'
+         *sp=0; char *chr1 = reg;
          if( (chrend = strchr(chr1, ':')) != NULL) { 
             *chrend=0; chronly=0;
          }
          char **chrpairlist = ti_seqname(t->idx, &n_seqpair_list);
-         chr1pairlist = get_seq2_list_for_given_seq1(chr1, chrpairlist, n_seqpair_list, &n_sub_list);
-         if(chronly==0) *chrend=':';
-         fprintf(stderr,"%s\n", chr1pairlist[0]);
-         sequential_iter_t *siter = ti_querys_2d_multi(t, chr1pairlist, n_sub_list);
+         chr2list = get_seq2_list_for_given_seq1(chr1, chrpairlist, n_seqpair_list, &n_sub_list);
+         if(chronly==0) *chrend=':';  // revert to original region string including beg and end
+
+         // create an array of regions in string.
+         char **regions = malloc(n_sub_list * sizeof(char*));
+         for(i=0;i<n_sub_list;i++){
+            regions[i] = malloc((strlen(chr2list[i]) + strlen(chr1) + 2) * sizeof(char));
+            strcpy(regions[i], chr1);
+            *(regions[i] + strlen(regions[i]) + 1) = 0;
+            *(regions[i] + strlen(regions[i])) = REGION_SPLIT_CHARACTER;
+            strcat(regions[i], chr2list[i]);
+         }
          free(chrpairlist);
-         free(chr1pairlist);
+         for(i=0;i<n_sub_list;i++) free(chr2list[i]);
+         free(chr2list);
+
+         sequential_iter_t *siter = ti_querys_2d_multi(t, regions, n_sub_list);
+         for(i=0;i<n_sub_list;i++) free(regions[i]);
+         free(regions);
          return(siter);
+
       } else {  // no wildcard
          sequential_iter_t *siter = create_sequential_iter(t);
          add_to_sequential_iter ( siter, ti_querys_2d(t,reg) );
@@ -1181,20 +1203,16 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
    }
 }
 
-sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs)
-{
-    sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
-    for(i=0;i<nRegs;i++){
-      add_to_sequential_iter ( siter, ti_querys_2d(t, regs[i]) );
-    }
-    return(siter);
-}
 
 
 ti_iter_t ti_queryi(pairix_t *t, int tid, int beg, int end)
 {
         return ti_queryi_2d(t,tid,beg,end,-1,-1);
+}
+
+sequential_iter_t *ti_queryi_general(pairix_t *t, int tid, int beg, int end)
+{
+        return ti_queryi_2d_general(t,tid,beg,end,-1,-1);
 }
 
 ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2)
@@ -1204,10 +1222,27 @@ ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
+sequential_iter_t *ti_queryi_2d_general(pairix_t *t, int tid, int beg, int end, int beg2, int end2)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    int i;
+    add_to_sequential_iter ( siter, ti_queryi_2d(t,tid,beg,end,beg2,end2) );
+    return(siter);
+}
+
 ti_iter_t ti_querys(pairix_t *t, const char *reg)
 {
         return ti_querys_2d(t,reg);
 }
+
+sequential_iter_t *ti_querys_general(pairix_t *t, const char *reg)
+{   
+    sequential_iter_t *siter = create_sequential_iter(t);
+    int i;
+    add_to_sequential_iter ( siter, ti_querys(t, reg) );
+    return(siter);
+}
+
 
 ti_iter_t ti_querys_2d(pairix_t *t, const char *reg)
 {
@@ -1218,6 +1253,16 @@ ti_iter_t ti_querys_2d(pairix_t *t, const char *reg)
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
+sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    int i;
+    for(i=0;i<nRegs;i++){
+      add_to_sequential_iter ( siter, ti_querys_2d(t, regs[i]) );
+    }
+    return(siter);
+}
+
 ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end)
 {
 	int tid;
@@ -1226,6 +1271,14 @@ ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end)
 	if (ti_lazy_index_load(t) != 0) return 0;
 	if ((tid = ti_get_tid(t->idx, name)) < 0) return 0;
 	return ti_iter_query(t->idx, tid, beg, end, -1, -1);
+}
+
+sequential_iter_t *ti_query_general(pairix_t *t, const char *name, int beg, int end)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    int i;
+    add_to_sequential_iter (siter, ti_query(t, name, beg, end));
+    return(siter);
 }
 
 ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
@@ -1245,6 +1298,14 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
+sequential_iter_t *ti_query_2d_general(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    int i;
+    add_to_sequential_iter (siter, ti_query_2d(t, name, beg, end, name2, beg2, end2));
+    return(siter);
+}
+
 int ti_querys_tid(pairix_t *t, const char *reg)
 {
         return ti_querys_2d_tid(t,reg);
@@ -1262,11 +1323,13 @@ int ti_querys_2d_tid(pairix_t *t, const char *reg)
 
 int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 {
-	int tid;
+	int tid, parse_err;
 	if (name == 0) return -3 ;
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return -3;
-	return( ti_get_tid(t->idx, name) );
+	if (ti_get_tid(t->idx, name) <0) return -1;
+        if (beg > end) return -2;
+        else return 0;
 }
 
 int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
@@ -1282,7 +1345,10 @@ int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char 
 	if (name == 0) return ti_iter_first();
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return 0;
-	return (ti_get_tid(t->idx, namepair));
+        if(ti_get_tid(t->idx, namepair) <0) return -1;
+        if (beg > end) return -2;
+        if (beg2 > end2) return -2;
+        else return 0;
 }
 
 
@@ -1307,9 +1373,11 @@ sequential_iter_t *create_sequential_iter(pairix_t *t)
 void destroy_sequential_iter(sequential_iter_t *siter)
 {
   int i;
-  for(i=0;i<siter->n;i++) ti_iter_destroy(siter->iter[i]);
-  free(siter->iter);
-  free(siter);
+  if(siter){
+    for(i=0;i<siter->n;i++) ti_iter_destroy(siter->iter[i]);
+    free(siter->iter);
+    free(siter);
+  }
 }
 
 // add an iter element to a sequential iterator, the size is dynamically incremented.
@@ -1427,7 +1495,7 @@ const char *merged_ti_read(merged_iter_t *miter, int *len)
 
 const char *sequential_ti_read(sequential_iter_t *siter, int *len)
 {
-    if(!siter) { fprintf(stderr,"Null merged_iter_t\n"); return(NULL); }
+    if(!siter) { fprintf(stderr,"Null sequential_iter_t\n"); return(NULL); }
     if(siter->n<=0) { fprintf(stderr,"No iter_unit lement in merged_iter_t\n"); return(NULL); }
 
     char *s = ti_iter_read(siter->t->fp,siter->iter[siter->curr], len, 0); 
@@ -1593,7 +1661,6 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
          k++;
       }
     }
-    fprintf(stderr,"k=%d, *pn_sub_list=%d\n",k,*pn_sub_list); // debugging
     assert (k = *pn_sub_list);
 
     return(sublist);
@@ -1611,6 +1678,7 @@ char *flip_region ( char* s) {
     strcpy(s_flp, s + i + 1);
     s_flp[l2] = REGION_SPLIT_CHARACTER;
     strcpy(s_flp + l2 + 1, s);
+    s[i]= REGION_SPLIT_CHARACTER;
     return(s_flp);
 }
 
@@ -1791,7 +1859,7 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
            iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
            create_iter_unit(tbs[j], iter, miter->iu[j]);
         }
-        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+        while ( ( s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
         //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
         destroy_merged_iter(miter); miter=NULL;     
       }
@@ -1831,7 +1899,7 @@ int stream_1d(char *fn)
            iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
            create_iter_unit(tbs_copies[j], iter, miter->iu[j]);
        }
-       while ( s=merged_ti_read(miter,&reslen) ) puts(s);
+       while ( (s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
        destroy_merged_iter(miter); miter=NULL;     
        for(j=0;j<n_chr1pairs;j++) ti_close(tbs_copies[j]);
        free(tbs_copies); tbs_copies=NULL;
@@ -1845,4 +1913,5 @@ int stream_1d(char *fn)
 
     return (0);   
 }
+
 
