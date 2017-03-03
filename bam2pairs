@@ -4,7 +4,8 @@
  
 input_bam=$1
 prefix=$2
-echo "#sorted: chr1-chr2-pos1-pos2" > $prefix.bsorted.pairs
+echo "## pairs format v1.0" > $prefix.bsorted.pairs
+echo "#sorted: chr1-chr2-pos1-pos2" >> $prefix.bsorted.pairs
 echo "#shape: upper triangle" >> $prefix.bsorted.pairs
 echo "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2" >> $prefix.bsorted.pairs
 echo "#command: bam2pairs $input_bam $prefix" >> $prefix.bsorted.pairs
