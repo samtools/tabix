@@ -27,6 +27,7 @@
 * [Utils](#utils)
     * [process_merged_nodup.sh](#process_merged_nodup.sh)
     * [process_old_merged_nodup.sh](#process_old_merged_nodup.sh)
+    * [merged_nodup2pairs.pl](#merged_nodup2pairs.pl)
 * [Pairs_merger](#pairs_merger)
     * [Installation](#installation-for-pairs_merger)
     * [Usage](#usage-for-pairs_merger)
@@ -319,6 +320,12 @@ Usage: process_merged_nodup.sh <merged_nodups.txt>
 * This script sorts, bgzips and indexes an old version of merged_nodups.txt file with readID as the first column.
 ```
 Usage: process_old_merged_nodup.sh <merged_nodups.txt>
+```
+
+### merged_nodup2pairs.pl
+* This script converts Juicer's merged_nodups.txt format to 4dn-style pairs format. It requires pairix and bgzip binaries in PATH.
+```
+Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
 ```
 
 ## Pairs_merger
