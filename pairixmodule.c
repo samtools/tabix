@@ -238,6 +238,7 @@ pairix_dealloc(PairixObject *self)
     PyObject_Del(self);
 }
 
+
 static PyObject *
 pairix_query(PairixObject *self, PyObject *args)
 {
