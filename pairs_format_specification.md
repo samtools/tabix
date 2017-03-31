@@ -12,6 +12,14 @@ This document describes the specification for the text contact list file format 
 The document begins with a summary of the specification, and later sections contain brief introduction of the tools that can be used along with the format.
 </p>
 
+### Table of Contents
+* [Pairs file](#pairs-file)
+* [Standard format](#standard-format)
+* [Standard sorting and indexing](#standard-sorting-and-indexing)
+* [Example optional columns](#example-optional-columns)
+* [Sorting mechanisms](#sorting-mechanisms)
+* [Tools for pairs file](#tools-for-pairs-file)
+
 ### Pairs file
 * File containing a list of contacts (e.g. a contact : pair of genomic loci that is represented by a valid read pair)
 * Similar to bam, but lossy (filtered) and minimal in information.
@@ -46,7 +54,7 @@ The document begins with a summary of the specification, and later sections cont
     * Genome assembly may be included in the header (see below).
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
 
-### Standard sorting and indexing for files provided by DCIC
+### Standard sorting and indexing
 * Bgzipped, tab-delimited text file with an index for random access
 * File extension: `.pairs.gz` (with index `.pairs.gz.px2`)
 * Mate sorting
@@ -57,41 +65,6 @@ The document begins with a summary of the specification, and later sections cont
   * Compressing by bgzip : https://github.com/4dn-dcic/pairix (forked) or https://github.com/samtools/tabix (original) (The two are identical)
 * Indexing and querying
   * Indexing and querying by Pairix : https://github.com/4dn-dcic/pairix
-
-
-### Example pairs files 
-#### A simple example with only reserved fields
-``` 
-## pairs format v1.0
-#sorted: chr1-chr2-pos1-pos2
-#shape: upper triangle
-#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
-#genome_assembly: hg38
-#columns: readID chr1 position1 chr2 position2 strand1 strand2
-EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
-EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
-EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
-EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
-```
- 
-#### A complex example with optional fields and/or missing fields
-<p>
-(not DCIC-provided file, but a user could generate a file like this)
-</p>
-
-``` 
-## pairs format v1.0
-#sorted: none
-#shape: upper triangle
-#chromosomes: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y
-#genome_assembly: GRCh37
-#columns: readID chr1 position1 chr2 position2 strand1 strand2 chr3 position3 strand3 mismatch_str1 mismatch_str2 mismatch_str3
-.  1 60000 2 10000 + +
-.  1 10000 1 20000 + +     10:A>G,13:C>G 4:G>T,6:C>G
-.  1 30000 3 40000 + -      8:T>A
-.  1 50000 1 70000 + + chr5 80000 - 2:T>G
-```
- 
 
 ### Example optional columns
 * MateIDs: mate1, mate2,
@@ -134,6 +107,42 @@ chr1 50000 chr1 70000
 chr1 60000 chr2 10000
 ```
 
+***
+
+### Example pairs files 
+#### A simple example with only reserved fields
+``` 
+## pairs format v1.0
+#sorted: chr1-chr2-pos1-pos2
+#shape: upper triangle
+#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
+#genome_assembly: hg38
+#columns: readID chr1 position1 chr2 position2 strand1 strand2
+EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
+EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
+EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
+EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
+```
+ 
+#### A complex example with optional fields and/or missing fields
+<p>
+(not DCIC-provided file, but a user could generate a file like this)
+</p>
+
+``` 
+## pairs format v1.0
+#sorted: none
+#shape: upper triangle
+#chromosomes: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y
+#genome_assembly: GRCh37
+#columns: readID chr1 position1 chr2 position2 strand1 strand2 chr3 position3 strand3 mismatch_str1 mismatch_str2 mismatch_str3
+.  1 60000 2 10000 + +
+.  1 10000 1 20000 + +     10:A>G,13:C>G 4:G>T,6:C>G
+.  1 30000 3 40000 + -      8:T>A
+.  1 50000 1 70000 + + chr5 80000 - 2:T>G
+```
+ 
+***
 
 ### Tools for pairs file
 * Pairix
