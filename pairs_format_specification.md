@@ -2,7 +2,7 @@
 <p>(document currently under developemt)</p>
 
 ### Authors
-4D DCIC & Nucleome Omics Working Group
+4D Nucleome DCIC & Omics Working Group
 
 <p>
 This document describes the specification for the text contact list file format for chromosome conformation experiments. This type of file is created in practically all HiC pipelines after filtering of aligned reads, and is used for downstream analyses including building matrices, QC, and other high resolution validation. Ideally, the files should be light-weight, easy-to-use and minimally different from the various formats already being used by major Hi-C analysis tools. With these criteria in mind, members of omics WG from the DCIC and authors of the cooler and juicer pipelines have come up with the following specification. 
