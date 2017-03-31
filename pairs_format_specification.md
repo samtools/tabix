@@ -16,34 +16,47 @@ The document begins with a summary of the specification, and later sections cont
 * File containing a list of contacts (e.g. a contact : pair of genomic loci that is represented by a valid read pair)
 * Similar to bam, but lossy (filtered) and minimal in information.
 * Similar to matrix, but at read pair resolution.
-* Analogous to the formats used by hiclib, cooler and juicer pipelines (these pipelines can be modified to accommodate the new format)
+* Analogous to the formats used by hiclib, cooler and juicer pipelines (cooler and juicer have been modified to accommodate the new format)
 
 ### Standard format
-* A text file with 7 reserved  columns and ? optional columns.
-* Reserved columns: readID, chr1, chr2, pos1, pos2, strand1, strand2 
-* Optionally, readID and strands can be blank (‘.’) : DCIC provides both readID and strands.
-* Positions are 5’end of reads.
-* Optional columns for triplets, quadruplets, mapq, sequence/mismatch information (bowtie-style e.g. 10:A>G) 
-* Contacts must be nonredundant.
+* Content
+  * Contacts must be nonredundant.
+    * The requirement is that each pair appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2).
+  * A text file with 7 reserved  columns and ? optional columns.
+  * Reserved columns: `readID, chr1, chr2, pos1, pos2, strand1, strand2` 
+  * Preserving READ ID allows retrieving corresponding reads from a bam file.
+* Required columns: `chr1, chr2, pos1, pos2` (i.e. optionally, readID and strands can be blank (‘.’))
+  * Optional columns can be added (e.g. for triplets, quadruplets, mapq, sequence/mismatch information (bowtie-style e.g. 10:A>G))
+  * Reserved optional column names (column positions are not reserved): frag1, frag2 (restriction enzyme fragmenet index used by juicer)
+* Missing values for required columns
+  * a single-character dummy (‘.’)
 * Header
   * Required
     * First line: `## pairs format v1.0`
-    * Sorting mechanism: `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, ...
     * column contents and ordering: `#columns: readID chr1 position1 chr2 position2 strand1 strand2`
-  * Optional
-    * Chromosome order, genome assembly may be included in the header (see below).
+  * Optional, but reserved (header key is reserved)
+    * Sorting mechanism: `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
+    * Upper triangle vs lower triangle: `#shape: upper triangle`
+    * chromosome mate order: `#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM`
+      * Chromosome order for defining upper triangle (mate1 < mate2) is defined by this header.
+      * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
+      * The style in the header must match the actual chromosomes in the file:
+        * ENSEMBL-style (1,2,.. ) vs USCS-style (chr1, chr2)
+  * Other example optional headers (not parsed by software tools but for human)
+    * Genome assembly may be included in the header (see below).
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
-    * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
-    * Chromosome order for defining upper triangle (mate1 < mate2) is defined.
 
 ### Standard sorting and indexing for files provided by DCIC
 * Bgzipped, tab-delimited text file with an index for random access
 * File extension: `.pairs.gz` (with index `.pairs.gz.px2`)
-* Can be filtered and lossy.
-* Upper triangle (mate1 coordinate is lower than mate2 coordinate) by default; optionally, lower triangle.
-* Sort by (chr1, chr2, pos1, pos2) ('Chromosome-pair-block-sorted') by default (i.e all chr1:chr1 pairs appear before chr1:chr2); optionally, 1D-position-sorted (chr1, pos1)
-* Compressing by bgzip : https://github.com/4dn-dcic/pairix (forked) or https://github.com/samtools/tabix (original) (The two are identical)
-* Indexing and querying by Pairix : https://github.com/4dn-dcic/pairix
+* Mate sorting
+  * Upper triangle (mate1 coordinate is lower than mate2 coordinate) by default; optionally, lower triangle.
+* Row sorting
+  * Sort by (chr1, chr2, pos1, pos2) ('Chromosome-pair-block-sorted') by default (i.e all chr1:chr1 pairs appear before chr1:chr2); optionally, 1D-position-sorted (chr1, pos1)
+* Compressing
+  * Compressing by bgzip : https://github.com/4dn-dcic/pairix (forked) or https://github.com/samtools/tabix (original) (The two are identical)
+* Indexing and querying
+  * Indexing and querying by Pairix : https://github.com/4dn-dcic/pairix
 
 
 ### Example pairs files 
@@ -79,35 +92,8 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 .  1 50000 1 70000 + + chr5 80000 - 2:T>G
 ```
  
-### Details on each proposed component
 
-#### Mate ordering / arrangement
-* Default: upper-triangle
-* Other options: lower-triangle
-<p>The requirement is that each pair appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2).
-
-#### Reserved columns
-* column1-7 are reserved
-```
-readID chr1 chr2 pos1 pos2 strand1 strand2
-```
-<p>
-Preserving READ ID allows retrieving corresponding reads from a bam file.
-</p>
-
-#### Required columns
-* 4 columns are required. The other reserved columns are not required and can have a missing value.
-```
-chr1 pos1 chr2 pos2
-```
-
-#### Missing values for reserved columns
-* a single-character dummy (‘.’)
- 
-#### Optional reserved column names
-* Restriction enzyme fragment numbers (as in juicer pairs format): frag1, frag2 (these column names are reserved since they are identified by juicer)
-
-#### Other example optional columns
+### Example optional columns
 * MateIDs: mate1, mate2,
 * Map quality: mapq1, mapq2
 * Sequence / mismatch information (for phasing)
@@ -130,31 +116,8 @@ chr1 pos1 chr2 pos2
 #genome_assembly: hg38
 ```
 
-#### Chromosome ordering
-* Chromosome order is optionally specified in the header.
-```
-#chromosomes: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y Mt
-```
-* The style in the header must match the actual chromosomes in the file:
-  * ENSEMBL-style (1,2,.. ) vs USCS-style (chr1, chr2)
- 
-#### Sorting mechanism
-* Mark the sorting mechanism in the header, so that the user knows how the file is sorted without having to look into it. Sorting by two chromosomes first allows faster querying since it uses smaller search space for intra- and inter-chromosomal submatrix query and a virtual 4C (row-extraction) query.
- 
-``` 
-# Sorted: chr1-chr2-pos1-pos2
-```
-or
-```
-# Sorted: chr1-pos1
-```
-or
-```
-# Sorted: none
-```
-or other custom sorting mechanisms (e.g. sorting that takes into account triplets, quadraplets, … )
-
-##### Examples of the two sorting mechanisms
+### Sorting mechanisms
+#### Examples of the two sorting mechanisms
 
 ```
 # Sorted: chr1-chr2-pos1-pos2
