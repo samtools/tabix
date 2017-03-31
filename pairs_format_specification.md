@@ -12,6 +12,8 @@ This document describes the specification for the text contact list file format 
 The document begins with a summary of the specification, and later sections contain brief introduction of the tools that can be used along with the format.
 </p>
 
+***
+
 ### Table of Contents
 * [Pairs file](#pairs-file)
 * [Standard format](#standard-format)
@@ -20,11 +22,15 @@ The document begins with a summary of the specification, and later sections cont
 * [Sorting mechanisms](#sorting-mechanisms)
 * [Tools for pairs file](#tools-for-pairs-file)
 
+***
+
 ### Pairs file
 * File containing a list of contacts (e.g. a contact : pair of genomic loci that is represented by a valid read pair)
 * Similar to bam, but lossy (filtered) and minimal in information.
 * Similar to matrix, but at read pair resolution.
 * Analogous to the formats used by hiclib, cooler and juicer pipelines (cooler and juicer have been modified to accommodate the new format)
+
+***
 
 ### Standard format
 * Content
@@ -54,6 +60,8 @@ The document begins with a summary of the specification, and later sections cont
     * Genome assembly may be included in the header (see below).
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
 
+***
+
 ### Standard sorting and indexing
 * Bgzipped, tab-delimited text file with an index for random access
 * File extension: `.pairs.gz` (with index `.pairs.gz.px2`)
@@ -65,6 +73,8 @@ The document begins with a summary of the specification, and later sections cont
   * Compressing by bgzip : https://github.com/4dn-dcic/pairix (forked) or https://github.com/samtools/tabix (original) (The two are identical)
 * Indexing and querying
   * Indexing and querying by Pairix : https://github.com/4dn-dcic/pairix
+
+***
 
 ### Example optional columns
 * MateIDs: mate1, mate2,
@@ -88,6 +98,8 @@ The document begins with a summary of the specification, and later sections cont
 ```
 #genome_assembly: hg38
 ```
+
+***
 
 ### Sorting mechanisms
 #### Examples of the two sorting mechanisms
