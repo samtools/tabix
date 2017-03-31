@@ -24,12 +24,12 @@ The document begins with a summary of the specification, and later sections cont
     * The requirement is that each pair appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2).
   * A text file with 7 reserved  columns and ? optional columns.
   * Reserved columns: `readID, chr1, chr2, pos1, pos2, strand1, strand2` 
-  * Preserving READ ID allows retrieving corresponding reads from a bam file.
-* Required columns: `chr1, chr2, pos1, pos2` (i.e. optionally, readID and strands can be blank (‘.’))
+    * Preserving READ ID allows retrieving corresponding reads from a bam file.
+  * Required columns: `chr1, chr2, pos1, pos2` (i.e. optionally, readID and strands can be blank (‘.’))
+  * Missing values for required columns
+    * a single-character dummy (‘.’)
   * Optional columns can be added (e.g. for triplets, quadruplets, mapq, sequence/mismatch information (bowtie-style e.g. 10:A>G))
   * Reserved optional column names (column positions are not reserved): frag1, frag2 (restriction enzyme fragmenet index used by juicer)
-* Missing values for required columns
-  * a single-character dummy (‘.’)
 * Header
   * Required
     * First line: `## pairs format v1.0`
