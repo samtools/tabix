@@ -155,13 +155,6 @@ or
 or other custom sorting mechanisms (e.g. sorting that takes into account triplets, quadraplets, … )
 
 ##### Examples of the two sorting mechanisms
-```
-# Sorted: chr1-pos1
-chr1 10000 chr1 20000
-chr1 30000 chr3 40000
-chr1 50000 chr1 70000
-chr1 60000 chr2 10000
-```
 
 ```
 # Sorted: chr1-chr2-pos1-pos2
@@ -170,6 +163,14 @@ chr1 50000 chr1 70000
 chr1 60000 chr2 10000
 chr1 30000 chr3 40000
 ```
+```
+# Sorted: chr1-pos1
+chr1 10000 chr1 20000
+chr1 30000 chr3 40000
+chr1 50000 chr1 70000
+chr1 60000 chr2 10000
+```
+
 
 ### Tools for pairs file
 * Pairix
@@ -182,3 +183,8 @@ chr1 30000 chr3 40000
 * Rpairix
   * An R binder is available as well.
   * https://github.com/4dn-dcic/pairix
+* bam2pairs
+  * Converter from bam to pairs
+  * https://github.com/4dn-dcic/bam2pairs
+* utils for converting juicer's merged_nodups.txt formats to a pairs format can be found as part of the pairix package.
+  * https://github.com/4dn-dcic/pairix/tree/master/util
