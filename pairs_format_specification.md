@@ -37,15 +37,16 @@ The document begins with a summary of the specification, and later sections cont
     * Chromosome order for defining upper triangle (mate1 < mate2) is defined.
 
 ### Standard sorting and indexing for files provided by DCIC
-* Gzipped (bgzf), tab-delimited text file with an index for random access
+* Bgzipped, tab-delimited text file with an index for random access
 * File extension: `.pairs.gz` (with index `.pairs.gz.px2`)
 * Can be filtered and lossy.
 * Upper triangle (mate1 coordinate is lower than mate2 coordinate) by default; optionally, lower triangle.
 * Sort by (chr1, chr2, pos1, pos2) ('Chromosome-pair-block-sorted') by default (i.e all chr1:chr1 pairs appear before chr1:chr2); optionally, 1D-position-sorted (chr1, pos1)
+* Compressing by bgzip : https://github.com/4dn-dcic/pairix (forked) or https://github.com/samtools/tabix (original) (The two are identical)
 * Indexing and querying by Pairix : https://github.com/4dn-dcic/pairix
 
 
-### Example of DCIC-provided pairs file 
+### Example pairs files 
 #### A simple example with only reserved fields
 ``` 
 ## pairs format v1.0
@@ -84,14 +85,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * Default: upper-triangle
 * Other options: lower-triangle
 <p>The requirement is that each pair appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2).
-
-##### General file type
-* tab-delimited text, bgzipped for indexing. 
-<p>
-text is an easy-to-use file type that allows fast viewing without additional tools.
-bgzip (.gz) allows indexing and random-access by pairix or tabix
-Works with regular gunzip
-</p>
 
 #### Reserved columns
 * column1-7 are reserved
@@ -161,7 +154,7 @@ or
 ```
 or other custom sorting mechanisms (e.g. sorting that takes into account triplets, quadraplets, … )
 
-##### Examples
+##### Examples of the two sorting mechanisms
 ```
 # Sorted: chr1-pos1
 chr1 10000 chr1 20000
@@ -182,7 +175,7 @@ chr1 30000 chr3 40000
 * Pairix
   * Indexing on bgzipped file that is sorted by chr1-chr2-pos1-pos2 and querying on the indexed file.
   * https://github.com/4dn-dcic/pairix
-  * Pairix is developed on top of tabix, but the two indices are not mutually compatible.
+  * Although Pairix is developed on top of tabix, the two indices are not mutually compatible.
 * Pypairix
   * A python binder for pairix is available through pip install.
   * `pip install pypairix`
