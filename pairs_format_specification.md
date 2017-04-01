@@ -55,6 +55,7 @@ The document begins with a summary of the specification, and later sections cont
       * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
       * The style in the header must match the actual chromosomes in the file:
         * ENSEMBL-style (1,2,.. ) vs USCS-style (chr1, chr2)
+  * Command used to generate the pairs file: `#command: bam2pairs mysample.bam mysample`
   * Other example optional headers (not parsed by software tools but for human)
     * Genome assembly may be included in the header (see below).
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
