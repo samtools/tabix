@@ -20,8 +20,8 @@ The input bam file is paired-end and it doesn't have to be sorted or indexed.
 
 
 ## Output
-The output file contains all of the mapped reads in the input bam file. Both of the mates must be mapped. No additional filtering is performed.
-The output file is a Uc (upper-triangle, chromosome-block-sorted) pairs file, with the following columns.
+The output file contains all of the mapped reads in the input bam file. Both of the mates must be mapped. No additional filtering is performed. Every line of the bam file that meets the criterion of an 'upper triangle' (mate1 < mate2) is added nonredundantly to the output pairs file.
+The output file is an upper-triangular, chromosome-pair-block-sorted, pairs file, with the following columns.
 ```
 readID chr1 pos1 chr2 pos2 strand1 strand2
 ```
