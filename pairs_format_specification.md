@@ -42,7 +42,7 @@ The document begins with a summary of the specification, and later sections cont
   * Missing values for required columns
     * a single-character dummy (‘.’)
   * Optional columns can be added (e.g. for triplets, quadruplets, mapq, sequence/mismatch information (bowtie-style e.g. 10:A>G))
-  * Reserved optional column names (column positions are not reserved): frag1, frag2 (restriction enzyme fragmenet index used by juicer)
+  * Reserved optional column names (column positions are not reserved): `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
 * Header
   * Required
     * First line: `## pairs format v1.0`
