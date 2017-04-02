@@ -25,9 +25,11 @@
     * [Examples](#usage-examples-for-pypairix)
 * [Rpairix](#rpairix)
 * [Utils](#utils)
-    * [process_merged_nodup.sh](#process_merged_nodup.sh)
-    * [process_old_merged_nodup.sh](#process_old_merged_nodup.sh)
-    * [merged_nodup2pairs.pl](#merged_nodup2pairs.pl)
+    * [bam2pairs](#bam2pairs)
+    * [process_merged_nodup.sh](#process_merged_nodupsh)
+    * [process_old_merged_nodup.sh](#process_old_merged_nodupsh)
+    * [merged_nodup2pairs.pl](#merged_nodup2pairspl)
+    * [old_merged_nodup2pairs.pl](#old_merged_nodup2pairspl)
 * [Pairs_merger](#pairs_merger)
     * [Installation](#installation-for-pairs_merger)
     * [Usage](#usage-for-pairs_merger)
@@ -314,22 +316,32 @@ print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 * Rpairix is an R package for reading pairix-indexed pairs files. It has its own repo: https://github.com/4dn-dcic/Rpairix
 
 ## Utils
+### bam2pairs
+* This script converts a bam file to a 4dn style pairs file, sorted and inxed.
+* See [bam2pairs/README.md](bam2pairs/README.md) for more details.
+
 ### process_merged_nodup.sh 
-* This script sorts, bgzips and indexes a newer version of merged_nodups.txt file with strand1 as the first column.
+* This script sorts, bgzips and indexes a newer version of `merged_nodups.txt` file with strand1 as the first column.
 ```
 Usage: process_merged_nodup.sh <merged_nodups.txt>
 ```
 
 ### process_old_merged_nodup.sh 
-* This script sorts, bgzips and indexes an old version of merged_nodups.txt file with readID as the first column.
+* This script sorts, bgzips and indexes an old version of `merged_nodups.txt` file with readID as the first column.
 ```
 Usage: process_old_merged_nodup.sh <merged_nodups.txt>
 ```
 
 ### merged_nodup2pairs.pl
-* This script converts Juicer's merged_nodups.txt format to 4dn-style pairs format. It requires pairix and bgzip binaries in PATH.
+* This script converts Juicer's `merged_nodups.txt` format to 4dn-style pairs format. It requires pairix and bgzip binaries in PATH.
 ```
 Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
+```
+
+### old_merged_nodup2pairs.pl
+* This script converts Juicer's old `merged_nodups.txt` format to 4dn-style pairs format. It requires pairix and bgzip binaries in PATH.
+```
+Usage: old_merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
 ```
 
 ## Pairs_merger
