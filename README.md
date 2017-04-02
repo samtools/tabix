@@ -304,6 +304,10 @@ print( tb.get_startpos1_col() )
 print( tb.get_startpos2_col() )
 print( tb.get_endpos1_col() )
 print( tb.get_endpos2_col() )
+
+# check if key exists (key is a chromosome pair for a 2D-indexed file, or a chromosome for a 1D-indexed file)
+tb=pypairix.open("textfile.gz")
+print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 ```
 
 ## Rpairix
