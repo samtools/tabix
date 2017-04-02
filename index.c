@@ -1822,12 +1822,6 @@ char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
 }
 
 
-void fail(BGZF* fp)
-{
-    fprintf(stderr, "Error: %d\n", fp->errcode);
-    exit(1);
-}
-
 
 // pairs merger - merge multiple 2D-sorted files into a merged, 2D-sorted stream 
 //pass null - bgzf_write is slower than piping to bgzip -c.
@@ -1860,7 +1854,6 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
            create_iter_unit(tbs[j], iter, miter->iu[j]);
         }
         while ( ( s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
-        //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
         destroy_merged_iter(miter); miter=NULL;     
       }
       for(i=0;i<n;i++) ti_close(tbs[i]);

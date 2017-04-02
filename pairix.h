@@ -242,10 +242,6 @@ extern "C" {
         void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter);
 
 
-        /* bgzip function */
-        void fail(BGZF *fp);
-
-
 	/*******************
 	 * Deprecated APIs *
 	 *******************/
