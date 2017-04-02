@@ -318,7 +318,7 @@ print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 ## Utils
 ### bam2pairs
 * This script converts a bam file to a 4dn style pairs file, sorted and inxed.
-* See [bam2pairs/README.md](bam2pairs/README.md) for more details.
+* See [util/bam2pairs/README.md](util/bam2pairs/README.md) for more details.
 
 ### process_merged_nodup.sh 
 * This script sorts, bgzips and indexes a newer version of `merged_nodups.txt` file with strand1 as the first column.
