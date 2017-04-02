@@ -127,8 +127,6 @@ extern "C" {
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
         const char *merged_ti_read(merged_iter_t *miter, int *len);
         const char *sequential_ti_read(sequential_iter_t *siter, int *len);
-        int pairs_merger(char **fn, int n, BGZF *bzfp);
-        int stream_1d(char *fn);
 
 	/* Destroy the iterator */
 	void ti_iter_destroy(ti_iter_t iter);
