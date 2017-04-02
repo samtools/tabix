@@ -5,8 +5,8 @@ This script converts a paired-end bam file to a pairs file.
 
 ## Installation
 ```
-git clone https://github.com/4dn-dcic/bam2pairs
-## add bam2pairs to PATH.
+git clone https://github.com/4dn-dcic/pairix
+## add pairix/util/bam2pairs to PATH.
 ```
 
 ## Requirements
