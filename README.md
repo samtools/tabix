@@ -1,17 +1,14 @@
 # pairix
-* Pairix is a tool for random accessing a compressed text file. Specifically, it does indexing and querying on a bgzipped text file that contains a pair of genomic coordinates per line (a pairs file).
-* As an example, you have a text file with millions or bilions of lines like below, and you want to extract lines in (chr10,chrX) pair. An awk command would read the file from the beginning till you find the pair. However, if your file is sorted by chromosome pair and indexed, you can extract the lines almost instantly. That's what pairix does.:
+* Pairix is a tool for indexing and querying on a compressed text file.
+* Pairix was developed as a tool for the 4DN-standard `pairs` file format describing Hi-C data: [pairix/pairs_format_specification.md](pairix/pairs_format_specification.md)
+* However, it can be used as a generic tool for indexing and querying any bgzipped text file containing genomic coordinates, for either 2D- or 1D-indexing.
+* For example, given a text file with a million lines like below, you want to extract lines where the first coordinate is chr10 and the second is between positions 10,000,000 and 20,000,000 on chrX. An awk command would read the file from the beginning to the end. Pairix allows a faster query by accessing the file from a relevant position.
+  ```
+  chr1  10000  20000 chr2  30000  50000  +  -
+  chr1  30000  40000 chr3  10000  70000  +  -
+  ```
+* Pairix is written on top of Tabix (https://github.com/samtools/tabix) and has been adapted to `pairs` and other common Hi-C data formats. 
  
-  ex1)
-  ```
-  chr1  10000  20000 chr2  30000  50000
-  chr1  30000  40000 chr3  10000  70000
-  ```
-  ex2)
-  ```
-  chr1  10000  +  chr2  30000  -
-  chr1  30000  -  chr3  50000  -
-  ```
   
 ## Table of contents
 * [Availability](#availability)
@@ -45,21 +42,24 @@
 
 ## Availability
 * Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
-* Pairs_merger is available to merge two or more indexed pairs files.
-* Bgzip is provided as part of the repo, which is identical to the original program.
+* Various utils including `bam2pairs`, `merged_nodups2pairs.pl`, `pairs_merger` etc. are available within this repo.
+* The `bgzip` program that is provided as part of the repo is identical to the original program in https://github.com/samtools/tabix.
 
 ## Input file format
-* The text file must be first sorted by two chromosome columns and then by the first position column. The file must be compressed using bgzip. The file can be either tab-delimited or space-delimited.
+* For 2D indexing, the text file must be first sorted by two chromosome columns and then by the first position column. For 1D-indexing, the file must be sorted by a chromosome column and then by a position column.
+* The file must be compressed using bgzip. The file is either tab-delimited or space-delimited.
 * The index file has an extension `.px2`.
 
 ## Pairix
 ### Installation for pairix
-The same command installs bgzip and pairs_merger as well.
 ```
 git clone https://github.com/4dn-dcic/pairix
 cd pairix
 make
-# add the bin path to PATH
+# Add the bin path to PATH for pairix, bgzip, pairs_merger and stream_1d
+# In order to use utils, add util path to PATH
+# In order to use bam2pairs, add util/bam2pairs to PATH
+# eg: PATH=~/git/pairix/bin/:~/git/pairix/util:~/git/pairix/util/bam2pairs:$PATH
 ```
 
 ### Usage for pairix
