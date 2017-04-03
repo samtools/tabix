@@ -33,7 +33,7 @@ setup(
         Please reference the README for more information (https://github.com/4dn-dcic/pairix/blob/master/README.md)
         """,
     url = "https://github.com/4dn-dcic/pairix",
-    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.1.0",
+    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.1.1",
     author = "Soo Lee, Carl Vitzthum",
     author_email = "duplexa@gmail.com",
     license = "MIT",
