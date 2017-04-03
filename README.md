@@ -30,14 +30,14 @@
     * [process_old_merged_nodup.sh](#process_old_merged_nodupsh)
     * [merged_nodup2pairs.pl](#merged_nodup2pairspl)
     * [old_merged_nodup2pairs.pl](#old_merged_nodup2pairspl)
-* [Pairs_merger](#pairs_merger)
-    * [Installation](#installation-for-pairs_merger)
-    * [Usage](#usage-for-pairs_merger)
-    * [Examples](#usage-examples-for-pairs_merger)
-* [Streamer_1d](#streamer_1d)
-    * [Installation](#installation-for-streamer-1d)
-    * [Usage](#usage-for-streamer-1d)
-    * [Examples](#usage-examples-for-streamer-1d)
+    * [Pairs_merger](#pairs_merger)
+        * [Installation](#installation-for-pairs_merger)
+        * [Usage](#usage-for-pairs_merger)
+        * [Examples](#usage-examples-for-pairs_merger)
+    * [Streamer_1d](#streamer_1d)
+        * [Installation](#installation-for-streamer-1d)
+        * [Usage](#usage-for-streamer-1d)
+        * [Examples](#usage-examples-for-streamer-1d)
 * [Difference between pairix and tabix](#difference-between-pairix-and-tabix)
 * [Note](#note)
 * [Version history](#version-history)
@@ -255,7 +255,6 @@ for x in it:
 # Autoflip: if the queried chromosome pair does not exist in the pairs file, query the flipped pair.
 tb=pypairix.open("textfile.gz")
 it = tb.query2D(chrom2, start2, end2, chrom1, start1, end1, 1)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
 for x in it:
    print(x)
 
@@ -263,16 +262,13 @@ for x in it:
 tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}|{}:{}-{}'.format(chrom, start, end, chrom2, start2, end2)
 it = tb.querys2D(querystr)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
+for x in it:
+   print(x)
 
 # 2D query usage example with wild card
 tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}|*'.format(chrom, start, end)
 it = tb.querys2D(querystr)
-tb_result = [[x[1], x[2], x[2], x[5], x[6], x[6]] for x in it]
-print tb_result
-
 for x in it:
    print(x)
    
@@ -348,13 +344,13 @@ Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
 Usage: old_merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
 ```
 
-## Pairs_merger
+### Pairs_merger
 Pairs_merger is a tool that merges indexed pairs files that are already sorted and creates a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k interators. It does not require additional memory nor produces temporary files.
 
-### Installation for pairs_merger
+#### Installation for pairs_merger
 See [Installation for pairix](#installation-for-pairix)
 
-### Usage for pairs_merger
+#### Usage for pairs_merger
 ```
 pairs_merger <in1.gz> <in2.gz> <in3.gz> ... > <out.txt>
 # Each of the input files must have a .px2 index file.
@@ -368,7 +364,7 @@ pairs_merger <in1.gz> <in2.gz> <in3.gz> ... | bgzip -c > <out.gz>
 pairix [options] out.gz
 ```
 
-### Usage Examples for pairs_merger
+#### Usage Examples for pairs_merger
 ```
 bin/pairs_merger samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | bin/bgzip -c > out.gz
 bin/pairix -f -p merged_nodups out.gz
@@ -376,23 +372,23 @@ bin/pairix -f -p merged_nodups out.gz
 ```
 
  
-## Streamer_1d
+### Streamer_1d
 Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort (not recommended). 
 
-### Installation for streamer_1d
+#### Installation for streamer_1d
 See [Installation for pairix](#installation-for-pairix)
 
-### Usage for streamer_1d
+#### Usage for streamer_1d
 ```
 streamer_1d <in.2d.gz> > out.1d.pairs
 streamer_1d <in.2d.gz> | bgzip -c > out.1d.pairs.gz
 ```
 
-### Usage Examples for streamer_1d
+#### Usage Examples for streamer_1d
 
 
-### FAQ for streamer_1d
-#### The tool creates many file pointers for the input file, which is equivalent to opening many files simultaneously. Your OS may have a limit on the number of files that can be open at a time. For example, for Mac El Captain and Sierra, it is by default set to 256. This is usually enough, but in case the number of chromosomes in your pairs file happen to be larger than or close to this limit, the tool may produce an error message saying file limit is exceeded. You can increase this limit outside the program. For example, for Mac El Captain and Sierra, the following command raises the limit to 2000.
+#### FAQ for streamer_1d
+##### The tool creates many file pointers for the input file, which is equivalent to opening many files simultaneously. Your OS may have a limit on the number of files that can be open at a time. For example, for Mac El Captain and Sierra, it is by default set to 256. This is usually enough, but in case the number of chromosomes in your pairs file happen to be larger than or close to this limit, the tool may produce an error message saying file limit is exceeded. You can increase this limit outside the program. For example, for Mac El Captain and Sierra, the following command raises the limit to 2000.
 ```
 # view the limits
 uimit -a
