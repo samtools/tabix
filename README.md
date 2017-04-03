@@ -98,7 +98,7 @@ pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one
 (column 2 and 4 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
 ```
 # sorting & bgzipping
-sort -k2,2 -k4,4 -k3,3 -k5,5 samples/4dn.bsorted.chr21_22_only.pairs |bgzip -c > samples/4dn.bsorted.chr21_22_only.pairs.gz
+sort -k2,2 -k4,4 -k3,3n -k5,5n samples/4dn.bsorted.chr21_22_only.pairs |bgzip -c > samples/4dn.bsorted.chr21_22_only.pairs.gz
 
 # indexing
 pairix -f samples/4dn.bsorted.chr21_22_only.pairs.gz
@@ -111,7 +111,7 @@ pairix -f samples/4dn.bsorted.chr21_22_only.pairs.gz
 (column 2 and 6 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
 ```
 # sorting & bgzipping
-sort -t' ' -k2,2 -k6,6 -k3,3g merged_nodups.txt |bgzip -c > samples/merged_nodups.space.chrblock_sorted.subsample3.txt
+sort -t' ' -k2,2 -k6,6 -k3,3n -k7,7n merged_nodups.txt |bgzip -c > samples/merged_nodups.space.chrblock_sorted.subsample3.txt
 
 #indexing
 pairix -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz 
