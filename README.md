@@ -418,7 +418,8 @@ ulimit -n 2000
 ### 0.1.1
 * Now all source files are in `src/`.
 * `pypairix`: function `exists` is added
-* `pairix`: indexing presets (-p option) now includes `pairs`, `merged_nodups`, `old_merged_nodups`. (default is now `pairs` not `gff`). It also automatically recognizes extension `.pairs.gz`.
+* `pairix`: indexing presets (-p option) now includes `pairs`, `merged_nodups`, `old_merged_nodups`. It also automatically recognizes extension `.pairs.gz`.
 * merged_nodups.tab examples are now deprecated (since the original space-delimited files can be recognized as well)
-
+* `pairs_merger`: memory error fixed
+* updated tests
 

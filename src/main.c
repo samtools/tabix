@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Program: pairix (PAIRs file InderXer)\n");
         fprintf(stderr, "Version: %s\n\n", PACKAGE_VERSION);
         fprintf(stderr, "Usage:   pairix <in.pairs.gz> [region1 [region2 [...]]]\n\n");
-        fprintf(stderr, "Options: -p STR     preset: pairs, merged_nodups, old_merged_nodups, gff, bed, sam, vcf, psltbl [pairs]\n");
+        fprintf(stderr, "Options: -p STR     preset: pairs, merged_nodups, old_merged_nodups, gff, bed, sam, vcf, psltbl [gff]\n");
         fprintf(stderr, "         -s INT     sequence name column [1]\n");
         fprintf(stderr, "         -d INT     second sequence name column [null]\n");
         fprintf(stderr, "         -b INT     start1 column [4]\n");
