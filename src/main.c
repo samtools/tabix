@@ -100,7 +100,7 @@ int reheader_file(const char *header, const char *file, int meta)
 int main(int argc, char *argv[])
 {
     int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0;
-    ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
+    ti_conf_t conf = ti_conf_pairs, *conf_ptr = NULL;
     const char *reheader = NULL;
     char delimiter = 0;
     char line[MAX_REGIONLINE_LEN];
@@ -117,6 +117,9 @@ int main(int argc, char *argv[])
                 else if (strcmp(optarg, "sam") == 0) conf_ptr = &ti_conf_sam;
                 else if (strcmp(optarg, "vcf") == 0 || strcmp(optarg, "vcf4") == 0) conf_ptr = &ti_conf_vcf;
                 else if (strcmp(optarg, "psltbl") == 0) conf_ptr = &ti_conf_psltbl;
+                else if (strcmp(optarg, "pairs") == 0) conf_ptr = &ti_conf_pairs;
+                else if (strcmp(optarg, "merged_nodups") == 0) conf_ptr = &ti_conf_merged_nodups;
+                else if (strcmp(optarg, "old_merged_nodups") == 0) conf_ptr = &ti_conf_merged_nodups;
                 else {
                     fprintf(stderr, "[main] unrecognized preset '%s'\n", optarg);
                     return 1;
@@ -142,7 +145,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Program: pairix (PAIRs file InderXer)\n");
         fprintf(stderr, "Version: %s\n\n", PACKAGE_VERSION);
         fprintf(stderr, "Usage:   pairix <in.pairs.gz> [region1 [region2 [...]]]\n\n");
-        fprintf(stderr, "Options: -p STR     preset: gff, bed, sam, vcf, psltbl [gff]\n");
+        fprintf(stderr, "Options: -p STR     preset: pairs, merged_nodups, old_merged_nodups, gff, bed, sam, vcf, psltbl [pairs]\n");
         fprintf(stderr, "         -s INT     sequence name column [1]\n");
         fprintf(stderr, "         -d INT     second sequence name column [null]\n");
         fprintf(stderr, "         -b INT     start1 column [4]\n");
@@ -171,6 +174,7 @@ int main(int argc, char *argv[])
         else if (l>=7 && strcasecmp(argv[optind]+l-7, ".sam.gz") == 0) conf_ptr = &ti_conf_sam;
         else if (l>=7 && strcasecmp(argv[optind]+l-7, ".vcf.gz") == 0) conf_ptr = &ti_conf_vcf;
         else if (l>=10 && strcasecmp(argv[optind]+l-10, ".psltbl.gz") == 0) conf_ptr = &ti_conf_psltbl;
+        else if (l>=9 && strcasecmp(argv[optind]+l-9, ".pairs.gz") == 0) conf_ptr = &ti_conf_pairs;
     }
     if ( conf_ptr )
         conf = *conf_ptr;
@@ -208,7 +212,7 @@ int main(int argc, char *argv[])
                 stat(argv[optind], &stat_vcf);
                 if ( stat_vcf.st_mtime <= stat_px2.st_mtime )
                 {
-                    fprintf(stderr, "[tabix] the index file exists. Please use '-f' to overwrite.\n");
+                    fprintf(stderr, "[pairix] the index file exists. Please use '-f' to overwrite.\n");
                     free(fnidx);
                     return 1;
                 }
@@ -216,21 +220,21 @@ int main(int argc, char *argv[])
         }
         if ( bgzf_is_bgzf(argv[optind])!=1 )
         {
-            fprintf(stderr,"[tabix] was bgzip used to compress this file? %s\n", argv[optind]);
+            fprintf(stderr,"[pairix] was bgzip used to compress this file? %s\n", argv[optind]);
             free(fnidx);
             return 1;
         }
         if ( !conf_ptr )
         {
             // Building the index but the file type was neither recognised nor given. If no custom change
-            //  has been made, warn the user that GFF is used
-            if ( conf.preset==ti_conf_gff.preset
-                && conf.sc==ti_conf_gff.sc
-                && conf.bc==ti_conf_gff.bc
-                && conf.ec==ti_conf_gff.ec
-                && conf.meta_char==ti_conf_gff.meta_char
-                && conf.line_skip==ti_conf_gff.line_skip )
-                fprintf(stderr,"[tabix] The file type not recognised and -p not given, using the preset [gff].\n");
+            //  has been made, warn the user that PAIRS is used
+            if ( conf.preset==ti_conf_pairs.preset
+                && conf.sc==ti_conf_pairs.sc
+                && conf.bc==ti_conf_pairs.bc
+                && conf.ec==ti_conf_pairs.ec
+                && conf.meta_char==ti_conf_pairs.meta_char
+                && conf.line_skip==ti_conf_pairs.line_skip )
+                fprintf(stderr,"[pairix] The file type not recognised and -p not given, using the preset [pairs].\n");
         }
         return ti_index_build(argv[optind], &conf);
     }
@@ -245,7 +249,7 @@ int main(int argc, char *argv[])
             stat(argv[optind], &stat_vcf);
             if ( force==0 && stat_vcf.st_mtime > stat_px2.st_mtime )
             {
-                fprintf(stderr, "[tabix] the index file either does not exist or is older than the vcf file. Please reindex.\n");
+                fprintf(stderr, "[pairix] the index file either does not exist or is older than the vcf file. Please reindex.\n");
                 free(fnidx);
                 return 1;
             }
@@ -261,7 +265,7 @@ int main(int argc, char *argv[])
             const char *s;
             int len;
             if (ti_lazy_index_load(t) < 0) {
-                fprintf(stderr,"[tabix] failed to load the index file.\n");
+                fprintf(stderr,"[pairix] failed to load the index file.\n");
                 return 1;
             }
             const ti_conf_t *idxconf = ti_get_conf(t->idx);
@@ -289,7 +293,7 @@ int main(int argc, char *argv[])
             const ti_conf_t *idxconf;
             
             if (ti_lazy_index_load(t) < 0) {
-                fprintf(stderr,"[tabix] failed to load the index file.\n");
+                fprintf(stderr,"[pairix] failed to load the index file.\n");
                 return 1;
             }
             idxconf = ti_get_conf(t->idx);

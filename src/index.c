@@ -64,6 +64,10 @@ ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', '#', 0 };
 ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', '#', 0 };
 ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '\t', '@', 0 };
 ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '\t', '#', 0 };
+ti_conf_t ti_conf_pairs = { TI_PRESET_PAIRS, 2, 3, 3, 4, 5, 5, '\t', '#', 0 };
+ti_conf_t ti_conf_merged_nodups = { TI_PRESET_MERGED_NODUPS, 2, 3, 3, 6, 7, 7, ' ', '#', 0 };
+ti_conf_t ti_conf_old_merged_nodups = { TI_PRESET_OLD_MERGED_NODUPS, 3, 4, 4, 7, 8, 8, ' ', '#', 0 };
+
 
 /***************
  * read a line *
