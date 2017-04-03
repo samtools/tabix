@@ -1132,7 +1132,7 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
 {
    int n_seqpair_list;
    int n_sub_list;
-   char *sp, *chr1, *chr2, **chr1list, **chr2list, **chrpairlist;
+   char *sp, **chr1list, **chr2list;
    char *chrend;
    char chronly=1;
    int i;
@@ -1229,7 +1229,6 @@ ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end
 sequential_iter_t *ti_queryi_2d_general(pairix_t *t, int tid, int beg, int end, int beg2, int end2)
 {
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter ( siter, ti_queryi_2d(t,tid,beg,end,beg2,end2) );
     return(siter);
 }
@@ -1242,7 +1241,6 @@ ti_iter_t ti_querys(pairix_t *t, const char *reg)
 sequential_iter_t *ti_querys_general(pairix_t *t, const char *reg)
 {   
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter ( siter, ti_querys(t, reg) );
     return(siter);
 }
@@ -1280,7 +1278,6 @@ ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end)
 sequential_iter_t *ti_query_general(pairix_t *t, const char *name, int beg, int end)
 {
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter (siter, ti_query(t, name, beg, end));
     return(siter);
 }
@@ -1305,7 +1302,6 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 sequential_iter_t *ti_query_2d_general(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter (siter, ti_query_2d(t, name, beg, end, name2, beg2, end2));
     return(siter);
 }
@@ -1327,7 +1323,6 @@ int ti_querys_2d_tid(pairix_t *t, const char *reg)
 
 int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 {
-	int tid, parse_err;
 	if (name == 0) return -3 ;
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return -3;
@@ -1338,7 +1333,6 @@ int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 
 int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
-	int tid;
         char namepair[1000], *str_ptr;
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
@@ -1591,8 +1585,9 @@ char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
     if(conc_seq_list){
       // given an array, do sort|uniq, but doing it as if sorting by two chromosome columns (e.g. by chr1 first then chr2) rather than by a single merged chromosome pair string (e.g. 'chr1|chr2')
       qsort(conc_seq_list, n_seq_list, sizeof(char*), strcmp2d);  // This part does the sorting. see strcmp2d for more details.
+      char **uniq_seq_list = uniq(conc_seq_list, n_seq_list, pn_uniq_seq);
       free(conc_seq_list);
-      return ( uniq(conc_seq_list, n_seq_list, pn_uniq_seq) ); 
+      return ( uniq_seq_list ); 
     } else { fprintf(stderr,"Null concatenated seq list\n"); return(0); }
 }
 
@@ -1641,7 +1636,7 @@ char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpa
 char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
 {
     int i,k;
-    char *b_split, b;
+    char *b_split;
     char **sublist;
 
     // first round, count the number 
@@ -1726,7 +1721,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
 char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
 {
     int i,k;
-    char *b_split, b;
+    char *b_split;
     char **sublist;
 
     // first round, count the number 
@@ -1806,7 +1801,7 @@ char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
     fprintf(stderr,"(total %d unique seq names)\n",*pn_uniq_seq);
 
     // second round, allocate memory and actually create an array containing uniquified array
-    if( uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*)) ) {
+    if( (uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*))) != NULL ) {
       k=0; prev_i=0; 
       uniq_seq_list[0] = malloc((strlen(seq_list[0])+1)*sizeof(char));
       strcpy(uniq_seq_list[0],seq_list[0]);

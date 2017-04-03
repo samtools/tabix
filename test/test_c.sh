@@ -89,7 +89,6 @@ if [ ! -z "$(diff out out2.bsorted.pairs)" ]; then
 fi
 rm -f out out2.bsorted.pairs out2.pairs out.gz.px2 out2.bsorted.pairs.gz.px2
 
-echo 'haha'
 
 ## streamer_1d
 bin/streamer_1d samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | bin/bgzip -c > out.1d.pairs.gz
