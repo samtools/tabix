@@ -35,6 +35,9 @@
 #define TI_PRESET_GENERIC 0
 #define TI_PRESET_SAM     1
 #define TI_PRESET_VCF     2
+#define TI_PRESET_PAIRS     0
+#define TI_PRESET_MERGED_NODUPS     0
+#define TI_PRESET_OLD_MERGED_NODUPS     0
 
 #define TI_FLAG_UCSC      0x10000
 
@@ -92,7 +95,7 @@ typedef struct {
 } sequential_iter_t;
 
 
-extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam; // preset
+extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam, ti_conf_pairs, ti_conf_merged_nodups, ti_conf_old_merged_nodups; // preset
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,8 +130,6 @@ extern "C" {
 	const char *ti_read(pairix_t *t, ti_iter_t iter, int *len);
         const char *merged_ti_read(merged_iter_t *miter, int *len);
         const char *sequential_ti_read(sequential_iter_t *siter, int *len);
-        int pairs_merger(char **fn, int n, BGZF *bzfp);
-        int stream_1d(char *fn);
 
 	/* Destroy the iterator */
 	void ti_iter_destroy(ti_iter_t iter);
@@ -240,10 +241,6 @@ extern "C" {
 
         /* add an iter to sequential_iter - the array size is dynamically incremented */
         void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter);
-
-
-        /* bgzip function */
-        void fail(BGZF *fp);
 
 
 	/*******************

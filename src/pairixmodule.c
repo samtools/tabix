@@ -238,6 +238,7 @@ pairix_dealloc(PairixObject *self)
     PyObject_Del(self);
 }
 
+
 static PyObject *
 pairix_query(PairixObject *self, PyObject *args)
 {
@@ -471,6 +472,16 @@ pairix_get_endpos2_col(PairixObject *self)
   return Py_BuildValue("i", ti_get_ec2(self->tb->idx));
 }
 
+static PyObject *
+pairix_exists(PairixObject *self, PyObject *args)
+{
+    const char *key;
+    if (!PyArg_ParseTuple(args, "s:exists", &key)){
+        PyErr_SetString(PairixError, "Argument error! exists() takes the following args: <key_str>. Key_str is a str formatted as: '{CHR}' (1D) or  '{CHR}|{CHR}' (2D). (e.g. 'chr1|chr2')\n"); 
+        return Py_BuildValue("i", -1);
+    }
+  return Py_BuildValue("i", ti_get_tid(self->tb->idx, key)!=-1?1:0); // returns 1 if key exists, 0 if not, -1 if usage is wrong.
+}
 
 static PyObject *
 pairix_repr(PairixObject *self)
@@ -622,6 +633,12 @@ static PyMethodDef pairix_methods[] = {
        (PyCFunction)pairix_get_endpos2_col,
         METH_VARARGS,
         PyDoc_STR("Retrieve the 0-based column index of the end position of the second chromosome.\n\n") 
+    },
+    {
+       "exists",
+       (PyCFunction)pairix_exists,
+        METH_VARARGS,
+        PyDoc_STR("Check if key exists(1 if exists, 0 if not, -1 if wrong usage.)\n\n")
     },
     /*
     {

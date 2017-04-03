@@ -341,5 +341,18 @@ class PairixTestGetColumnIndex(unittest.TestCase):
         self.assertEqual(pr2.get_endpos2_col(),4)
 
 
+class PairixTestExists(unittest.TestCase):
+
+    def test_exists(self):
+        pr = pypairix.open(TEST_FILE_2D_4DN)
+        self.assertEqual(pr.exists("chr21|chr21"),1)
+        self.assertEqual(pr.exists("chr21|chr22"),1)
+        self.assertEqual(pr.exists("chr22|chr22"),1)
+        self.assertEqual(pr.exists("chr22|chr21"),0)
+        self.assertEqual(pr.exists("chr1|chr2"),0)
+        self.assertEqual(pr.exists("chr21"),0)
+        self.assertEqual(pr.exists("1|2"),0)
+
+
 if __name__ == '__main__':
     unittest.main()

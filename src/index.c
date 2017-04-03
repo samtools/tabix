@@ -64,6 +64,10 @@ ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', '#', 0 };
 ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', '#', 0 };
 ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '\t', '@', 0 };
 ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '\t', '#', 0 };
+ti_conf_t ti_conf_pairs = { TI_PRESET_PAIRS, 2, 3, 3, 4, 5, 5, '\t', '#', 0 };
+ti_conf_t ti_conf_merged_nodups = { TI_PRESET_MERGED_NODUPS, 2, 3, 3, 6, 7, 7, ' ', '#', 0 };
+ti_conf_t ti_conf_old_merged_nodups = { TI_PRESET_OLD_MERGED_NODUPS, 3, 4, 4, 7, 8, 8, ' ', '#', 0 };
+
 
 /***************
  * read a line *
@@ -1128,7 +1132,7 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
 {
    int n_seqpair_list;
    int n_sub_list;
-   char *sp, *chr1, *chr2, **chr1list, **chr2list, **chrpairlist;
+   char *sp, **chr1list, **chr2list;
    char *chrend;
    char chronly=1;
    int i;
@@ -1225,7 +1229,6 @@ ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end
 sequential_iter_t *ti_queryi_2d_general(pairix_t *t, int tid, int beg, int end, int beg2, int end2)
 {
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter ( siter, ti_queryi_2d(t,tid,beg,end,beg2,end2) );
     return(siter);
 }
@@ -1238,7 +1241,6 @@ ti_iter_t ti_querys(pairix_t *t, const char *reg)
 sequential_iter_t *ti_querys_general(pairix_t *t, const char *reg)
 {   
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter ( siter, ti_querys(t, reg) );
     return(siter);
 }
@@ -1276,7 +1278,6 @@ ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end)
 sequential_iter_t *ti_query_general(pairix_t *t, const char *name, int beg, int end)
 {
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter (siter, ti_query(t, name, beg, end));
     return(siter);
 }
@@ -1301,7 +1302,6 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 sequential_iter_t *ti_query_2d_general(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
     sequential_iter_t *siter = create_sequential_iter(t);
-    int i;
     add_to_sequential_iter (siter, ti_query_2d(t, name, beg, end, name2, beg2, end2));
     return(siter);
 }
@@ -1323,7 +1323,6 @@ int ti_querys_2d_tid(pairix_t *t, const char *reg)
 
 int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 {
-	int tid, parse_err;
 	if (name == 0) return -3 ;
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return -3;
@@ -1334,7 +1333,6 @@ int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 
 int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
-	int tid;
         char namepair[1000], *str_ptr;
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
@@ -1587,8 +1585,9 @@ char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
     if(conc_seq_list){
       // given an array, do sort|uniq, but doing it as if sorting by two chromosome columns (e.g. by chr1 first then chr2) rather than by a single merged chromosome pair string (e.g. 'chr1|chr2')
       qsort(conc_seq_list, n_seq_list, sizeof(char*), strcmp2d);  // This part does the sorting. see strcmp2d for more details.
+      char **uniq_seq_list = uniq(conc_seq_list, n_seq_list, pn_uniq_seq);
       free(conc_seq_list);
-      return ( uniq(conc_seq_list, n_seq_list, pn_uniq_seq) ); 
+      return ( uniq_seq_list ); 
     } else { fprintf(stderr,"Null concatenated seq list\n"); return(0); }
 }
 
@@ -1637,7 +1636,7 @@ char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpa
 char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
 {
     int i,k;
-    char *b_split, b;
+    char *b_split;
     char **sublist;
 
     // first round, count the number 
@@ -1722,7 +1721,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
 char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
 {
     int i,k;
-    char *b_split, b;
+    char *b_split;
     char **sublist;
 
     // first round, count the number 
@@ -1802,7 +1801,7 @@ char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
     fprintf(stderr,"(total %d unique seq names)\n",*pn_uniq_seq);
 
     // second round, allocate memory and actually create an array containing uniquified array
-    if( uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*)) ) {
+    if( (uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*))) != NULL ) {
       k=0; prev_i=0; 
       uniq_seq_list[0] = malloc((strlen(seq_list[0])+1)*sizeof(char));
       strcpy(uniq_seq_list[0],seq_list[0]);
@@ -1821,97 +1820,5 @@ char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
     return(uniq_seq_list);
 }
 
-
-void fail(BGZF* fp)
-{
-    fprintf(stderr, "Error: %d\n", fp->errcode);
-    exit(1);
-}
-
-
-// pairs merger - merge multiple 2D-sorted files into a merged, 2D-sorted stream 
-//pass null - bgzf_write is slower than piping to bgzip -c.
-int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result should be bgzipped. or pass NULL.
-{
-    pairix_t *tbs[n];
-    int i,j;
-    int reslen;
-    int n_uniq_seq=0;
-    char **uniq_seq_list=NULL;
-    char *s=NULL;
-    merged_iter_t *miter=NULL;
-    ti_iter_t iter;
-
-    // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
-    fprintf(stderr,"Opening files...\n");
-    for(i=0;i<n;i++)  tbs[i] = load_from_file(fn[i]);
-
-    // get a sorted unique seqname list
-    fprintf(stderr,"creating a sorted unique seqname list...\n");
-    uniq_seq_list = get_unique_merged_seqname(tbs, n, &n_uniq_seq);
-
-    // loop over the seq_list (chrpair list) and merge
-    if(uniq_seq_list){
-      fprintf(stderr,"Merging...\n");
-      for(i=0;i<n_uniq_seq;i++){
-        miter = create_merged_iter(n);
-        for(j=0;j<n;j++){
-           iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
-           create_iter_unit(tbs[j], iter, miter->iu[j]);
-        }
-        while ( ( s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
-        //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
-        destroy_merged_iter(miter); miter=NULL;     
-      }
-      for(i=0;i<n;i++) ti_close(tbs[i]);
-      for(i=0;i<n_uniq_seq;i++) free(uniq_seq_list[i]);
-      free(uniq_seq_list);
-      return(0);
-    } else { fprintf(stderr,"Null unique seq list\n"); return(0); }
-}
-
-
-// Uc->Up converter - convert a single 2D-sorted file into a 1D-sorted stream.
-int stream_1d(char *fn)
-{
-    pairix_t *tb, **tbs_copies=NULL;
-    int n_chrpairs, n_chr1, n_chr1pairs;
-    char **chrpair_list, **chr1_list, **chr1pair_list;
-    int i,j;
-    char *s=NULL;
-    merged_iter_t *miter=NULL;
-    ti_iter_t iter;
-    int reslen;
-
-    tb = load_from_file(fn);
-    if(tb==NULL) { fprintf(stderr,"file load failed\n"); return(1); }
-    chrpair_list = ti_seqname(tb->idx, &n_chrpairs);
-    if(chrpair_list==NULL) { fprintf(stderr, "Cannot retrieve key list\n"); return(1); }
-    chr1_list = get_seq1_list_from_seqpair_list(chrpair_list, n_chrpairs, &n_chr1);  // 'chr1','chr2',...
-    if(chr1_list==NULL) { fprintf(stderr, "Cannot retrieve list of first chromosomes\n"); return(1); }
-
-    for(i=0;i<n_chr1;i++){
-       chr1pair_list = get_sub_seq_list_for_given_seq1(chr1_list[i], chrpair_list, n_chrpairs, &n_chr1pairs); // 'chr2|chr2', 'chr2|chr3' ... given chr2, this one is not necessarily a sorted list but it doesn't matter.
-       miter = create_merged_iter(n_chr1pairs);
-       tbs_copies= malloc(n_chr1pairs*sizeof(pairix_t*));
-       for(j=0;j<n_chr1pairs;j++){
-           tbs_copies[j] = load_from_file(fn);
-           iter = ti_querys_2d(tbs_copies[j],chr1pair_list[j]);
-           create_iter_unit(tbs_copies[j], iter, miter->iu[j]);
-       }
-       while ( (s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
-       destroy_merged_iter(miter); miter=NULL;     
-       for(j=0;j<n_chr1pairs;j++) ti_close(tbs_copies[j]);
-       free(tbs_copies); tbs_copies=NULL;
-       free(chr1pair_list);
-    }
-
-    ti_close(tb);
-    for(i=0;i<n_chr1;i++) free(chr1_list[i]);
-    free(chr1_list);
-    free(chrpair_list);
-
-    return (0);   
-}
 
 

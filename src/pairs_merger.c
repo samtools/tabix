@@ -52,4 +52,41 @@ int main(int argc, char *argv[])
     return(res);
 }
 
+int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result should be bgzipped. or pass NULL.
+{
+    pairix_t *tbs[n];
+    int i,j; 
+    int reslen;
+    int n_uniq_seq=0;
+    char **uniq_seq_list=NULL;
+    char *s=NULL;
+    merged_iter_t *miter=NULL;
+    ti_iter_t iter;
+
+    // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
+    fprintf(stderr,"Opening files...\n");
+    for(i=0;i<n;i++)  tbs[i] = load_from_file(fn[i]);
+
+    // get a sorted unique seqname list 
+    fprintf(stderr,"creating a sorted unique seqname list...\n");
+    uniq_seq_list = get_unique_merged_seqname(tbs, n, &n_uniq_seq);
+
+    // loop over the seq_list (chrpair list) and merge
+    if(uniq_seq_list){
+      fprintf(stderr,"Merging...\n");
+      for(i=0;i<n_uniq_seq;i++){
+        miter = create_merged_iter(n);
+        for(j=0;j<n;j++){
+           iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
+           create_iter_unit(tbs[j], iter, miter->iu[j]);
+        }    
+        while ( ( s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
+        destroy_merged_iter(miter); miter=NULL;     
+      }    
+      for(i=0;i<n;i++) ti_close(tbs[i]);
+      for(i=0;i<n_uniq_seq;i++) free(uniq_seq_list[i]);
+      free(uniq_seq_list);
+      return(NULL);
+    } else { fprintf(stderr,"Null unique seq list\n"); return(NULL); }
+}
 

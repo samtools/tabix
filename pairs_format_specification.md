@@ -169,6 +169,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * https://github.com/4dn-dcic/pairix
 * bam2pairs
   * Converter from bam to pairs
-  * https://github.com/4dn-dcic/bam2pairs
+  * https://github.com/4dn-dcic/pairix/tree/master/util/bam2pairs
 * utils for converting juicer's merged_nodups.txt formats to a pairs format can be found as part of the pairix package.
   * https://github.com/4dn-dcic/pairix/tree/master/util
