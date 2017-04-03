@@ -77,6 +77,14 @@ if [ ! -z "$(diff log1 log2)" ]; then
   return 1;
 fi
 
+## merged_nodups2pairs.pl
+gunzip -c samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | perl util/merged_nodup2pairs.pl - samples/merged_nodups.space.chrblock_sorted.subsample3
+pairix -f samples/merged_nodups.space.chrblock_sorted.subsample3.bsorted.pairs.gz
+pairix samples/merged_nodups.space.chrblock_sorted.subsample3.bsorted.pairs.gz '2|21' | cut -f2,3,4,5,8,9 > log1
+gunzip -c samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | awk '$2=="2" && $6=="21" {print $2"\t"$3"\t"$6"\t"$7"\t"$4"\t"$8 }' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  return 1;
+fi
 
 ## pairs_merger
 bin/pairs_merger samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | bgzip -c > out.gz
