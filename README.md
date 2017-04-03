@@ -107,7 +107,7 @@ pairix -f samples/4dn.bsorted.chr21_22_only.pairs.gz
 # Pairs extension .pairs.gz is automatically recognized.
 ```
 
-#### Preparing a double-chromosome-block sorted merged_nodups.txt file (Juicer style pairs file)
+#### Preparing a double-chromosome-block sorted `merged_nodups.txt` file (Juicer style pairs file)
 (column 2 and 6 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
 ```
 # sorting & bgzipping
@@ -318,7 +318,7 @@ print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 
 ## Utils
 ### bam2pairs
-* This script converts a bam file to a 4dn style pairs file, sorted and inxed.
+* This script converts a bam file to a 4dn style pairs file, sorted and indexed.
 * See [util/bam2pairs/README.md](util/bam2pairs/README.md) for more details.
 
 ### process_merged_nodup.sh 
@@ -338,11 +338,36 @@ Usage: process_old_merged_nodup.sh <merged_nodups.txt>
 ```
 Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
 ```
+* An example output file (bgzipped and indexed) looks as below.
+```
+## pairs format v1.0
+#sorted: chr1-chr2-pos1-pos2
+#shape: upper triangle
+#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2
+SRR1658650.8850202.2/2	1	16944943	1	151864549	-	+	45178	333257
+SRR1658650.8794979.1/1	1	21969282	1	50573348	-	-	59146	140641
+SRR1658650.6209714.1/1	1	31761397	1	32681095	-	+	88139	90865
+SRR1658650.6348458.2/2	1	40697468	1	40698014	+	-	113763	113763
+SRR1658650.12316544.1/1	1	41607001	1	41608253	+	+	116392	116398
+```
+
 
 ### old_merged_nodup2pairs.pl
 * This script converts Juicer's old `merged_nodups.txt` format to 4dn-style pairs format. It requires pairix and bgzip binaries in PATH.
 ```
 Usage: old_merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
+```
+* An example output file (bgzipped and indexed) looks as below.
+```
+## pairs format v1.0
+#sorted: chr1-chr2-pos1-pos2
+#shape: upper triangle
+#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2
+SRR1658650.8850202.2/2	1	16944943	1	151864549	-	+	45178	333257
+SRR1658650.8794979.1/1	1	21969282	1	50573348	-	-	59146	140641
+SRR1658650.6209714.1/1	1	31761397	1	32681095	-	+	88139	90865
+SRR1658650.6348458.2/2	1	40697468	1	40698014	+	-	113763	113763
+SRR1658650.12316544.1/1	1	41607001	1	41608253	+	+	116392	116398
 ```
 
 ### Pairs_merger
