@@ -100,7 +100,7 @@ int reheader_file(const char *header, const char *file, int meta)
 int main(int argc, char *argv[])
 {
     int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0;
-    ti_conf_t conf = ti_conf_pairs, *conf_ptr = NULL;
+    ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
     const char *reheader = NULL;
     char delimiter = 0;
     char line[MAX_REGIONLINE_LEN];
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
                 else if (strcmp(optarg, "psltbl") == 0) conf_ptr = &ti_conf_psltbl;
                 else if (strcmp(optarg, "pairs") == 0) conf_ptr = &ti_conf_pairs;
                 else if (strcmp(optarg, "merged_nodups") == 0) conf_ptr = &ti_conf_merged_nodups;
-                else if (strcmp(optarg, "old_merged_nodups") == 0) conf_ptr = &ti_conf_merged_nodups;
+                else if (strcmp(optarg, "old_merged_nodups") == 0) conf_ptr = &ti_conf_old_merged_nodups;
                 else {
                     fprintf(stderr, "[main] unrecognized preset '%s'\n", optarg);
                     return 1;
@@ -227,14 +227,14 @@ int main(int argc, char *argv[])
         if ( !conf_ptr )
         {
             // Building the index but the file type was neither recognised nor given. If no custom change
-            //  has been made, warn the user that PAIRS is used
-            if ( conf.preset==ti_conf_pairs.preset
-                && conf.sc==ti_conf_pairs.sc
-                && conf.bc==ti_conf_pairs.bc
-                && conf.ec==ti_conf_pairs.ec
-                && conf.meta_char==ti_conf_pairs.meta_char
-                && conf.line_skip==ti_conf_pairs.line_skip )
-                fprintf(stderr,"[pairix] The file type not recognised and -p not given, using the preset [pairs].\n");
+            //  has been made, warn the user that GFF is used
+            if ( conf.preset==ti_conf_gff.preset
+                && conf.sc==ti_conf_gff.sc
+                && conf.bc==ti_conf_gff.bc
+                && conf.ec==ti_conf_gff.ec
+                && conf.meta_char==ti_conf_gff.meta_char
+                && conf.line_skip==ti_conf_gff.line_skip )
+                fprintf(stderr,"[pairix] The file type not recognised and -p not given, using the preset [gff].\n");
         }
         return ti_index_build(argv[optind], &conf);
     }
