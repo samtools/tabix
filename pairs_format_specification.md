@@ -30,17 +30,16 @@ The document begins with a summary of the specification, and later sections cont
 ***
 
 ### Standard format
-* Content
-  * Contacts must be nonredundant.
-    * The requirement is that each pair appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2).
-  * A text file with 7 reserved  columns and ? optional columns.
-  * Reserved columns: `readID, chr1, chr2, pos1, pos2, strand1, strand2` 
-    * Preserving READ ID allows retrieving corresponding reads from a bam file.
-  * Required columns: `chr1, chr2, pos1, pos2` (i.e. optionally, readID and strands can be blank (‘.’))
-  * Missing values for required columns
-    * a single-character dummy (‘.’)
-  * Optional columns can be added (e.g. for triplets, quadruplets, mapq, sequence/mismatch information (bowtie-style e.g. 10:A>G))
-  * Reserved optional column names (column positions are not reserved): `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
+* Data columns
+  * 7 reserved  columns, 4 required columns, 9 reserved column names. Any number of optional columns can be added.
+  * Reserved columns (columns 1-7): `readID, chr1, chr2, pos1, pos2, strand1, strand2`
+    * The positions of these columns are reserved.
+  * Required columns (columns 2-5): `chr1, chr2, pos1, pos2`
+    * Required columns cannot have a missing value.
+  * Missing values for reserved columns: a single-character dummy (‘.’)
+  * Reserved optional column names: `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
+    * Column positions are not reserved for the reserved optional column names.
+  * Other ptional columns can be added (e.g. for triplets, quadruplets, mapq, sequence/mismatch information (bowtie-style e.g. 10:A>G))
 * Header
   * Required
     * First line: `## pairs format v1.0`
@@ -57,7 +56,14 @@ The document begins with a summary of the specification, and later sections cont
   * Other example optional headers (not parsed by software tools but for human)
     * Genome assembly may be included in the header (see below).
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
-
+* Content
+  * Contacts must be nonredundant.
+    * Each entry appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only the first one (if upper-triangle) or the second one (if lower-triangle) must be kept.
+    ```
+    - chr1 10000 chr2 2000 + +
+    - chr2 2000 chr1 10000 + +
+    ```
+    
 ***
 
 ### Standard sorting and indexing
