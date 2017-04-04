@@ -39,7 +39,6 @@
 * [Version history](#version-history)
 
 <br>
-***
 
 ## Availability
 * Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
@@ -47,7 +46,6 @@
 * The `bgzip` program that is provided as part of the repo is identical to the original program in https://github.com/samtools/tabix.
 
 <br>
-***
 
 ## Input file format
 * For 2D indexing, the text file must be first sorted by two chromosome columns and then by the first position column. For 1D-indexing, the file must be sorted by a chromosome column and then by a position column.
@@ -55,7 +53,6 @@
 * The index file has an extension `.px2`.
 
 <br>
-***
 
 ## Pairix
 ### Installation for pairix
@@ -70,7 +67,6 @@ make
 ```
 
 <br>
-***
 
 ### Usage for pairix
 #### compression
@@ -107,7 +103,6 @@ pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one
 ```
 
 <br>
-***
 
 ### Usage examples for pairix
 
@@ -241,7 +236,6 @@ chr10	3978709	.	G	A	1901.77	PASS	AC=2;AF=1.00;AN=2;BaseQRankSum=0.677;DB;DP=66;D
 ```
 
 <br>
-***
 
 ## Pypairix
 ### Installation for pypairix
@@ -260,7 +254,6 @@ python test/test.py
 ```
 
 <br>
-***
 
 ### Usage examples for pypairix
 ```
@@ -335,13 +328,11 @@ print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 ```
 
 <br>
-***
 
 ## Rpairix
 * Rpairix is an R package for reading pairix-indexed pairs files. It has its own repo: https://github.com/4dn-dcic/Rpairix
 
 <br>
-***
 
 ## Utils
 ### bam2pairs
@@ -451,7 +442,6 @@ ulimit -n 2000
 ```
 
 <br>
-***
 
 ## Note
 * Currently 2D indexing supports only 2D query (one of the mates can be a wildcard *) and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
@@ -459,7 +449,6 @@ ulimit -n 2000
 * Tabix and pairix indices are not cross-compatible.
 
 <br>
-***
 
 ## Version history
 ### 0.1.1
