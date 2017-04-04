@@ -134,10 +134,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 ```
  
 #### A complex example with optional fields and/or missing fields
-<p>
-(not DCIC-provided file, but a user could generate a file like this)
-</p>
-
 ``` 
 ## pairs format v1.0
 #sorted: none
