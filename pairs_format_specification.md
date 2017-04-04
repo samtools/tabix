@@ -4,7 +4,7 @@
 <br>
 
 <p>
-This document describes the specification for the text contact list file format for chromosome conformation experiments. This type of file is created in practically all HiC pipelines after filtering of aligned reads, and is used for downstream analyses including building matrices, QC, and other high resolution validation. Ideally, the files should be light-weight, easy-to-use and minimally different from the various formats already being used by major Hi-C analysis tools. With these criteria in mind, members of omics WG from the DCIC and authors of the cooler and juicer pipelines have come up with the following specification. 
+This document describes the specification for the text contact list file format for chromosome conformation experiments. This type of file is created in practically all HiC pipelines after filtering of aligned reads, and is used for downstream analyses including building matrices, QC, and other high resolution validation. Ideally, the files should be light-weight, easy-to-use and minimally different from the various formats already being used by major Hi-C analysis tools. With these criteria in mind, members of 4D Nucleome Omics Data Standards Working Group have come up with the following specification. 
 </p>
 
 <p>
@@ -20,6 +20,7 @@ The document begins with a summary of the specification, and later sections cont
 * [Example optional columns](#example-optional-columns)
 * [Sorting mechanisms](#sorting-mechanisms)
 * [Tools for pairs file](#tools-for-pairs-file)
+* [Contributors](#contributors)
 
 ***
 
@@ -165,3 +166,8 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * https://github.com/4dn-dcic/pairix/tree/master/util/bam2pairs
 * utils for converting juicer's merged_nodups.txt formats to a pairs format can be found as part of the pairix package.
   * https://github.com/4dn-dcic/pairix/tree/master/util
+
+***
+
+### Contributors
+Soo Lee, Nezar Abdennur, Neva Durand, Peter Kerpedjiev, Hakan Özadam, Anton Goloborodko, Lixing Yang, Nils Gehlenborg, Andy Shroeder, Bing Ren, Erez Lieberman Aiden, Peter Park, Burak Alver
