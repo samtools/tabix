@@ -154,12 +154,17 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 
 ### Tools for pairs file
 * Pairix
-  * Indexing on bgzipped file that is sorted by chr1-chr2-pos1-pos2 and querying on the indexed file.
+  * Indexing on bgzipped file that is sorted by `chr1-chr2-pos1-pos2` and querying on the indexed file.
   * https://github.com/4dn-dcic/pairix
-  * Although Pairix is developed on top of tabix, the two indices are not mutually compatible.
+  * example usage
+    ```
+    pairix sample.pairs.gz # indexing
+    pairix sample.pairs.gz 'chr1:10000-20000|chr2:20000-30000' # querying
+    ```
 * Pypairix
   * A python binder for pairix is available through pip install.
   * `pip install pypairix`
+  * https://github.com/4dn-dcic/pairix
 * Rpairix
   * An R binder is available as well.
   * https://github.com/4dn-dcic/pairix
