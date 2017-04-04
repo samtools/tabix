@@ -15,10 +15,12 @@ The document begins with a summary of the specification, and later sections cont
 
 ### Table of Contents
 * [Pairs file](#pairs-file)
+* [Example pairs file](#example-pairs-file)
 * [Standard format](#standard-format)
 * [Standard sorting and indexing](#standard-sorting-and-indexing)
 * [Example optional columns](#example-optional-columns)
 * [Sorting mechanisms](#sorting-mechanisms)
+* [More examples](#more-examples)
 * [Tools for pairs file](#tools-for-pairs-file)
 * [Contributors](#contributors)
 
@@ -28,6 +30,20 @@ The document begins with a summary of the specification, and later sections cont
 * Pairs format is a standard text format for pairs of genomic loci given as 1bp point positions
 
 ***
+
+### Example pairs file
+``` 
+## pairs format v1.0
+#sorted: chr1-chr2-pos1-pos2
+#shape: upper triangle
+#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
+#genome_assembly: hg38
+#columns: readID chr1 position1 chr2 position2 strand1 strand2
+EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
+EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
+EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
+EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
+```
 
 ### Standard format
 * Data columns
@@ -129,21 +145,7 @@ chr1 60000 chr2 10000
 
 ***
 
-### Example pairs files 
-#### A simple example with only reserved fields
-``` 
-## pairs format v1.0
-#sorted: chr1-chr2-pos1-pos2
-#shape: upper triangle
-#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
-#genome_assembly: hg38
-#columns: readID chr1 position1 chr2 position2 strand1 strand2
-EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
-EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
-EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
-EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
-```
- 
+### More examples 
 #### A complex example with optional fields and/or missing fields
 ``` 
 ## pairs format v1.0
