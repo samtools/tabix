@@ -1,5 +1,5 @@
 ## Pairs file format specification draft 1.0
-<p> 4D Nucleome DCIC and Omics Working Group </p>
+<p> 4D Nucleome Omics Data Standards Working Group </p>
 
 <br>
 
@@ -24,10 +24,7 @@ The document begins with a summary of the specification, and later sections cont
 ***
 
 ### Pairs file
-* File containing a list of contacts (e.g. a contact : pair of genomic loci that is represented by a valid read pair)
-* Similar to bam, but lossy (filtered) and minimal in information.
-* Similar to matrix, but at read pair resolution.
-* Analogous to the formats used by hiclib, cooler and juicer pipelines (cooler and juicer have been modified to accommodate the new format)
+* Pairs format is a standard text format for pairs of genomic loci given as 1bp point positions
 
 ***
 
