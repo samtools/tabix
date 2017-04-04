@@ -37,7 +37,7 @@ The document begins with a summary of the specification, and later sections cont
 #shape: upper triangle
 #chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
 #genome_assembly: hg38
-#columns: readID chr1 position1 chr2 position2 strand1 strand2
+#columns: readID chr1 pos1 chr2 pos2 strand1 strand2
 EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
 EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
 EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
@@ -59,7 +59,7 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * Required
     * First line: `## pairs format v1.0`
     * column contents and ordering: 
-      * `#columns: readID chr1 position1 chr2 position2 strand1 strand2 <column_name> <column_name> ...`
+      * `#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 <column_name> <column_name> ...`
   * Optional lines with reserved header keys (`sorted`, `chromosomes`, `shape`, `command`, `genome_assembly`)
     * Sorting mechanism: `chr1-chr2-pos1-pos2`, `chr1-pos1`, `none` are reserved.
       * `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
@@ -143,7 +143,7 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 #shape: upper triangle
 #chromosomes: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y
 #genome_assembly: GRCh37
-#columns: readID chr1 position1 chr2 position2 strand1 strand2 chr3 position3 strand3 mismatch_str1 mismatch_str2 mismatch_str3
+#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 chr3 pos3 strand3 mismatch_str1 mismatch_str2 mismatch_str3
 .  1 60000 2 10000 + +
 .  1 10000 1 20000 + +     10:A>G,13:C>G 4:G>T,6:C>G
 .  1 30000 3 40000 + -      8:T>A
