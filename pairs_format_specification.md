@@ -99,7 +99,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
     chr1 50000 chr1 70000
     chr1 60000 chr2 10000
     ```
-
 * Redundancy
   * Contacts must be nonredundant.
     * Each entry appears only once and in a consistent ordering of the two mates; either in an `upper triangle` (mate2 coordinate is larger than mate1) or a `lower triangle` (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only one of them must be kept. This order must be consistent with the `#shape` and `#chromoosmes` header lines if they are present.
