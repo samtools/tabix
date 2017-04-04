@@ -168,6 +168,11 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * Rpairix
   * An R binder is available as well.
   * https://github.com/4dn-dcic/pairix
+  * example usage
+    ```
+    px_build_index("sample.pairs.gz","pairs") # indexing
+    px_query("sample.pairs.gz",'chr1:10000-20000|chr2:20000-30000') # querying
+    ```
 * bam2pairs
   * Converter from bam to pairs
   * https://github.com/4dn-dcic/pairix/tree/master/util/bam2pairs
