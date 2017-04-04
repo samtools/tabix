@@ -1,6 +1,6 @@
 # pairix
 * `Pairix` is a tool for indexing and querying on a compressed text file.
-* `Pairix` was developed as a tool for the 4DN-standard `pairs` file format describing Hi-C data: [pairix/pairs_format_specification.md](pairix/pairs_format_specification.md)
+* `Pairix` was developed as a tool for the 4DN-standard `pairs` file format describing Hi-C data: [pairs_format_specification.md](pairs_format_specification.md)
 * However, it can be used as a generic tool for indexing and querying any bgzipped text file containing genomic coordinates, for either 2D- or 1D-indexing.
 * For example, given a text file with a million lines like below, you want to extract lines where the first coordinate is chr10 and the second is between positions 10,000,000 and 20,000,000 on chrX. An awk command would read the file from the beginning to the end. `Pairix` allows a faster query by accessing the file from a relevant position.
   ```
