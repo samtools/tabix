@@ -31,20 +31,21 @@ The document begins with a summary of the specification, and later sections cont
 
 ### Standard format
 * Data columns
-  * 7 reserved  columns, 4 required columns, 9 reserved column names. Any number of optional columns can be added.
-  * Reserved columns (columns 1-7): `readID, chr1, chr2, pos1, pos2, strand1, strand2`
-    * The positions of these columns are reserved.
-  * Required columns (columns 2-5): `chr1, chr2, pos1, pos2`
-    * Required columns cannot have a missing value.
-  * Missing values for reserved columns: a single-character dummy (‘.’)
-  * Reserved optional column names: `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
-    * Column positions are not reserved for the reserved optional column names.
-  * Other ptional columns can be added (e.g. for triplets, quadruplets, mapq, sequence/mismatch information (bowtie-style e.g. 10:A>G))
+  * 7 reserved; 4 required; 9 reserved column names; Any number of optional columns can be added.
+    * Reserved columns (columns 1-7): The positions of these columns are reserved.
+      * `readID, chr1, chr2, pos1, pos2, strand1, strand2`
+    * Required columns (columns 2-5): Required columns cannot have a missing value.
+      * `chr1, chr2, pos1, pos2`
+      * Missing values for reserved columns: a single-character dummy (‘.’)
+    * Reserved optional column names: Column positions are not reserved for the reserved optional column names.
+      * `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
 * Header
+  * Header lines begin with '#' and must appear before the data entries. Relative positions of header lines are not determined, except the first line that specifies the format.
   * Required
     * First line: `## pairs format v1.0`
-    * column contents and ordering: `#columns: readID chr1 position1 chr2 position2 strand1 strand2`
-  * Optional, but reserved (header key is reserved)
+    * column contents and ordering: 
+      * `#columns: readID chr1 position1 chr2 position2 strand1 strand2 <column_name> <column_name> ...`
+  * Optional, but reserved (header keys `sorted`, `chromosomes`, `shape` are reserved)
     * Sorting mechanism: `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
     * Upper triangle vs lower triangle: `#shape: upper triangle`
     * chromosome mate order: `#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM`
@@ -58,7 +59,7 @@ The document begins with a summary of the specification, and later sections cont
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
 * Content
   * Contacts must be nonredundant.
-    * Each entry appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only the first one (if upper-triangle) or the second one (if lower-triangle) must be kept.
+    * Each entry appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only the first one (if upper-triangle) or the second one (if lower-triangle) must be kept. This order must be consistent with the `#shape` and `#chromoosmes` header lines if they are present.
     ```
     - chr1 10000 chr2 2000 + +
     - chr2 2000 chr1 10000 + +
