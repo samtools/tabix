@@ -84,7 +84,7 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * Mate sorting
   * By default, `upper triangle` (mate1 coordinate is lower than mate2 coordinate); optionally, `lower triangle`.
 * Row sorting
-  * By default, `chr1-chr2-pos1-pos2` ('Chromosome-pair-block-sorted') (see below); optionally, 1D-position-sorted (`chr1-pos1`). Examples are shown below.
+  * By default, `chr1-chr2-pos1-pos2`; optionally, `chr1-pos1`. Examples are shown below.
     ```
     # Sorted: chr1-chr2-pos1-pos2
     chr1 10000 chr1 20000
