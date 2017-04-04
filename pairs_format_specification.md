@@ -19,7 +19,6 @@ The document begins with a summary of the specification, and later sections cont
 * [Standard format](#standard-format)
 * [Standard sorting and indexing](#standard-sorting-and-indexing)
 * [Example optional columns](#example-optional-columns)
-* [Sorting mechanisms](#sorting-mechanisms)
 * [More examples](#more-examples)
 * [Tools for pairs file](#tools-for-pairs-file)
 * [Contributors](#contributors)
@@ -85,7 +84,22 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * Mate sorting
   * By default, `upper triangle` (mate1 coordinate is lower than mate2 coordinate); optionally, `lower triangle`.
 * Row sorting
-  * By default, `chr1-chr2-pos1-pos2` ('Chromosome-pair-block-sorted') (see below); optionally, 1D-position-sorted (`chr1-pos1`)
+  * By default, `chr1-chr2-pos1-pos2` ('Chromosome-pair-block-sorted') (see below); optionally, 1D-position-sorted (`chr1-pos1`). Examples are shown below.
+    ```
+    # Sorted: chr1-chr2-pos1-pos2
+    chr1 10000 chr1 20000
+    chr1 50000 chr1 70000
+    chr1 60000 chr2 10000
+    chr1 30000 chr3 40000
+    ```
+    ```
+    # Sorted: chr1-pos1
+    chr1 10000 chr1 20000
+    chr1 30000 chr3 40000
+    chr1 50000 chr1 70000
+    chr1 60000 chr2 10000
+    ```
+
 * Redundancy
   * Contacts must be nonredundant.
     * Each entry appears only once and in a consistent ordering of the two mates; either in an `upper triangle` (mate2 coordinate is larger than mate1) or a `lower triangle` (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only one of them must be kept. This order must be consistent with the `#shape` and `#chromoosmes` header lines if they are present.
@@ -121,25 +135,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * Genome assembly can be optionally specified in the header
 ```
 #genome_assembly: hg38
-```
-
-***
-
-### Sorting mechanisms
-#### Examples of the two sorting mechanisms
-```
-# Sorted: chr1-chr2-pos1-pos2
-chr1 10000 chr1 20000
-chr1 50000 chr1 70000
-chr1 60000 chr2 10000
-chr1 30000 chr3 40000
-```
-```
-# Sorted: chr1-pos1
-chr1 10000 chr1 20000
-chr1 30000 chr3 40000
-chr1 50000 chr1 70000
-chr1 60000 chr2 10000
 ```
 
 ***
