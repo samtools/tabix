@@ -40,15 +40,18 @@ The document begins with a summary of the specification, and later sections cont
     * Reserved optional column names: The positions of these columns are not reserved.
       * `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
 * Header
-  * Header lines begin with '#' and must appear before the data entries. Relative positions of header lines are not determined, except the first line that specifies the format.
+  * Header lines begin with '#' and must appear before the data entries. Relative positions of header lines are not determined, except for the first line that specifies the format.
   * Required
     * First line: `## pairs format v1.0`
     * column contents and ordering: 
       * `#columns: readID chr1 position1 chr2 position2 strand1 strand2 <column_name> <column_name> ...`
-  * Optional, but reserved (header keys `sorted`, `chromosomes`, `shape` are reserved)
-    * Sorting mechanism: `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
-    * Upper triangle vs lower triangle: `#shape: upper triangle`
-    * chromosome mate order: `#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM`
+  * Optional lines with reserved header keys (`sorted`, `chromosomes`, `shape`)
+    * Sorting mechanism: `chr1-chr2-pos1-pos2`, `chr1-pos1`, `none` are reserved.
+      * `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
+    * Upper triangle vs lower triangle: `upper triangle`, `lower triangle` are reserved.
+      * `#shape: upper triangle` or `#shape: lower triangle`
+    * chromosome mate order: 
+      * e.g.) `#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM`
       * Chromosome order for defining upper triangle (mate1 < mate2) is defined by this header.
       * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
       * The style in the header must match the actual chromosomes in the file:
