@@ -28,11 +28,9 @@
     * [merged_nodup2pairs.pl](#merged_nodup2pairspl)
     * [old_merged_nodup2pairs.pl](#old_merged_nodup2pairspl)
     * [Pairs_merger](#pairs_merger)
-        * [Installation](#installation-for-pairs_merger)
         * [Usage](#usage-for-pairs_merger)
         * [Examples](#usage-examples-for-pairs_merger)
     * [Streamer_1d](#streamer_1d)
-        * [Installation](#installation-for-streamer-1d)
         * [Usage](#usage-for-streamer-1d)
         * [Examples](#usage-examples-for-streamer-1d)
 * [Note](#note)
@@ -391,9 +389,6 @@ SRR1658650.12316544.1/1	1	41607001	1	41608253	+	+	116392	116398
 ### Pairs_merger
 Pairs_merger is a tool that merges indexed pairs files that are already sorted and creates a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k interators. It does not require additional memory nor produces temporary files.
 
-#### Installation for pairs_merger
-See [Installation for pairix](#installation-for-pairix)
-
 #### Usage for pairs_merger
 ```
 pairs_merger <in1.gz> <in2.gz> <in3.gz> ... > <out.txt>
@@ -419,9 +414,6 @@ bin/pairix -f -p merged_nodups out.gz
 ### Streamer_1d
 Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort (not recommended). 
 
-#### Installation for streamer_1d
-See [Installation for pairix](#installation-for-pairix)
-
 #### Usage for streamer_1d
 ```
 streamer_1d <in.2d.gz> > out.1d.pairs
@@ -429,7 +421,9 @@ streamer_1d <in.2d.gz> | bgzip -c > out.1d.pairs.gz
 ```
 
 #### Usage Examples for streamer_1d
-
+```
+bin/streamer_1d samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | bgzip -c > out.1d.pairs.gz
+```
 
 #### FAQ for streamer_1d
 ##### The tool creates many file pointers for the input file, which is equivalent to opening many files simultaneously. Your OS may have a limit on the number of files that can be open at a time. For example, for Mac El Captain and Sierra, it is by default set to 256. This is usually enough, but in case the number of chromosomes in your pairs file happen to be larger than or close to this limit, the tool may produce an error message saying file limit is exceeded. You can increase this limit outside the program. For example, for Mac El Captain and Sierra, the following command raises the limit to 2000.
