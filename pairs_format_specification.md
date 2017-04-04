@@ -170,4 +170,4 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 ***
 
 ### Contributors
-Soo Lee, Nezar Abdennur, Neva Durand, Peter Kerpedjiev, Hakan Özadam, Anton Goloborodko, Lixing Yang, Nils Gehlenborg, Andy Shroeder, Bing Ren, Erez Lieberman Aiden, Peter Park, Burak Alver
+Soo Lee, Nezar Abdennur, Neva Durand, Peter Kerpedjiev, Hakan Özadam, Anton Goloborodko, Lixing Yang, Nils Gehlenborg, Andy Shroeder, Bing Ren, Erez Lieberman Aiden, Peter Park, Burak Alver, and other members of the 4D Nucleome Omics Data Standards Working Group.
