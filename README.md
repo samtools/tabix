@@ -40,6 +40,7 @@
 
 <br>
 ***
+
 ## Availability
 * Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
 * Various utils including `bam2pairs`, `merged_nodups2pairs.pl`, `pairs_merger` etc. are available within this repo.
@@ -47,6 +48,7 @@
 
 <br>
 ***
+
 ## Input file format
 * For 2D indexing, the text file must be first sorted by two chromosome columns and then by the first position column. For 1D-indexing, the file must be sorted by a chromosome column and then by a position column.
 * The file must be compressed using bgzip. The file is either tab-delimited or space-delimited.
@@ -54,6 +56,7 @@
 
 <br>
 ***
+
 ## Pairix
 ### Installation for pairix
 ```
@@ -68,6 +71,7 @@ make
 
 <br>
 ***
+
 ### Usage for pairix
 #### compression
 ```
@@ -104,6 +108,7 @@ pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one
 
 <br>
 ***
+
 ### Usage examples for pairix
 
 #### Preparing a 4dn-style pairs file. This is a double-chromosome-block sorted test file.
@@ -237,6 +242,7 @@ chr10	3978709	.	G	A	1901.77	PASS	AC=2;AF=1.00;AN=2;BaseQRankSum=0.677;DB;DP=66;D
 
 <br>
 ***
+
 ## Pypairix
 ### Installation for pypairix
 
@@ -255,6 +261,7 @@ python test/test.py
 
 <br>
 ***
+
 ### Usage examples for pypairix
 ```
 # to import and use python module pypairix, add the following in your python script.
@@ -329,11 +336,13 @@ print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 
 <br>
 ***
+
 ## Rpairix
 * Rpairix is an R package for reading pairix-indexed pairs files. It has its own repo: https://github.com/4dn-dcic/Rpairix
 
 <br>
 ***
+
 ## Utils
 ### bam2pairs
 * This script converts a bam file to a 4dn style pairs file, sorted and indexed.
@@ -443,12 +452,15 @@ ulimit -n 2000
 
 <br>
 ***
+
 ## Note
 * Currently 2D indexing supports only 2D query (one of the mates can be a wildcard *) and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
 * Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric.
+* Tabix and pairix indices are not cross-compatible.
 
 <br>
 ***
+
 ## Version history
 ### 0.1.1
 * Now all source files are in `src/`.
