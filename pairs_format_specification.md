@@ -60,7 +60,7 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
     * First line: `## pairs format v1.0`
     * column contents and ordering: 
       * `#columns: readID chr1 position1 chr2 position2 strand1 strand2 <column_name> <column_name> ...`
-  * Optional lines with reserved header keys (`sorted`, `chromosomes`, `shape`)
+  * Optional lines with reserved header keys (`sorted`, `chromosomes`, `shape`, `command`, `genome_assembly`)
     * Sorting mechanism: `chr1-chr2-pos1-pos2`, `chr1-pos1`, `none` are reserved.
       * `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
     * Upper triangle vs lower triangle: `upper triangle`, `lower triangle` are reserved.
@@ -71,10 +71,13 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
       * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
       * The style in the header must match the actual chromosomes in the file:
         * ENSEMBL-style (1,2,.. ) vs USCS-style (chr1, chr2)
-    * Command used to generate the pairs file: `#command: bam2pairs mysample.bam mysample`
-  * Other example optional headers (not parsed by software tools but for human)
-    * Genome assembly may be included in the header (see below).
-    * Filtering information (commands used to generate the file) can be reported in the header (optional). 
+    * Command used to generate the pairs file: 
+      * `#command: bam2pairs mysample.bam mysample`
+      * e.g.) Filtering information can be reported this way. 
+    * Genome assembly:
+      * `#genome_assembly: hg38`
+  * Other example optional headers (see below for more examples)
+
     
 ***
 
@@ -129,12 +132,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * Note: BWA format does not record the base on the read but the reference, and therefore must accompany read sequence.
 * Add CIGAR string 
   * For soft- or hard-clipped cases, we need to know where the MD tag begins.
- 
-#### Genome assembly
-* Genome assembly can be optionally specified in the header
-```
-#genome_assembly: hg38
-```
 
 ***
 
