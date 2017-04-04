@@ -76,13 +76,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * Other example optional headers (not parsed by software tools but for human)
     * Genome assembly may be included in the header (see below).
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
-* Content
-  * Contacts must be nonredundant.
-    * Each entry appears only once and in a consistent ordering of the two mates; either in an `upper triangle` (mate2 coordinate is larger than mate1) or a `lower triangle` (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only the first one (if `upper triangle`) or the second one (if `lower triangle`) must be kept. This order must be consistent with the `#shape` and `#chromoosmes` header lines if they are present.
-      ```
-      - chr1 10000 chr2 2000 + +
-      - chr2 2000 chr1 10000 + +
-      ```
     
 ***
 
@@ -90,9 +83,16 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * Bgzipped, tab-delimited text file with an index for random access
 * File extension: `.pairs.gz` (with index `.pairs.gz.px2`)
 * Mate sorting
-  * Upper triangle (mate1 coordinate is lower than mate2 coordinate) by default; optionally, lower triangle.
+  * By default, `upper triangle` (mate1 coordinate is lower than mate2 coordinate); optionally, `lower triangle`.
 * Row sorting
-  * Sort by (chr1, chr2, pos1, pos2) ('Chromosome-pair-block-sorted') by default (i.e all chr1:chr1 pairs appear before chr1:chr2); optionally, 1D-position-sorted (chr1, pos1)
+  * By default, `chr1-chr2-pos1-pos2` ('Chromosome-pair-block-sorted') (see below); optionally, 1D-position-sorted (`chr1-pos1`)
+* Redundancy
+  * Contacts must be nonredundant.
+    * Each entry appears only once and in a consistent ordering of the two mates; either in an `upper triangle` (mate2 coordinate is larger than mate1) or a `lower triangle` (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only one of them must be kept. This order must be consistent with the `#shape` and `#chromoosmes` header lines if they are present.
+      ```
+      - chr1 10000 chr2 2000 + +
+      - chr2 2000 chr1 10000 + +
+      ```   
 * Compressing
   * Compressing by bgzip : https://github.com/4dn-dcic/pairix (forked) or https://github.com/samtools/tabix (original) (The two are identical)
 * Indexing and querying
@@ -127,7 +127,6 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 
 ### Sorting mechanisms
 #### Examples of the two sorting mechanisms
-
 ```
 # Sorted: chr1-chr2-pos1-pos2
 chr1 10000 chr1 20000
