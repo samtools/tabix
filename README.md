@@ -66,16 +66,20 @@ make
 ```
 # compression
 bgzip textfile
-
+```
+```
 # indexing
+pairix textfile.gz  # for recognized file extension
 pairix -p <preset> textfile.gz
 pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_column> [-u<pos2_start_column> -v<pos2_end_column>] [-T] textfile.gz    # u, v is required for full 2d query.
-# column indices are 1-based.
-# use -T option for a space-delimited file.
-# use -f option to overwrite an existing index file.
-# presets can be used for indexing : `pairs`, `merged_nodups`, `old_merged_nodups` for 2D indexing, `gff`, `vcf`, `bed`, `sam` for 1D indexing. Default is `pairs`.
-# Some file extensions are recognized: `.pairs.gz`, `.vcf.gz`, `gff.gz`, `bed.gz`, `sam.gz`
+```
+* column indices are 1-based.
+* use `-T` option for a space-delimited file.
+* use `-f` option to overwrite an existing index file.
+* presets can be used for indexing : `pairs`, `merged_nodups`, `old_merged_nodups` for 2D indexing, `gff`, `vcf`, `bed`, `sam` for 1D indexing. Default is `pairs`.
+* For the recognized file extensions, the `-p` option can be dropped: `.pairs.gz`, `.vcf.gz`, `gff.gz`, `bed.gz`, `sam.gz`
 
+```
 # querying
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
 
