@@ -37,7 +37,7 @@ The document begins with a summary of the specification, and later sections cont
     * Required columns (columns 2-5): Required columns cannot have a missing value.
       * `chr1, chr2, pos1, pos2`
       * Missing values for reserved columns: a single-character dummy (‘.’)
-    * Reserved optional column names: Column positions are not reserved for the reserved optional column names.
+    * Reserved optional column names: The positions of these columns are not reserved.
       * `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
 * Header
   * Header lines begin with '#' and must appear before the data entries. Relative positions of header lines are not determined, except the first line that specifies the format.
@@ -59,7 +59,7 @@ The document begins with a summary of the specification, and later sections cont
     * Filtering information (commands used to generate the file) can be reported in the header (optional). 
 * Content
   * Contacts must be nonredundant.
-    * Each entry appears only once and in a consistent ordering of the two mates; either in an upper-triangle (mate2 coordinate is larger than mate1) or a lower-triangle (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only the first one (if upper-triangle) or the second one (if lower-triangle) must be kept. This order must be consistent with the `#shape` and `#chromoosmes` header lines if they are present.
+    * Each entry appears only once and in a consistent ordering of the two mates; either in an `upper triangle` (mate2 coordinate is larger than mate1) or a `lower triangle` (mate1 coordinate is larger than mate2). For example, the following two rows are redundant and only the first one (if `upper triangle`) or the second one (if `lower triangle`) must be kept. This order must be consistent with the `#shape` and `#chromoosmes` header lines if they are present.
     ```
     - chr1 10000 chr2 2000 + +
     - chr2 2000 chr1 10000 + +
