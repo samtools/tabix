@@ -170,7 +170,7 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * https://github.com/4dn-dcic/pairix
   * example usage
     ```
-    px_build_index("sample.pairs.gz","pairs") # indexing
+    px_build_index("sample.pairs.gz") # indexing
     px_query("sample.pairs.gz",'chr1:10000-20000|chr2:20000-30000') # querying
     ```
 * bam2pairs
@@ -182,4 +182,4 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 ***
 
 ### Contributors
-Soo Lee, Nezar Abdennur, Neva Durand, Peter Kerpedjiev, Hakan Özadam, Anton Goloborodko, Lixing Yang, Nils Gehlenborg, Andy Shroeder, Bing Ren, Erez Lieberman Aiden, Peter Park, Burak Alver, and other members of the 4D Nucleome Omics Data Standards Working Group.
+Soohyun Lee, Nezar Abdennur, Neva Durand, Peter Kerpedjiev, Hakan Özadam, Anton Goloborodko, Lixing Yang, Nils Gehlenborg, Andy Shroeder, Bing Ren, Erez Lieberman Aiden, Peter Park, Burak Alver, and other members of the 4D Nucleome Omics Data Standards Working Group.
