@@ -1,14 +1,31 @@
 # pairix
-* `Pairix` is a tool for indexing and querying on a compressed text file.
-* `Pairix` was developed as a tool for the 4DN-standard `pairs` file format describing Hi-C data: [pairs_format_specification.md](pairs_format_specification.md)
-* However, it can be used as a generic tool for indexing and querying any bgzipped text file containing genomic coordinates, for either 2D- or 1D-indexing.
-* For example, given a text file with a million lines like below, you want to extract lines where the first coordinate is chr10 and the second is between positions 10,000,000 and 20,000,000 on chrX. An awk command would read the file from the beginning to the end. `Pairix` allows a faster query by accessing the file from a relevant position.
+* Pairix is a tool for indexing and querying on a block-compressed text file containing a pair of genomic coordinates.
+* Pairix is a stand-alone C program that was written on top of tabix (https://github.com/samtools/tabix) as a tool for the 4DN-standard pairs file format describing Hi-C data: [pairs_format_specification.md](pairs_format_specification.md)
+* However, Pairix can be used as a generic tool for indexing and querying any bgzipped text file containing genomic coordinates, for either 2D- or 1D- indexing and querying.
+* For example, given a text file like below, you want to extract specific lines. An awk command, for example, would read the file from the beginning to the end. Pairix creates an index and uses it to accesses the file from a relevant position by taking advantage of the bgzf compression, allowing for a fast query for large files.
+
+  **Pairs format**
   ```
-  chr1  10000  20000 chr2  30000  50000  +  -
-  chr1  30000  40000 chr3  10000  70000  +  -
+  ## pairs format v1.0
+  #sorted: chr1-chr2-pos1-pos2
+  #shape: upper triangle
+  #chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
+  #genome_assembly: hg38
+  #columns: readID chr1 pos1 chr2 pos2 strand1 strand2
+  EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
+  EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
+  EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
+  EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   ```
-* `Pairix` is written on top of `Tabix` (https://github.com/samtools/tabix) and has been adapted to `pairs` and other common Hi-C data formats  for 2D indexing and querying. 
- 
+  
+  **Some custom text file**
+  ```
+  chr1  10000  20000 chr2  30000  50000  3.5
+  chr1  30000  40000 chr3  10000  70000  4.6
+  ```
+
+* Bgzip can be found either in this repo or https://github.com/samtools/tabix (original).
+
   
 ## Table of contents
 * [Availability](#availability)
