@@ -48,9 +48,9 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * Data columns
   * 7 reserved; 4 required; 9 reserved column names; Any number of optional columns can be added.
     * Reserved columns (columns 1-7): The positions of these columns are reserved.
-      * `readID, chr1, chr2, pos1, pos2, strand1, strand2`
+      * `readID, chr1, pos1, chr2, pos2, strand1, strand2`
     * Required columns (columns 2-5): Required columns cannot have a missing value.
-      * `chr1, chr2, pos1, pos2`
+      * `chr1, pos1, chr2, pos2`
       * Missing values for reserved columns: a single-character dummy (‘.’)
     * Reserved optional column names: The positions of these columns are not reserved.
       * `frag1`, `frag2` (restriction enzyme fragmenet index used by juicer)
