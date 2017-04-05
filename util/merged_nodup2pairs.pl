@@ -33,7 +33,7 @@ system("grep '^#' $outfile_prefix.pairs > $outfile_prefix.bsorted.pairs; grep -v
 system("bgzip -f $outfile_prefix.bsorted.pairs");
 
 # pairix indexing
-system("pairix -s2 -b3 -e3 -d4 -u5 -f $outfile_prefix.bsorted.pairs.gz");
+system("pairix -f $outfile_prefix.bsorted.pairs.gz");
 
 # removing text file
 # system("rm -f $outfile_prefix.pairs");
