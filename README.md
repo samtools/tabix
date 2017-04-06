@@ -463,6 +463,10 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.1.2
+* Now custom column set overrides file extension recognition
+* bam2pairs now records 5end of a read for position (instead of leftmost)
+
 ### 0.1.1
 * Now all source files are in `src/`.
 * `pypairix`: function `exists` is added
