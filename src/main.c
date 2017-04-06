@@ -100,7 +100,7 @@ int reheader_file(const char *header, const char *file, int meta)
 int main(int argc, char *argv[])
 {
     int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0;
-    ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
+    ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
     char delimiter = 0;
     char line[MAX_REGIONLINE_LEN];
@@ -139,6 +139,9 @@ int main(int argc, char *argv[])
             case 'r': reheader = optarg; break;
         }
     }
+    if(conf.sc==0 && (conf.bc || conf.ec || conf.sc2 || conf.bc2 || conf.ec2)) {
+        fprintf(stderr, "[main] custom column set must specify at least mate1 chromosome (-s)\n"); return 1;
+    } 
     if(conf.bc2 && !conf.ec2) conf.ec2=conf.bc2;
     if (optind == argc) {
         fprintf(stderr, "\n");
@@ -165,7 +168,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "\n");
         return 1;
     }
-    if ( !conf_ptr )
+    if ( !conf_ptr && conf.sc == 0 )
     {
         int l = strlen(argv[optind]);
         int strcasecmp(const char *s1, const char *s2);
