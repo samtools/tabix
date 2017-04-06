@@ -8,7 +8,7 @@
 #include "pairix.h"
 #include "knetfile.h"
 
-#define PACKAGE_VERSION "0.0.1"
+#define PACKAGE_VERSION "0.1.2"
 #define MAX_REGIONLINE_LEN 10000
 #define MAX_FILENAME 10000
 

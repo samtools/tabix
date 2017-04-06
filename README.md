@@ -466,6 +466,7 @@ ulimit -n 2000
 ### 0.1.2
 * Now custom column set overrides file extension recognition
 * bam2pairs now records 5end of a read for position (instead of leftmost)
+* Version number in the binaries fixed.
 
 ### 0.1.1
 * Now all source files are in `src/`.
