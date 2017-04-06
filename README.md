@@ -100,6 +100,7 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 * use `-f` option to overwrite an existing index file.
 * presets can be used for indexing : `pairs`, `merged_nodups`, `old_merged_nodups` for 2D indexing, `gff`, `vcf`, `bed`, `sam` for 1D indexing. Default is `pairs`.
 * For the recognized file extensions, the `-p` option can be dropped: `.pairs.gz`, `.vcf.gz`, `gff.gz`, `bed.gz`, `sam.gz`
+* Custom column specification (-s, -d, -b, -e, -u, -v) overrides file extension recognition. The custom specification must always have at least chr1_column (-s).
 
 #### querying
 ```
