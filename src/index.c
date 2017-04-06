@@ -59,6 +59,7 @@ struct __ti_iter_t {
 
 
 
+ti_conf_t ti_conf_null = { 0, 0, 0, 0, 0, 0, 0, '\t', '#', 0 };
 ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '\t', '#', 0 };
 ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', '#', 0 };
 ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', '#', 0 };
@@ -160,7 +161,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 				if (intv->beg2 < 0) intv->beg2 = 0;
 				if (intv->end2 < 1) intv->end2 = 1;
 			} else if(id == conf->ec) {
-				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
+				if ((conf->preset&0xffff) != TI_PRESET_VCF && (conf->preset&0xffff) != TI_PRESET_SAM) {
 					intv->end = strtol(line + b, &s, 0);
 				} else if ((conf->preset&0xffff) == TI_PRESET_SAM) {
 					if (id == 6) { // CIGAR
@@ -193,10 +194,10 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 					}
 				}
 			} else if(conf->ec2 && id == conf->ec2) {
-				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
+				if ((conf->preset&0xffff) != TI_PRESET_VCF && (conf->preset&0xffff) != TI_PRESET_SAM) {
 					intv->end2 = strtol(line + b, &s, 0);
                                 }
-			} else {
+	      	        } else {
 				if ((conf->preset&0xffff) == TI_PRESET_SAM) {
 					if (id == 6) { // CIGAR
 						int l = 0, op;

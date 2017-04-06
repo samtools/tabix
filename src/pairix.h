@@ -35,9 +35,9 @@
 #define TI_PRESET_GENERIC 0
 #define TI_PRESET_SAM     1
 #define TI_PRESET_VCF     2
-#define TI_PRESET_PAIRS     0
-#define TI_PRESET_MERGED_NODUPS     0
-#define TI_PRESET_OLD_MERGED_NODUPS     0
+#define TI_PRESET_PAIRS     3
+#define TI_PRESET_MERGED_NODUPS     4
+#define TI_PRESET_OLD_MERGED_NODUPS     5
 
 #define TI_FLAG_UCSC      0x10000
 
@@ -95,7 +95,7 @@ typedef struct {
 } sequential_iter_t;
 
 
-extern ti_conf_t ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam, ti_conf_pairs, ti_conf_merged_nodups, ti_conf_old_merged_nodups; // preset
+extern ti_conf_t ti_conf_null, ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam, ti_conf_pairs, ti_conf_merged_nodups, ti_conf_old_merged_nodups; // preset
 
 #ifdef __cplusplus
 extern "C" {
