@@ -364,7 +364,6 @@ class PairixTestBuildIndex(unittest.TestCase):
     end2 = 51304566
     # reverse reversed results to get them in the required order here
     result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
-    pr = pypairix.open(TEST_FILE_2D_4DN)
 
     def test_build_index_without_force(self):
         # expect an error here... the px2 file already exists
@@ -374,8 +373,9 @@ class PairixTestBuildIndex(unittest.TestCase):
 
     def test_build_index_with_force(self):
         pypairix.build_index(TEST_FILE_2D_4DN, force=1)
+        pr = pypairix.open(TEST_FILE_2D_4DN)
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        it = self.pr.querys2D(query)
+        it = pr.querys2D(query)
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
