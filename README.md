@@ -14,10 +14,10 @@
   #columns: readID chr1 pos1 chr2 pos2 strand1 strand2
   EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
   EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
-  EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
+  EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + +
   EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   ```
-  
+
   **Some custom text file**
   ```
   chr1  10000  20000 chr2  30000  50000  3.5
@@ -26,7 +26,7 @@
 
 * Bgzip can be found either in this repo or https://github.com/samtools/tabix (original).
 
-  
+
 ## Table of contents
 * [Availability](#availability)
 * [Input file format](#input-file-format)
@@ -142,7 +142,7 @@ pairix -f samples/4dn.bsorted.chr21_22_only.pairs.gz
 sort -t' ' -k2,2 -k6,6 -k3,3n -k7,7n merged_nodups.txt |bgzip -c > samples/merged_nodups.space.chrblock_sorted.subsample3.txt
 
 #indexing
-pairix -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz 
+pairix -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz
 # The above command is equivalent to : pairix -f -s2 -d6 -b3 -e3 -u7 -T samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz
 ```
 
@@ -181,7 +181,7 @@ pairix samples/test_4dn.pairs.gz 'chr21:10000000-20000000|chr22:30000000-3500000
 SRR1658581.8816993	chr21	11171003	chr22	33169971	+	+
 ```
 
-full 2D multi-query 
+full 2D multi-query
 ```
 pairix samples/test_4dn.pairs.gz 'chr21:10000000-20000000|chr22:30000000-35000000' 'chrX:100000000-110000000|chrX:150000000-170000000'
 SRR1658581.8816993	chr21	11171003	chr22	33169971	+	+
@@ -302,7 +302,7 @@ querystr='{}:{}-{}|*'.format(chrom, start, end)
 it = tb.querys2D(querystr)
 for x in it:
    print(x)
-   
+
 # 2D query usage example 3, with *autoflip* with `querys2D(querystr, 1)`
 # Autoflip: if the queried chromosome pair does not exist in the pairs file, query the flipped pair.
 tb=pypairix.open("textfile.gz")
@@ -310,20 +310,20 @@ querystr='{}:{}-{}|{}:{}-{}'.format(chrom2, start2, end2, chrom, start, end)
 it = tb.querys2D(querystr, 1)
 for x in it:
    print(x)
-   
+
 # 1D query usage example 1
 tb=pypairix.open("textfile.gz")
 it = tb.query(chrom, start, end)
 for x in it:
    print(x)
-   
+
 # 1D query usage example 2
 tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}'.format(chrom, start, end)
 it = tb.querys2D(querystr)
 for x in it:
    print(x)
-   
+
 # get the list of (chr-pair) blocks
 tb=pypairix.open("textfile.gz")
 chrplist = tb.get_blocknames()
@@ -355,13 +355,13 @@ print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 * This script converts a bam file to a 4dn style pairs file, sorted and indexed.
 * See [util/bam2pairs/README.md](util/bam2pairs/README.md) for more details.
 
-### process_merged_nodup.sh 
+### process_merged_nodup.sh
 * This script sorts, bgzips and indexes a newer version of `merged_nodups.txt` file with strand1 as the first column.
 ```
 Usage: process_merged_nodup.sh <merged_nodups.txt>
 ```
 
-### process_old_merged_nodup.sh 
+### process_old_merged_nodup.sh
 * This script sorts, bgzips and indexes an old version of `merged_nodups.txt` file with readID as the first column.
 ```
 Usage: process_old_merged_nodup.sh <merged_nodups.txt>
@@ -428,9 +428,9 @@ bin/pairix -f -p merged_nodups out.gz
 # The above command is equivalent to : bin/pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz
 ```
 
- 
+
 ### Streamer_1d
-Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort (not recommended). 
+Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort (not recommended).
 
 #### Usage for streamer_1d
 ```
@@ -463,6 +463,14 @@ ulimit -n 2000
 <br>
 
 ## Version history
+
+### 0.1.3
+* added build_index methods. Now you can build index files (.px2) using command line, R, or Python
+    + R: px_build_index(<filename>)
+    + Python: pypairix.build_index(<filename>)
+* tests updated
+* pairs_format_specification updated
+
 ### 0.1.2
 * Now custom column set overrides file extension recognition
 * bam2pairs now records 5end of a read for position (instead of leftmost)
@@ -475,4 +483,3 @@ ulimit -n 2000
 * merged_nodups.tab examples are now deprecated (since the original space-delimited files can be recognized as well)
 * `pairs_merger`: memory error fixed
 * updated tests
-

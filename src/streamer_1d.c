@@ -8,7 +8,7 @@
 #include "pairix.h"
 #include "knetfile.h"
 
-#define PACKAGE_VERSION "0.1.2"
+#define PACKAGE_VERSION "0.1.3"
 #define FILENAMEMAX 2000
 
 int main(int argc, char *argv[])
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     strcpy(fn,argv[1]);
 
     // write to stdout bgzip (This is slower, so don't use it)
-    //f_dst = fileno(stdout);                
+    //f_dst = fileno(stdout);
     //bzfp = bgzf_dopen(f_dst, "w");
 
     // actually write merged pairs to bzfp stdout
@@ -89,4 +89,3 @@ int stream_1d(char *fn)
 
     return (0);
 }
-

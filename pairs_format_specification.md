@@ -4,7 +4,7 @@
 <br>
 
 <p>
-This document describes the specification for the text contact list file format for chromosome conformation experiments. This type of file is created in practically all HiC pipelines after filtering of aligned reads, and is used for downstream analyses including building matrices, QC, and other high resolution validation. Ideally, the files should be light-weight, easy-to-use and minimally different from the various formats already being used by major Hi-C analysis tools. With these criteria in mind, members of 4D Nucleome Omics Data Standards Working Group have come up with the following specification. 
+This document describes the specification for the text contact list file format for chromosome conformation experiments. This type of file is created in practically all HiC pipelines after filtering of aligned reads, and is used for downstream analyses including building matrices, QC, and other high resolution validation. Ideally, the files should be light-weight, easy-to-use and minimally different from the various formats already being used by major Hi-C analysis tools. With these criteria in mind, members of 4D Nucleome Omics Data Standards Working Group have come up with the following specification.
 </p>
 
 <p>
@@ -31,7 +31,7 @@ The document begins with a summary of the specification, and later sections cont
 ***
 
 ### Example pairs file
-``` 
+```
 ## pairs format v1.0
 #sorted: chr1-chr2-pos1-pos2
 #shape: upper triangle
@@ -40,7 +40,7 @@ The document begins with a summary of the specification, and later sections cont
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2
 EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
 EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
-EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + + 
+EAS139:136:FC706VJ:2:2342:15343:9863 chr1 60000 chr2 10000 + +
 EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 ```
 
@@ -58,27 +58,27 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * Header lines begin with '#' and must appear before the data entries. Relative positions of header lines are not determined, except for the first line that specifies the format.
   * Required
     * First line: `## pairs format v1.0`
-    * column contents and ordering: 
+    * column contents and ordering:
       * `#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 <column_name> <column_name> ...`
   * Optional lines with reserved header keys (`sorted`, `chromosomes`, `shape`, `command`, `genome_assembly`)
     * Sorting mechanism: `chr1-chr2-pos1-pos2`, `chr1-pos1`, `none` are reserved.
       * `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
     * Upper triangle vs lower triangle: `upper triangle`, `lower triangle` are reserved.
       * `#shape: upper triangle` or `#shape: lower triangle`
-    * chromosome mate order: 
+    * chromosome mate order:
       * e.g.) `#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM`
       * Chromosome order for defining upper triangle (mate1 < mate2) is defined by this header.
       * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
       * The style in the header must match the actual chromosomes in the file:
         * ENSEMBL-style (1,2,.. ) vs USCS-style (chr1, chr2)
-    * Command used to generate the pairs file: 
+    * Command used to generate the pairs file:
       * `#command: bam2pairs mysample.bam mysample`
-      * e.g.) Filtering information can be reported this way. 
+      * e.g.) Filtering information can be reported this way.
     * Genome assembly:
       * `#genome_assembly: hg38`
   * Other example optional headers (see below for more examples)
 
-    
+
 ***
 
 ### Standard sorting and indexing
@@ -130,14 +130,14 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 * BWA format : 6G11A56
   * 6G11A56 means : 6 matches followed by a mismatch (G -> something) followed by 11 matches followed by a mismatch (A -> something) then 56 matches.
   * Note: BWA format does not record the base on the read but the reference, and therefore must accompany read sequence.
-* Add CIGAR string 
+* Add CIGAR string
   * For soft- or hard-clipped cases, we need to know where the MD tag begins.
 
 ***
 
-### More examples 
+### More examples
 #### A complex example with optional fields and/or missing fields
-``` 
+```
 ## pairs format v1.0
 #sorted: none
 #shape: upper triangle
@@ -149,7 +149,7 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 .  1 30000 3 40000 + -      8:T>A
 .  1 50000 1 70000 + + chr5 80000 - 2:T>G
 ```
- 
+
 ***
 
 ### Tools for pairs file
@@ -165,6 +165,14 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   * A python binder for pairix is available through pip install.
   * `pip install pypairix`
   * https://github.com/4dn-dcic/pairix
+  * example usage
+    ```
+    pypairix.build_index("sample.pairs.gz") #indexing
+    pr = pypairix.open("sample.pairs.gz")
+    iter = pr.querys2D('chr1:10000-20000|chr2:20000-30000') # querying; returns an iterator
+    for line in iter:
+	   print line
+    ```
 * Rpairix
   * An R binder is available as well.
   * https://github.com/4dn-dcic/pairix

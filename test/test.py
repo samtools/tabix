@@ -353,6 +353,33 @@ class PairixTestExists(unittest.TestCase):
         self.assertEqual(pr.exists("chr21"),0)
         self.assertEqual(pr.exists("1|2"),0)
 
+class PairixTestBuildIndex(unittest.TestCase):
+    f_type = find_pairs_type(TEST_FILE_2D_4DN)
+    regions = read_pairs(TEST_FILE_2D_4DN, f_type)
+    chrom = 'chr21'
+    start = 1
+    end = 48129895
+    chrom2 = 'chr22'
+    start2 = 1
+    end2 = 51304566
+    # reverse reversed results to get them in the required order here
+    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
+    pr = pypairix.open(TEST_FILE_2D_4DN)
+
+    def test_build_index_without_force(self):
+        # expect an error here... the px2 file already exists
+        with self.assertRaises(pypairix.PairixError) as error:
+            pypairix.build_index(TEST_FILE_2D_4DN)
+        self.assertEqual(error.exception.message, "The index file exists. Please use force=1 to overwrite.")
+
+    def test_build_index_with_force(self):
+        pypairix.build_index(TEST_FILE_2D_4DN, force=1)
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it = self.pr.querys2D(query)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
+
+
 
 if __name__ == '__main__':
     unittest.main()

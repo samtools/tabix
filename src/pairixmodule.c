@@ -187,6 +187,118 @@ static PyTypeObject PairixIterator_Type = {
     0,                          /*tp_is_gc*/
 };
 
+/* ------------------------build_index------------------------- */
+
+int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int sc2, int bc2, int ec2, char *delimiter, char *meta_char, int line_skip, int force){
+
+  if(force==0){
+    char *fnidx = calloc(strlen(inputfilename) + 5, 1);
+    strcat(strcpy(fnidx, inputfilename), ".px2");
+    struct stat stat_px2, stat_input;
+     if (stat(fnidx, &stat_px2) == 0){  // file exists.
+         // Before complaining, check if the input file isn't newer. This is a common source of errors,
+         // people tend not to notice that pairix failed
+         stat(inputfilename, &stat_input);
+         if ( stat_input.st_mtime <= stat_px2.st_mtime ) return(-4);
+     }
+     free(fnidx);
+  }
+  if ( bgzf_is_bgzf(inputfilename)!=1 ) return(-3);
+  else {
+    ti_conf_t conf;
+    if (strcmp(preset, "") == 0 && sc == 0 && bc == 0){
+      int l = strlen(inputfilename);
+      int strcasecmp(const char *s1, const char *s2);
+      if (l>=7 && strcasecmp(inputfilename+l-7, ".gff.gz") == 0) conf = ti_conf_gff;
+      else if (l>=7 && strcasecmp(inputfilename+l-7, ".bed.gz") == 0) conf = ti_conf_bed;
+      else if (l>=7 && strcasecmp(inputfilename+l-7, ".sam.gz") == 0) conf = ti_conf_sam;
+      else if (l>=7 && strcasecmp(inputfilename+l-7, ".vcf.gz") == 0) conf = ti_conf_vcf;
+      else if (l>=10 && strcasecmp(inputfilename+l-10, ".psltbl.gz") == 0) conf = ti_conf_psltbl;
+      else if (l>=9 && strcasecmp(inputfilename+l-9, ".pairs.gz") == 0) conf = ti_conf_pairs;
+      else return(-5); // file extension not recognized and no preset specified
+    }
+    else if (strcmp(preset, "") == 0 && sc != 0 && bc != 0){
+      conf.sc = sc;
+      conf.bc = bc;
+      conf.ec = ec;
+      conf.sc2 = sc2;
+      conf.bc2 = bc2;
+      conf.ec2 = ec2;
+      conf.delimiter = (delimiter)[0];
+      conf.meta_char = (int)((meta_char)[0]);
+      conf.line_skip = line_skip;
+    }
+    else if (strcmp(preset, "gff") == 0) conf = ti_conf_gff;
+    else if (strcmp(preset, "bed") == 0) conf = ti_conf_bed;
+    else if (strcmp(preset, "sam") == 0) conf = ti_conf_sam;
+    else if (strcmp(preset, "vcf") == 0 || strcmp(preset, "vcf4") == 0) conf = ti_conf_vcf;
+    else if (strcmp(preset, "psltbl") == 0) conf = ti_conf_psltbl;
+    else if (strcmp(preset, "pairs") == 0) conf = ti_conf_pairs;
+    else if (strcmp(preset, "merged_nodups") == 0) conf = ti_conf_merged_nodups;
+    else if (strcmp(preset, "old_merged_nodups") == 0) conf = ti_conf_old_merged_nodups;
+    else return(-2);  // wrong preset
+
+    return ti_index_build(inputfilename, &conf);  // -1 if failed
+  }
+}
+
+static char indexer_docstring[] = "Build pairix index for a pairs file. Required args: <filename (str)>. Optional args: <preset (str)> one of the following strings: 'gff', 'bed', 'sam', 'vcf', 'psltbl' (1D-indexing) or 'pairs', 'merged_nodups', 'old_merged_nodups' (2D-indexing). If preset is '', at least some of the custom parameters must be given instead (sc, bc, ec, sc2, bc2, ec2, delimiter, comment_char, line_skip). (default '') <sc (int)> first sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc. If preset is not given, this one is required. (default 0) <bc (int)> first start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc. If preset is not given, this one is required. (default 0) <ec (int)> first end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec. (default 0) <sc2 (int)> second sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc2. If sc, bc are specified but not sc2 and bc2, it is 1D-indexed. (default 0) <bc2 (int)> second start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc2. (default 0) <ec2 (int)> second end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec2. (default 0) <delimiter (str)> delimiter (e.g. '\\t' or ' ') (default '\\t'). If preset is given, preset overrides delimiter. <meta_char (str)> comment character. Lines beginning with this character are skipped when creating an index. If preset is given, preset overrides comment_char (default '#') <line_skip (int)> number of lines to skip in the beginning. (default 0) <force (int)> If 1, overwrite existing index file. If 0, do not overwrite unless the index file is older than the bgzipped file. (default 0)";
+
+static PyObject *indexer_build_index(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    // args: char *inputfilename, char *preset, int sc, int bc, int ec, int sc2, int bc2, int ec2, char *delimiter, char *meta_char, int line_skip, int force
+    char *inputfilename, *preset, *delimiter, *meta_char;
+    int sc, bc, ec, sc2, bc2, ec2, line_skip, force, result;
+    // default arg values
+    preset = "";
+    delimiter = "\t";
+    meta_char = "#";
+    sc = 0;
+    bc = 0;
+    ec = 0;
+    sc2 = 0;
+    bc2 = 0;
+    ec2 = 0;
+    line_skip = 0;
+    force = 0;
+
+    static char *kwlist[] = {"inputfilename", "preset", "sc", "bc", "ec", "sc2", "bc2", "ec2", "delimiter", "meta_char", "line_skip", "force", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|siiiiiissii", kwlist, &inputfilename, &preset, &sc, &bc, &ec, &sc2, &bc2, &ec2, &delimiter, &meta_char, &line_skip, &force)){
+        PyErr_SetString(PairixError, "Argument error! build_index() requires the following args:\n<filename (str)>.\nOptional args:\n<preset (str)> one of the following strings: 'gff', 'bed', 'sam', 'vcf', 'psltbl' (1D-indexing) or 'pairs', 'merged_nodups', 'old_merged_nodups' (2D-indexing). If preset is '', at least some of the custom parameters must be given instead (sc, bc, ec, sc2, bc2, ec2, delimiter, comment_char, line_skip). (default '')\n<sc (int)> first sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc. If preset is not given, this one is required. (default 0)\n<bc (int)> first start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc. If preset is not given, this one is required. (default 0)\n<ec (int)> first end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec. (default 0)\n<sc2 (int)> second sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc2. If sc, bc are specified but not sc2 and bc2, it is 1D-indexed. (default 0)\n<bc2 (int)> second start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc2. (default 0)\n<ec2 (int)> second end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec2. (default 0)\n<delimiter (str)> delimiter (e.g. '\\t' or ' ') (default '\\t'). If preset is given, preset overrides delimiter.\n<meta_char (str)> comment character. Lines beginning with this character are skipped when creating an index. If preset is given, preset overrides comment_char (default '#')\n<line_skip (int)> number of lines to skip in the beginning. (default 0)\n<force (int)> If 1, overwrite existing index file. If 0, do not overwrite unless the index file is older than the bgzipped file. (default 0)");
+        return NULL;
+    }
+
+    result = build_index(inputfilename, preset, sc, bc, ec, sc2, bc2, ec2, delimiter, meta_char, line_skip, force);
+
+    if (result == -1) {
+        PyErr_SetString(PairixError, "Can't create index.");
+        return NULL;
+    }
+    else if (result == -2) {
+        PyErr_SetString(PairixError, "Can't recognize preset.");
+        return NULL;
+    }
+    else if (result == -3) {
+        PyErr_SetString(PairixError, "Was bgzip used to compress this file?");
+        return NULL;
+    }
+    else if (result == -4) {
+        PyErr_SetString(PairixError, "The index file exists. Please use force=1 to overwrite.");
+        return NULL;
+    }
+    else if (result == -5) {
+        PyErr_SetString(PairixError, "Can't recognize file type, with no preset specified.");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyMethodDef indexer_methods[] = {
+    {"build_index", (PyCFunction)indexer_build_index, METH_VARARGS | METH_KEYWORDS, indexer_docstring},
+    {NULL, NULL} /* sentinel */
+};
 
 /* --- Pairix ----------------------------------------------------------- */
 
@@ -476,7 +588,7 @@ pairix_exists(PairixObject *self, PyObject *args)
 {
     const char *key;
     if (!PyArg_ParseTuple(args, "s:exists", &key)){
-        PyErr_SetString(PairixError, "Argument error! exists() takes the following args: <key_str>. Key_str is a str formatted as: '{CHR}' (1D) or  '{CHR}|{CHR}' (2D). (e.g. 'chr1|chr2')\n"); 
+        PyErr_SetString(PairixError, "Argument error! exists() takes the following args: <key_str>. Key_str is a str formatted as: '{CHR}' (1D) or  '{CHR}|{CHR}' (2D). (e.g. 'chr1|chr2')\n");
         return Py_BuildValue("i", -1);
     }
   return Py_BuildValue("i", ti_get_tid(self->tb->idx, key)!=-1?1:0); // returns 1 if key exists, 0 if not, -1 if usage is wrong.
@@ -601,37 +713,37 @@ static PyMethodDef pairix_methods[] = {
        "get_chr1_col",
        (PyCFunction)pairix_get_chr1_col,
         METH_VARARGS,
-        PyDoc_STR("Retrieve the 0-based column index of the first chromosome.\n\n") 
+        PyDoc_STR("Retrieve the 0-based column index of the first chromosome.\n\n")
     },
     {
        "get_chr2_col",
        (PyCFunction)pairix_get_chr2_col,
         METH_VARARGS,
-        PyDoc_STR("Retrieve the 0-based column index of the second chromosome.\n\n") 
+        PyDoc_STR("Retrieve the 0-based column index of the second chromosome.\n\n")
     },
     {
        "get_startpos1_col",
        (PyCFunction)pairix_get_startpos1_col,
         METH_VARARGS,
-        PyDoc_STR("Retrieve the 0-based column index of the start position on the first chromosome.\n\n") 
+        PyDoc_STR("Retrieve the 0-based column index of the start position on the first chromosome.\n\n")
     },
     {
        "get_startpos2_col",
        (PyCFunction)pairix_get_startpos2_col,
         METH_VARARGS,
-        PyDoc_STR("Retrieve the 0-based column index of the start potision on the second chromosome.\n\n") 
+        PyDoc_STR("Retrieve the 0-based column index of the start potision on the second chromosome.\n\n")
     },
     {
        "get_endpos1_col",
        (PyCFunction)pairix_get_endpos1_col,
         METH_VARARGS,
-        PyDoc_STR("Retrieve the 0-based column index of the end position of the first chromosome.\n\n") 
+        PyDoc_STR("Retrieve the 0-based column index of the end position of the first chromosome.\n\n")
     },
     {
        "get_endpos2_col",
        (PyCFunction)pairix_get_endpos2_col,
         METH_VARARGS,
-        PyDoc_STR("Retrieve the 0-based column index of the end position of the second chromosome.\n\n") 
+        PyDoc_STR("Retrieve the 0-based column index of the end position of the second chromosome.\n\n")
     },
     {
        "exists",
@@ -697,7 +809,7 @@ static PyTypeObject Pairix_Type = {
     0,                          /*tp_free*/
     0,                          /*tp_is_gc*/
 };
-/* --------------------------------------------------------------------- */
+
 
 static PyMethodDef pairix_functions[] = {
     {NULL, NULL} /* sentinel */
@@ -759,6 +871,11 @@ PyMODINIT_FUNC PyInit_pypairix(void)
 
     PyModule_AddObject(m, "open", (PyObject *)&Pairix_Type);
     PyModule_AddObject(m, "iter", (PyObject *)&PairixIterator_Type);
+    PyObject *module_dict, *indexer_func, *mod_name;
+    mod_name = PyString_FromString("pypairix");
+    module_dict = PyModule_GetDict(m);
+    indexer_func = PyCFunction_NewEx(&indexer_methods[0], (PyObject*)NULL, mod_name);
+    PyDict_SetItemString(module_dict, "build_index", indexer_func);
 
 #if PY_MAJOR_VERSION >= 3
     return m;
