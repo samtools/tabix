@@ -92,6 +92,12 @@ pairixiter_iter(PyObject *self)
 # define PYOBJECT_FROM_STRING_AND_SIZE PyUnicode_FromStringAndSize
 #endif
 
+#if PY_MAJOR_VERSION < 3
+# define PYOBJECT_FROM_STRING PyString_FromString
+#else
+# define PYOBJECT_FROM_STRING PyUnicode_FromString
+#endif
+
 static PyObject *
 pairixiter_iternext(PairixIteratorObject *self)
 {
@@ -872,7 +878,7 @@ PyMODINIT_FUNC PyInit_pypairix(void)
     PyModule_AddObject(m, "open", (PyObject *)&Pairix_Type);
     PyModule_AddObject(m, "iter", (PyObject *)&PairixIterator_Type);
     PyObject *module_dict, *indexer_func, *mod_name;
-    mod_name = PyString_FromString("pypairix");
+    mod_name = PYOBJECT_FROM_STRING("pypairix");
     module_dict = PyModule_GetDict(m);
     indexer_func = PyCFunction_NewEx(&indexer_methods[0], (PyObject*)NULL, mod_name);
     PyDict_SetItemString(module_dict, "build_index", indexer_func);
