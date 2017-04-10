@@ -371,7 +371,7 @@ class PairixTestBuildIndex(unittest.TestCase):
             pypairix.build_index(TEST_FILE_2D_4DN)
         self.assertEqual(error.exception.message, "The index file exists. Please use force=1 to overwrite.")
 
-    def test_build_index_with_force(self):
+    def test_build_index_with_force(self):   ## recognizing file extension pairs.gz
         pypairix.build_index(TEST_FILE_2D_4DN, force=1)
         pr = pypairix.open(TEST_FILE_2D_4DN)
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
@@ -379,6 +379,14 @@ class PairixTestBuildIndex(unittest.TestCase):
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
+    def test_build_index_with_force_merged_nodups(self):  ## recognizing preset merged_nodups
+        pypairix.build_index(TEST_FILE_2D_SPACE, "merged_nodups", force=1)
+
+    def test_build_index_with_force_merged_nodups_tab(self):  ## recognizing custom set
+        pypairix.build_index(TEST_FILE_2D, sc=2, bc=3, ec=3, sc2=6, bc2=7, ec2=7, force=1)
+
+    def test_build_index_with_force_vcf(self):  ## recognizing file extension vcf.gz
+        pypairix.build_index(TEST_FILE_1D, force=1)
 
 
 if __name__ == '__main__':
