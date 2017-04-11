@@ -463,10 +463,12 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.1.4
+* fixed usage print for `merged_nodup2pairs.pl` and `old_merged_nodup2pairs.pl`.
 
 ### 0.1.3
 * added build_index methods. Now you can build index files (.px2) using command line, R, or Python
-    + R: px_build_index(<filename>)
+    + R: px_build_index(<filename>) : see Rpairix
     + Python: pypairix.build_index(<filename>)
 * tests updated
 * pairs_format_specification updated
