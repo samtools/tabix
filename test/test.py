@@ -154,6 +154,13 @@ class PairixTest(unittest.TestCase):
         pr_result = [[x[0], x[1], x[1]] for x in it]
         self.assertEqual(self.result, pr_result)
 
+    def test_build_index_with_force_vcf(self):  ## recognizing file extension vcf.gz
+        pypairix.build_index(TEST_FILE_1D, force=1)
+        pr2 = pypairix.open(TEST_FILE_1D)
+        query = '{}:{}-{}'.format(self.chrom, self.start, self.end)
+        it2 = pr2.querys(query)
+        pr2_result = [[x[0], x[1], x[1]] for x in it2]
+        self.assertEqual(self.result, pr2_result)
 
 
 ## semi-2D query on 2D indexed file
@@ -208,6 +215,15 @@ class PairixTest2D(unittest.TestCase):
             # verify some things about the warning
             assert len(w) == 1
             assert issubclass(w[-1].category, pypairix.PairixWarning)
+
+    def test_build_index_with_force_merged_nodups_tab(self):  ## recognizing custom set
+        pypairix.build_index(TEST_FILE_2D, sc=2, bc=3, ec=3, sc2=6, bc2=7, ec2=7, force=1)
+        # test with reindex
+        pr2 = pypairix.open(TEST_FILE_2D)
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it2 = pr2.querys2D(query)
+        pr2_result = build_it_result(it2, self.f_type)
+        self.assertEqual(self.result, pr2_result)
 
 
 ## 2D query on 2D indexed file with chromosomes input in reverse order
@@ -273,6 +289,24 @@ class PairixTest2D_4DN(unittest.TestCase):
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
+    def test_build_index_without_force(self):
+        # expect an error here... the px2 file already exists
+        with self.assertRaises(pypairix.PairixError) as error:
+            pypairix.build_index(TEST_FILE_2D_4DN)
+        # errors are handled differently in python 2 and python 3
+        if sys.version_info > (3,0):
+            self.assertEqual(error.exception.__str__(), "The index file exists. Please use force=1 to overwrite.")
+        else:
+            self.assertEqual(error.exception.message, "The index file exists. Please use force=1 to overwrite.")
+
+    def test_build_index_with_force(self):   ## recognizing file extension pairs.gz
+        pypairix.build_index(TEST_FILE_2D_4DN, force=1)
+        pr2 = pypairix.open(TEST_FILE_2D_4DN)
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it2 = pr2.querys2D(query)
+        pr2_result = build_it_result(it2, self.f_type)
+        self.assertEqual(self.result, pr2_result)
+
 
 ## 2D query on 2D indexed space-delimited file
 class PairixTest2DSpace(unittest.TestCase):
@@ -298,6 +332,13 @@ class PairixTest2DSpace(unittest.TestCase):
         pr_result = build_it_result(it, self.f_type)
         self.assertEqual(self.result, pr_result)
 
+    def test_build_index_with_force_merged_nodups(self):  ## recognizing preset merged_nodups
+        pypairix.build_index(TEST_FILE_2D_SPACE, "merged_nodups", force=1)
+        pr2 = pypairix.open(TEST_FILE_2D_SPACE)
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it2 = pr2.querys2D(query)
+        pr2_result = build_it_result(it2, self.f_type)
+        self.assertEqual(self.result, pr2_result)
 
 class PairixTestBlocknames(unittest.TestCase):
 
@@ -352,41 +393,6 @@ class PairixTestExists(unittest.TestCase):
         self.assertEqual(pr.exists("chr1|chr2"),0)
         self.assertEqual(pr.exists("chr21"),0)
         self.assertEqual(pr.exists("1|2"),0)
-
-class PairixTestBuildIndex(unittest.TestCase):
-    f_type = find_pairs_type(TEST_FILE_2D_4DN)
-    regions = read_pairs(TEST_FILE_2D_4DN, f_type)
-    chrom = 'chr21'
-    start = 1
-    end = 48129895
-    chrom2 = 'chr22'
-    start2 = 1
-    end2 = 51304566
-    # reverse reversed results to get them in the required order here
-    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
-
-    def test_build_index_without_force(self):
-        # expect an error here... the px2 file already exists
-        with self.assertRaises(pypairix.PairixError) as error:
-            pypairix.build_index(TEST_FILE_2D_4DN)
-        self.assertEqual(error.exception.message, "The index file exists. Please use force=1 to overwrite.")
-
-    def test_build_index_with_force(self):   ## recognizing file extension pairs.gz
-        pypairix.build_index(TEST_FILE_2D_4DN, force=1)
-        pr = pypairix.open(TEST_FILE_2D_4DN)
-        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        it = pr.querys2D(query)
-        pr_result = build_it_result(it, self.f_type)
-        self.assertEqual(self.result, pr_result)
-
-    def test_build_index_with_force_merged_nodups(self):  ## recognizing preset merged_nodups
-        pypairix.build_index(TEST_FILE_2D_SPACE, "merged_nodups", force=1)
-
-    def test_build_index_with_force_merged_nodups_tab(self):  ## recognizing custom set
-        pypairix.build_index(TEST_FILE_2D, sc=2, bc=3, ec=3, sc2=6, bc2=7, ec2=7, force=1)
-
-    def test_build_index_with_force_vcf(self):  ## recognizing file extension vcf.gz
-        pypairix.build_index(TEST_FILE_1D, force=1)
 
 
 if __name__ == '__main__':
