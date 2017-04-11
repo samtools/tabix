@@ -8,7 +8,7 @@
 #include "pairix.h"
 #include "knetfile.h"
 
-#define PACKAGE_VERSION "0.1.2"
+#define PACKAGE_VERSION "0.1.3"
 #define MAX_REGIONLINE_LEN 10000
 #define MAX_FILENAME 10000
 
@@ -84,7 +84,7 @@ int reheader_file(const char *header, const char *file, int meta)
         #endif
         if ( nread<=0 )
             break;
-    
+
         int count = fwrite(buf, 1, nread, bgzf_out->fp);
         if (count != nread)
             error("Write failed, wrote %d instead of %d bytes.\n", count,(int)nread);
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     }
     if(conf.sc==0 && (conf.bc || conf.ec || conf.sc2 || conf.bc2 || conf.ec2)) {
         fprintf(stderr, "[main] custom column set must specify at least mate1 chromosome (-s)\n"); return 1;
-    } 
+    }
     if(conf.bc2 && !conf.ec2) conf.ec2=conf.bc2;
     if (optind == argc) {
         fprintf(stderr, "\n");
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
             int i, len;
             const char *s;
             const ti_conf_t *idxconf;
-            
+
             if (ti_lazy_index_load(t) < 0) {
                 fprintf(stderr,"[pairix] failed to load the index file.\n");
                 return 1;

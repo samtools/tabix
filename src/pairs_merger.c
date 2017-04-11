@@ -8,7 +8,7 @@
 #include "pairix.h"
 #include "knetfile.h"
 
-#define PACKAGE_VERSION "0.1.2"
+#define PACKAGE_VERSION "0.1.3"
 #define FILENAMEMAX 2000
 
 int main(int argc, char *argv[])
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     }
 
     // write to stdout bgzip
-    //f_dst = fileno(stdout);                
+    //f_dst = fileno(stdout);
     //bzfp = bgzf_dopen(f_dst, "w");
 
     // actually write merged pairs to bzfp stdout
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result should be bgzipped. or pass NULL.
 {
     pairix_t *tbs[n];
-    int i,j; 
+    int i,j;
     int reslen;
     int n_uniq_seq=0;
     char **uniq_seq_list=NULL;
@@ -67,7 +67,7 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
     fprintf(stderr,"Opening files...\n");
     for(i=0;i<n;i++)  tbs[i] = load_from_file(fn[i]);
 
-    // get a sorted unique seqname list 
+    // get a sorted unique seqname list
     fprintf(stderr,"creating a sorted unique seqname list...\n");
     uniq_seq_list = get_unique_merged_seqname(tbs, n, &n_uniq_seq);
 
@@ -79,14 +79,13 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
         for(j=0;j<n;j++){
            iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
            create_iter_unit(tbs[j], iter, miter->iu[j]);
-        }    
+        }
         while ( ( s=merged_ti_read(miter,&reslen)) != NULL ) puts(s);
-        destroy_merged_iter(miter); miter=NULL;     
-      }    
+        destroy_merged_iter(miter); miter=NULL;
+      }
       for(i=0;i<n;i++) ti_close(tbs[i]);
       for(i=0;i<n_uniq_seq;i++) free(uniq_seq_list[i]);
       free(uniq_seq_list);
       return(NULL);
     } else { fprintf(stderr,"Null unique seq list\n"); return(NULL); }
 }
-
