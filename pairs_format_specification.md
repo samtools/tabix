@@ -8,7 +8,7 @@ This document describes the specification for the text contact list file format 
 </p>
 
 <p>
-The document begins with a summary of the specification, and later sections contain brief introduction of the tools that can be used along with the format.
+The document begins with a summary of the specification. Later sections introduce the pairix tools developed by the 4DN DCIC that provide various utilities for indexing and querying pairs-type files.
 </p>
 
 ***
