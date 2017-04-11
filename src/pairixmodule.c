@@ -205,7 +205,7 @@ int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int s
          // Before complaining, check if the input file isn't newer. This is a common source of errors,
          // people tend not to notice that pairix failed
          stat(inputfilename, &stat_input);
-         if ( stat_input.st_mtime <= stat_px2.st_mtime ) return(-4);
+         if ( stat_input.st_mtime <= stat_px2.st_mtime ) { free(fnidx); return(-4);}
      }
      free(fnidx);
   }
