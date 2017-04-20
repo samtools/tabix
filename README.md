@@ -341,6 +341,7 @@ print( tb.get_endpos2_col() )
 # check if key exists (key is a chromosome pair for a 2D-indexed file, or a chromosome for a 1D-indexed file)
 tb=pypairix.open("textfile.gz")
 print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
+print( tb.exists2("chr1","chr2") )  # 1 if exists, 0 if not.
 ```
 
 <br>
@@ -463,10 +464,13 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.1.4
+* fixed usage print for `merged_nodup2pairs.pl` and `old_merged_nodup2pairs.pl`.
+* `pypairix`: function `exists2` is added
 
 ### 0.1.3
 * added build_index methods. Now you can build index files (.px2) using command line, R, or Python
-    + R: px_build_index(<filename>)
+    + R: px_build_index(<filename>) : see Rpairix
     + Python: pypairix.build_index(<filename>)
 * tests updated
 * pairs_format_specification updated

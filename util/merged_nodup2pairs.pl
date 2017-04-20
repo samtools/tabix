@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # merged_nodups.txt to 4dn-pairs converter 
-if(@ARGV<0) { print "usage: $0 merged_nodups.txt outprefix\nRequires sort and bgzip\n"; exit; }
+if(@ARGV<1) { print "usage: $0 merged_nodups.txt outprefix\nRequires sort and bgzip\n"; exit; }
 $infile = shift @ARGV;
 $outfile_prefix = shift @ARGV;
 

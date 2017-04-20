@@ -32,6 +32,8 @@
 #include "kstring.h"
 #include "bgzf.h"
 
+#define REGION_SPLIT_CHARACTER   '|'
+
 #define TI_PRESET_GENERIC 0
 #define TI_PRESET_SAM     1
 #define TI_PRESET_VCF     2

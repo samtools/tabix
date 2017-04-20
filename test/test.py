@@ -395,5 +395,16 @@ class PairixTestExists(unittest.TestCase):
         self.assertEqual(pr.exists("1|2"),0)
 
 
+class PairixTestExists(unittest.TestCase):
+
+    def test_exists2(self):
+        pr = pypairix.open(TEST_FILE_2D_4DN)
+        self.assertEqual(pr.exists2("chr21","chr21"),1)
+        self.assertEqual(pr.exists2("chr21","chr22"),1)
+        self.assertEqual(pr.exists2("chr22","chr22"),1)
+        self.assertEqual(pr.exists2("chr22","chr21"),0)
+        self.assertEqual(pr.exists2("chr1","chr2"),0)
+        self.assertEqual(pr.exists2("1","2"),0)
+
 if __name__ == '__main__':
     unittest.main()
