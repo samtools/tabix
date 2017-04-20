@@ -601,6 +601,26 @@ pairix_exists(PairixObject *self, PyObject *args)
 }
 
 static PyObject *
+pairix_exists2(PairixObject *self, PyObject *args)
+{
+    char *chr1, *chr2, *sname;
+    int h;
+    if (!PyArg_ParseTuple(args, "ss:exists2", &chr1, &chr2)){
+        PyErr_SetString(PairixError, "Argument error! exists2() takes the following args: <seqname1(chr1)> <seqname2(chr2)>\n");
+        return Py_BuildValue("i", -1);
+    }
+    /* concatenate chromosomes */
+    sname = (char*)malloc(strlen(chr1)+strlen(chr2)+2);
+    strcpy(sname, chr1);
+    h=strlen(sname);
+    sname[h]= REGION_SPLIT_CHARACTER;
+    strcpy(sname+h+1, chr2);
+    int res = ti_get_tid(self->tb->idx, sname)!=-1?1:0;
+    free(sname);
+    return Py_BuildValue("i", res); // returns 1 if key exists, 0 if not, -1 if usage is wrong.
+}
+
+static PyObject *
 pairix_repr(PairixObject *self)
 {
 #if PY_MAJOR_VERSION < 3
@@ -756,6 +776,12 @@ static PyMethodDef pairix_methods[] = {
        (PyCFunction)pairix_exists,
         METH_VARARGS,
         PyDoc_STR("Check if key exists(1 if exists, 0 if not, -1 if wrong usage.)\n\n")
+    },
+    {
+       "exists2",
+       (PyCFunction)pairix_exists2,
+        METH_VARARGS,
+        PyDoc_STR("Check if key exists2(1 if exists, 0 if not, -1 if wrong usage.)\n\n")
     },
     /*
     {

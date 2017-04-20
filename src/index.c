@@ -14,10 +14,8 @@
 #define TAD_MIN_CHUNK_GAP 32768
 // 1<<14 is the size of minimum bin.
 #define TAD_LIDX_SHIFT    14
-#define REGION_SPLIT_CHARACTER   '|'
 #define DEFAULT_DELIMITER '\t'
 #define MAX_REGION_STR_LEN 10000
-
 
 typedef struct {
 	uint64_t u, v;
