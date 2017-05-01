@@ -117,12 +117,9 @@ sub parse_header {
   my $pChr_ord=$_[2];
   my $fout=$_[3];
 
-  print @$pSQ; ## debugging
   if(!%$pChr_ord){
-    for my $line (@SQ) {
-      print "haha"; ## debugging
+    for my $line (@$pSQ) {
       if($line=~/^\@SQ\s+SN:(\S+)\s+LN:(\d+)/){
-        print "hoho"; ## debugging
         my $chrname = $1; my $chrlen = $2;
         $pChr_size->{$chrname}=$chrlen;
       }
