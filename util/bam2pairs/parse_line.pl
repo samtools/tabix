@@ -51,6 +51,7 @@ while(<$IN>){
   
   $"="\t";
   if(%chr_ord){
+    next if(!exists $chr_ord{$x[1]} || !exists $chr_ord{$x[3]}); # works as filter as well.
     if($chr_ord{$x[1]} < $chr_ord{$x[3]} || ($chr_ord{$x[1]} == $chr_ord{$x[3]} && $x[2] < $x[4]) ){  ## upper triangle filtering
       print $OUT "@x\t$s1\t$s2\n";  
     }
@@ -98,7 +99,7 @@ sub print_headers {
   print $OUT "#shape: upper triangle\n";
   print $OUT "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2\n";
 
-  my $command_option = sprintf("%s %s", $pos_is_5end?'-5':'', $chrsizefile?'-c $chrsizefile':'');
+  my $command_option = sprintf("%s %s", $pos_is_5end?'-5':'', $chrsizefile?"-c $chrsizefile":'');
   print $OUT "#command: bam2pairs $command_option @ARGV\n";
 }
 
@@ -107,7 +108,7 @@ sub print_chr_size_header {
   my $pChr_size = shift @_;
   my $pChr_ord = shift @_;
   for my $chr (sort {$pChr_ord->{$a}<=>$pChr_ord->{$b}} keys %$pChr_ord){
-    print $OUT "#chromesize: $chr\t$pChr_size->{$chr}\n";
+    print $OUT "#chromsize: $chr\t$pChr_size->{$chr}\n";
   }
 }
 
@@ -117,7 +118,7 @@ sub parse_header {
   my $pChr_ord=$_[2];
   my $fout=$_[3];
 
-  if(!%$pChr_ord){
+  if(scalar %$pChr_ord==0){
     for my $line (@$pSQ) {
       if($line=~/^\@SQ\s+SN:(\S+)\s+LN:(\d+)/){
         my $chrname = $1; my $chrlen = $2;

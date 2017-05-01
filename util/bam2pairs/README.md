@@ -28,6 +28,13 @@ readID chr1 pos1 chr2 pos2 strand1 strand2
 It is bgzipped by `bgzip` and indexed by `pairix` on the chromosome pairs.
 
 
+## Usage
+```
+bam2pairs [-5]|[-c <chromsize_file>] <input_bam> <out_prefix>
+```
+* `-5` : 5'position is used (default: left-most)
+* `-c <chromsize_file>` : mate ordering in the order of chromosomes in the chromsize_file is used and chromsize headers are ordered in the same way.
+
 ## Example Output
 The first few lines of an example output file looks as below:
 ```
@@ -35,6 +42,8 @@ The first few lines of an example output file looks as below:
 #sorted: chr1-chr2-pos1-pos2
 #shape: upper triangle
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2
+#chromsize: chr1 249250621
+...
 #command: bam2pairs /d/bam/_1_out.sorted.bam /d/pairs/_1_out.sorted
 SRR1658581.31870055     chr1    15398   chr1    53692634        -       +
 SRR1658581.24590805     chr1    19593   chr1    11784792        +       +
@@ -44,3 +53,4 @@ SRR1658581.49762205     chr1    106813  chr1    252815  -       +
 SRR1658581.25376859     chr1    114423  chr1    143957748       -       -
 SRR1658581.30418686     chr1    134451  chr1    212858250       -       +
 ```
+
