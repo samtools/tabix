@@ -624,6 +624,37 @@ pairix_exists2(PairixObject *self, PyObject *args)
 }
 
 static PyObject *
+pairix_get_header(PairixObject *self)
+{
+    sequential_iter_t *siter;
+    int len;
+    int n=0; // number of header lines
+    char *s;
+
+    siter = ti_queryi_2d_general(self->tb, 0, 0, 0, 0, 0);
+    while ((s = sequential_ti_read(siter, &len)) != 0) {
+        if ((int)(*s) != ti_get_conf(self->tb->idx)->meta_char) break;
+        n++;
+    }
+    destroy_sequential_iter(siter);
+    bgzf_seek(self->tb->fp, 0, SEEK_SET);
+
+    PyObject *headers = PyList_New(n);
+    siter = ti_queryi_2d_general(self->tb, 0, 0, 0, 0, 0);
+    int i=0;
+    while ((s = sequential_ti_read(siter, &len)) != 0) {
+        if ((int)(*s) != ti_get_conf(self->tb->idx)->meta_char) break;
+        PyObject *val = Py_BuildValue("s",s);
+        if(!val) { Py_DECREF(headers); return NULL; }
+        PyList_SET_ITEM(headers,i,val);
+        i++;
+    } 
+    destroy_sequential_iter(siter);
+    bgzf_seek(self->tb->fp, 0, SEEK_SET);
+    return(headers);
+}
+
+static PyObject *
 pairix_repr(PairixObject *self)
 {
 #if PY_MAJOR_VERSION < 3
@@ -785,6 +816,12 @@ static PyMethodDef pairix_methods[] = {
        (PyCFunction)pairix_exists2,
         METH_VARARGS,
         PyDoc_STR("Check if key exists2(1 if exists, 0 if not, -1 if wrong usage.)\n\n")
+    },
+    {
+       "get_header",
+       (PyCFunction)pairix_get_header,
+        METH_VARARGS,
+        PyDoc_STR("return header strings\n\n")
     },
     /*
     {
