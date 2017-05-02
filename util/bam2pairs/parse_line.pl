@@ -75,15 +75,17 @@ sub print_usage {
 }
 
 sub read_chrsizefile {
-  open $CHRSIZE, $_[0] or die "Can't open chrsize file";
+  my $chrsizefile = shift @_;
+  my $pChr_size = shift @_;
+  my $pChr_ord = shift @_;
+  open $CHRSIZE, $chrsizefile or die "Can't open chrsize file $chrsizefile";
   my $k=0;  # chr order index
-  my %chr_ord=(); # chr order hash (key: chr, value: chr order index)
   while(<$CHRSIZE>){
     chomp; 
-    my @s = split/\s+/; # any file with chromosome name as first column would work. chr name should not have space.
-    $chr_ord{$s[0]}=$k++;
+    my @s = split/\s+/; # any file with chromosome name as first column and size as second column would work. chr name should not have space.
+    $pChr_ord->{$s[0]}=$k++;
+    $pChr_size->{$s[0]}=$s[1];
   }
-  return %chr_ord;
   close $CHRSIZE;
 }
 
@@ -125,9 +127,9 @@ sub parse_header {
         $pChr_size->{$chrname}=$chrlen;
       }
     }
+    my $k=0;
+    %$pChr_ord = map { $_, $k++ } sort {$a cmp $b} keys %$pChr_size;
   }
-  my $k=0;
-  %$pChr_ord = map { $_, $k++ } sort {$a cmp $b} keys %$pChr_size;
   &print_chr_size_header($fout, $pChr_size, $pChr_ord);
 }
 
