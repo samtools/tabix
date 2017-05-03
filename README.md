@@ -467,6 +467,8 @@ ulimit -n 2000
 ### 0.1.5
 * `pypairix`: function `build_index` now has option `zero` which created a zero-based index (defaut 1-based).
 * `bam2pairs`: now adds chromsize in the header. Optionally takes chromsize file to define mate ordering and filter chromosomes. If chromsize file is not fed, the mate ordering is alphanumeric.
+* `pypairix`: functions `get_header` and `get_chromsize` are added.
+* pairs format now has chromsize in the header as requirement.
 
 ### 0.1.4
 * fixed usage print for `merged_nodup2pairs.pl` and `old_merged_nodup2pairs.pl`.

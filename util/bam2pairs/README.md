@@ -30,10 +30,11 @@ It is bgzipped by `bgzip` and indexed by `pairix` on the chromosome pairs.
 
 ## Usage
 ```
-bam2pairs [-5]|[-c <chromsize_file>] <input_bam> <out_prefix>
+bam2pairs [-l]|[-c <chromsize_file>] <input_bam> <out_prefix>
 ```
-* `-5` : 5'position is used (default: left-most)
-* `-c <chromsize_file>` : mate ordering in the order of chromosomes in the chromsize_file is used and chromsize headers are ordered in the same way.
+* `-l` : leftmost position is used (default: 5'position on the read)
+* `-c <chromsize_file>` : mate ordering in the order of chromosomes in the chromsize_file is used and chromsize headers are ordered in the same way. (defautl: alphanumeric ordering of chromosomes defined in the bam header)
+
 
 ## Example Output
 The first few lines of an example output file looks as below:
@@ -43,6 +44,8 @@ The first few lines of an example output file looks as below:
 #shape: upper triangle
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2
 #chromsize: chr1 249250621
+#chromsize: chr2 243199373
+#chromsize: chr3 198022430 
 ...
 #command: bam2pairs /d/bam/_1_out.sorted.bam /d/pairs/_1_out.sorted
 SRR1658581.31870055     chr1    15398   chr1    53692634        -       +
