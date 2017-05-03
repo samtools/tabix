@@ -342,6 +342,14 @@ print( tb.get_endpos2_col() )
 tb=pypairix.open("textfile.gz")
 print( tb.exists("chr1|chr2") )  # 1 if exists, 0 if not.
 print( tb.exists2("chr1","chr2") )  # 1 if exists, 0 if not.
+
+# get header
+tb=pypairix.open("textfile.gz")
+print (tb.get_header())
+
+# get chromsize
+tb=pypairix.open("textfile.gz")
+print (tb.get_chromsize())
 ```
 
 <br>
