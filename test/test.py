@@ -27,8 +27,39 @@ import warnings
 
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_2D_4DN = 'samples/4dn.bsorted.chr21_22_only.pairs.gz'
+TEST_FILE_2D_4DN_2 = 'samples/test_4dn.pairs.gz'
 TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 TEST_FILE_2D_SPACE = 'samples/merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
+
+
+def get_header(filename, meta_char='#'):
+    """Read gzipped file and retrieve lines beginning with '#'."""
+    retval = []
+    for line in gzip.open(filename):
+        try:
+            line = line.decode('utf-8')
+        except AttributeError:
+            pass
+        if line.startswith(meta_char):
+            retval.append(line.rstrip())
+    return retval
+
+
+def get_chromsize(filename):
+    """Read gzipped file and retrieve chromsize."""
+    retval = []
+    for line in gzip.open(filename):
+        try:
+            line = line.decode('utf-8')
+        except AttributeError:
+            pass
+        if line.startswith('#chromsize: '):
+            fields = line.rstrip().split('\s+')
+            chrname = fields[1]
+            chrsize = fields[2]
+            retval.append([chrname, chrsize]) 
+    return retval
+
 
 def read_vcf(filename):
     """Read a VCF file and return a list of [chrom, start, end] items."""
@@ -340,6 +371,7 @@ class PairixTest2DSpace(unittest.TestCase):
         pr2_result = build_it_result(it2, self.f_type)
         self.assertEqual(self.result, pr2_result)
 
+
 class PairixTestBlocknames(unittest.TestCase):
 
     def test_blocknames(self):
@@ -395,7 +427,7 @@ class PairixTestExists(unittest.TestCase):
         self.assertEqual(pr.exists("1|2"),0)
 
 
-class PairixTestExists(unittest.TestCase):
+class PairixTestExists2(unittest.TestCase):
 
     def test_exists2(self):
         pr = pypairix.open(TEST_FILE_2D_4DN)
@@ -406,5 +438,25 @@ class PairixTestExists(unittest.TestCase):
         self.assertEqual(pr.exists2("chr1","chr2"),0)
         self.assertEqual(pr.exists2("1","2"),0)
 
+
+class PairixTestGetHeader(unittest.TestCase):
+
+    def tet_get_header(self):
+        pr = pypairix.open(TEST_FILE_2D_4DN)
+        self.assertEqual(pr.get_header(), get_header(TEST_FILE_2D_4DN))
+        pr = pypairix.open(TEST_FILE_2D_4DN_2)
+        self.assertEqual(pr.get_header(), get_header(TEST_FILE_2D_4DN_2))
+
+
+class PairixTestGetChromsize(unittest.TestCase):
+
+    def tet_get_header(self):
+        pr = pypairix.open(TEST_FILE_2D_4DN)
+        self.assertEqual(pr.get_chromsize(), get_chromsize(TEST_FILE_2D_4DN))
+        pr = pypairix.open(TEST_FILE_2D_4DN_2)
+        self.assertEqual(pr.get_chromsize(), get_chromsize(TEST_FILE_2D_4DN_2))
+
+
 if __name__ == '__main__':
     unittest.main()
+
