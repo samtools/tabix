@@ -904,7 +904,8 @@ static PyMethodDef pairix_methods[] = {
        "get_chromsize",
        (PyCFunction)pairix_get_chromsize,
         METH_VARARGS,
-        PyDoc_STR("return chromsize as a list of 2-element lists [chromosome_name, chromosome_size]\n\n")
+        PyDoc_STR("return chromsize as a list of 2-element lists \
+                   [chromosome_name, chromosome_size]\n\n")
     },
     /*
     {
