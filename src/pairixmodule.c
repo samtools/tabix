@@ -250,7 +250,38 @@ int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int s
   }
 }
 
-static char indexer_docstring[] = "build_index(filename)\n\nBuild pairix index for a pairs file.\n\nRequired args: <filename (str)>. Optional args: <preset (str)> one of the following strings: 'gff', 'bed', 'sam', 'vcf', 'psltbl' (1D-indexing) or 'pairs', 'merged_nodups', 'old_merged_nodups' (2D-indexing). If preset is '', at least some of the custom parameters must be given instead (sc, bc, ec, sc2, bc2, ec2, delimiter, comment_char, line_skip). (default '') <sc (int)> first sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc. If preset is not given, this one is required. (default 0) <bc (int)> first start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc. If preset is not given, this one is required. (default 0) <ec (int)> first end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec. (default 0) <sc2 (int)> second sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc2. If sc, bc are specified but not sc2 and bc2, it is 1D-indexed. (default 0) <bc2 (int)> second start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc2. (default 0) <ec2 (int)> second end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec2. (default 0) <delimiter (str)> delimiter (e.g. '\\t' or ' ') (default '\\t'). If preset is given, preset overrides delimiter. <meta_char (str)> comment character. Lines beginning with this character are skipped when creating an index. If preset is given, preset overrides comment_char (default '#') <line_skip (int)> number of lines to skip in the beginning. (default 0) <force (int)> If 1, overwrite existing index file. If 0, do not overwrite unless the index file is older than the bgzipped file. (default 0). <zero (int)> If 1, create a zero-based index. (default one-based)\n";
+static char indexer_docstring[] = (
+"build_index(filename, preset, sc, bc, ec, sc2, bc2, ec2, delimiter, meta_char, force)\n\n"
+"Build pairix index for a pairs file.\n\n"
+"Parameters\n"
+"----------\n"
+"filename : str\n"
+"    Name of bgzipped file to index.\n"
+"preset : str, optional (default : '')\n"
+"    One of the following strings: 'gff', 'bed', 'sam', 'vcf', 'psltbl' \n"
+"   (1D-indexing) or 'pairs', 'merged_nodups', 'old_merged_nodups' (2D-indexing).\n"
+"sc, bc, ec : int, optional\n"
+"    First sequence, start, and end column indexes (1-based). Zero (0) means \n"
+"    not specified. If preset is given, preset overrides these. If preset is \n"
+"    not given, sc2 and bc2 are required.\n"
+"sc2, bc2, ec2 : int, optional\n"
+"    Second sequence, start, and end column indexes (1-based). Zero (0) \n"
+"    means not specified. If preset is given, preset overrides these. If sc, \n"
+"    bc are specified but not sc2 and bc2, the file will be 1D-indexed.\n"
+"delimiter : str, optional (default: '\\t')\n"
+"    Data delimiter, e.g. '\\t' or ' '. If preset is given, preset overrides \n"
+"    delimiter.\n"
+"meta_char : str, optional (default: '#')\n"
+"    Comment character. Lines beginning with this character are skipped when \n"
+"    creating an index. If preset is given, preset overrides comment_char.\n"
+"line_skip : int, optional (default: 0)\n"
+"    Number of lines to skip in the beginning\n"
+"force : int, optional (default: 0)\n"
+"    If 1, overwrite existing index file. If 0, do not overwrite unless the \n"
+"    index file is older than the bgzipped file.\n"
+"zero : int, optional (default 0)\n"
+"    If 1, create a zero-based index. (default one-based)\n");
+   
 
 static PyObject *indexer_build_index(PyObject *self, PyObject *args, PyObject *kwargs)
 {
