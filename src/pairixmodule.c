@@ -631,22 +631,24 @@ pairix_get_header(PairixObject *self)
     int n=0; // number of header lines
     char *s;
 
-    siter = ti_queryi_2d_general(self->tb, 0, 0, 0, 0, 0);
+    const ti_conf_t *pconf = ti_get_conf(self->tb->idx);
+    siter = ti_query_general(self->tb, 0, 0, 0);
     while ((s = sequential_ti_read(siter, &len)) != 0) {
-        if ((int)(*s) != ti_get_conf(self->tb->idx)->meta_char) break;
+        if ((int)(*s) != pconf->meta_char) break;
         n++;
     }
     destroy_sequential_iter(siter);
     bgzf_seek(self->tb->fp, 0, SEEK_SET);
 
     PyObject *headers = PyList_New(n);
-    siter = ti_queryi_2d_general(self->tb, 0, 0, 0, 0, 0);
+    if(!headers) return NULL;
+    siter = ti_query_general(self->tb, 0, 0, 0);
     int i=0;
     while ((s = sequential_ti_read(siter, &len)) != 0) {
-        if ((int)(*s) != ti_get_conf(self->tb->idx)->meta_char) break;
-        PyObject *val = Py_BuildValue("s",s);
+        if ((int)(*s) != pconf->meta_char) break;
+        PyObject *val = Py_BuildValue("s", s);
         if(!val) { Py_DECREF(headers); return NULL; }
-        PyList_SET_ITEM(headers,i,val);
+        PyList_SET_ITEM(headers, i, val);
         i++;
     } 
     destroy_sequential_iter(siter);
