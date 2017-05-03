@@ -35,8 +35,11 @@ The document begins with a summary of the specification. Later sections introduc
 ## pairs format v1.0
 #sorted: chr1-chr2-pos1-pos2
 #shape: upper triangle
-#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
 #genome_assembly: hg38
+#chromsize: chr1 249250621
+#chromsize: chr2 243199373
+#chromsize: chr3 198022430
+...
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2
 EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
 EAS139:136:FC706VJ:2:8762:23765:128766 chr1 50000 chr1 70000 + +
@@ -60,17 +63,17 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
     * First line: `## pairs format v1.0`
     * column contents and ordering:
       * `#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 <column_name> <column_name> ...`
+    * chromosome names and their size in bp, one chromosome per line, in the same order that defines ordering between mates.
+      * `#chromsize: <chromosome_name> <chromosome_size>` 
+      * Chromosome order for defining upper triangle (mate1 < mate2) is defined by this header.
+      * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
+      * The style in the header must match the actual chromosomes in the file:
+        * ENSEMBL-style (1,2,.. ) vs USCS-style (chr1, chr2)
   * Optional lines with reserved header keys (`sorted`, `chromosomes`, `shape`, `command`, `genome_assembly`)
     * Sorting mechanism: `chr1-chr2-pos1-pos2`, `chr1-pos1`, `none` are reserved.
       * `#sorted: chr1-chr2-pos1-pos2`, `#sorted: chr1-pos1`, `#sorted: none`, or other custom sorting mechanisms
     * Upper triangle vs lower triangle: `upper triangle`, `lower triangle` are reserved.
       * `#shape: upper triangle` or `#shape: lower triangle`
-    * chromosome mate order:
-      * e.g.) `#chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM`
-      * Chromosome order for defining upper triangle (mate1 < mate2) is defined by this header.
-      * Chromosome order for rows is not defined (UNIX sort or any other sort can be used)
-      * The style in the header must match the actual chromosomes in the file:
-        * ENSEMBL-style (1,2,.. ) vs USCS-style (chr1, chr2)
     * Command used to generate the pairs file:
       * `#command: bam2pairs mysample.bam mysample`
       * e.g.) Filtering information can be reported this way.
@@ -141,7 +144,9 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 ## pairs format v1.0
 #sorted: none
 #shape: upper triangle
-#chromosomes: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y
+#chromsize: 1 249250621
+#chromsize: 2 243199373
+...
 #genome_assembly: GRCh37
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2 chr3 pos3 strand3 mismatch_str1 mismatch_str2 mismatch_str3
 .  1 60000 2 10000 + +
@@ -190,4 +195,4 @@ EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
 ***
 
 ### Contributors
-Soohyun Lee, Nezar Abdennur, Neva Durand, Peter Kerpedjiev, Hakan Özadam, Anton Goloborodko, Lixing Yang, Nils Gehlenborg, Andy Shroeder, Bing Ren, Erez Lieberman Aiden, Peter Park, Burak Alver, and other members of the 4D Nucleome Omics Data Standards Working Group.
+Soohyun Lee, Nezar Abdennur, Neva Durand, Anton Goloborodko, Hakan Özadam, Peter Kerpedjiev, Lixing Yang, Nils Gehlenborg, Andy Shroeder, Bing Ren, Erez Lieberman Aiden, Peter Park, Burak Alver, and other members of the 4D Nucleome Omics Data Standards Working Group.

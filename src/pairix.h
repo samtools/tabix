@@ -28,6 +28,8 @@
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
+#define PACKAGE_VERSION "0.1.5"
+
 #include <stdint.h>
 #include "kstring.h"
 #include "bgzf.h"
