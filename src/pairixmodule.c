@@ -657,6 +657,50 @@ pairix_get_header(PairixObject *self)
 }
 
 static PyObject *
+pairix_get_chromsize(PairixObject *self)
+{
+    sequential_iter_t *siter;
+    int len;
+    int n=0; // number of header lines corresponding to chromsize
+    char *s;
+
+    const ti_conf_t *pconf = ti_get_conf(self->tb->idx);
+    siter = ti_query_general(self->tb, 0, 0, 0);
+    while ((s = sequential_ti_read(siter, &len)) != 0) {
+        if ((int)(*s) != pconf->meta_char) break;
+        if(strncmp(s, "#chromsize: ", 12)==0)
+            n++;
+    }
+    destroy_sequential_iter(siter);
+    bgzf_seek(self->tb->fp, 0, SEEK_SET);
+
+    PyObject *headers = PyList_New(n);
+    if(!headers) return NULL;
+    siter = ti_query_general(self->tb, 0, 0, 0);
+    int i=0;
+    while ((s = sequential_ti_read(siter, &len)) != 0) {
+        if ((int)(*s) != pconf->meta_char) break;
+        if(strncmp(s, "#chromsize: ", 12)==0) {
+            PyObject *header_line = PyList_New(2);
+            int j=12; do { j++; } while(s[j]!=' ' && s[j]!='\t');
+            char b=s[j]; s[j]=0;
+            PyObject *chr = Py_BuildValue("s", s + 12);
+            if(!chr) { Py_DECREF(header_line); Py_DECREF(headers); return NULL; }
+            PyList_SET_ITEM(header_line, 0, chr);
+            s[j]=b;
+            PyObject *val = Py_BuildValue("s", s + j + 1);
+            if(!val) { Py_DECREF(header_line); Py_DECREF(headers);  return NULL; }
+            PyList_SET_ITEM(header_line, 1, val);
+            PyList_SET_ITEM(headers, i, header_line);
+            i++;
+        }
+    } 
+    destroy_sequential_iter(siter);
+    bgzf_seek(self->tb->fp, 0, SEEK_SET);
+    return(headers);
+}
+
+static PyObject *
 pairix_repr(PairixObject *self)
 {
 #if PY_MAJOR_VERSION < 3
@@ -824,6 +868,12 @@ static PyMethodDef pairix_methods[] = {
        (PyCFunction)pairix_get_header,
         METH_VARARGS,
         PyDoc_STR("return header strings\n\n")
+    },
+    {
+       "get_chromsize",
+       (PyCFunction)pairix_get_chromsize,
+        METH_VARARGS,
+        PyDoc_STR("return chromsize\n\n")
     },
     /*
     {
