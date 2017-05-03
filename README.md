@@ -9,7 +9,10 @@
   ## pairs format v1.0
   #sorted: chr1-chr2-pos1-pos2
   #shape: upper triangle
-  #chromosomes: chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY chrM
+  #chromsize: chr1 249250621
+  #chromsize: chr2 243199373
+  #chromsize: chr3 198022430
+  ...
   #genome_assembly: hg38
   #columns: readID chr1 pos1 chr2 pos2 strand1 strand2
   EAS139:136:FC706VJ:2:2104:23462:197393 chr1 10000 chr1 20000 + +
