@@ -1,6 +1,11 @@
 #!/usr/bin/perl
 # merged_nodups.txt to 4dn-pairs converter 
-if(@ARGV<1) { print "usage: $0 merged_nodups.txt outprefix\nRequires sort and bgzip\n"; exit; }
+my $split_sort = 0;
+
+use Getopt::Long;
+&GetOptions( 's|split_sort=s' => $split_sort );
+
+if(@ARGV<1) { print "usage: $0 [-s|--split_sort <nsplit>] merged_nodups.txt outprefix\nRequires sort and bgzip\n"; exit; }
 $infile = shift @ARGV;
 $outfile_prefix = shift @ARGV;
 
@@ -10,6 +15,8 @@ print OUT "## pairs format v1.0\n";
 print OUT "#sorted: chr1-chr2-pos1-pos2\n";
 print OUT "#shape: upper triangle\n";
 print OUT "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2\n";
+
+my $n=0; # line count
 open IN, "$infile" or die "Can't open $infile\n";
 while(<IN>){
   chomp;
@@ -21,13 +28,25 @@ while(<IN>){
   } else {
     print OUT "$ri\t$c1\t$p1\t$c2\t$p2\t$s1\t$s2\t$f1\t$f2\n";
   }
+  $n++;
 }
 
 close IN;
 close OUT;
 
 # sorting
-system("grep '^#' $outfile_prefix.pairs > $outfile_prefix.bsorted.pairs; grep -v '^#' $outfile_prefix.pairs | sort -k2,2 -k4,4 -k3,3g -k5,5g >> $outfile_prefix.bsorted.pairs");
+system("grep '^#' $outfile_prefix.pairs > $outfile_prefix.bsorted.pairs");
+
+if($split_sort>1) {
+  my $L = int($n/$split_sort)+1;
+  system("grep -v '^#' $outfile_prefix.pairs | split -l $L - $outfile_prefix.pairs.split");
+  for my $i (0..$L-1){
+    system("sort -k2,2 -k4,4 -k3,3g -k5,5g $outfile_prefix.pairs.split$i >> $outfile_prefix.bsorted.pairs.split$i");
+  }
+  system("sort -m -k2,2 -k4,4 -k3,3g -k5,5g $outfile_prefix.bsorted.pairs.split* >> $outfile_prefix.bsorted.pairs"); 
+}else{
+  system("grep -v '^#' $outfile_prefix.pairs | sort -k2,2 -k4,4 -k3,3g -k5,5g >> $outfile_prefix.bsorted.pairs");
+}
 
 # bgzipping
 system("bgzip -f $outfile_prefix.bsorted.pairs");
