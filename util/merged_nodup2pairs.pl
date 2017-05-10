@@ -6,9 +6,9 @@ use Getopt::Long;
 &GetOptions( 's|split_sort=s' => $split_sort );
 
 if(@ARGV<1) { print "usage: $0 [-s|--split_sort <nsplit>] merged_nodups.txt chrom_size outprefix\nRequires sort and bgzip\n"; exit; }
-$infile = shift @ARGV;
-$chromsizefile = shift @ARGV;
-$outfile_prefix = shift @ARGV;
+$infile = $ARGV[0];
+$chromsizefile = $ARGV[1];
+$outfile_prefix = $ARGV[2];
 
 # chromsize file
 $k=0;
@@ -32,8 +32,9 @@ for my $chr (sort {$chromorder{$a} <=> $chromorder{$b}} keys %chromorder){
   print OUT "#chromsize: $chr $chromsize{$chr}\n";
 }
 
-$command_options = $split_sort>0?'-s $split_sort':'';
-print OUT "#command: merged_nodup2pairs.pl $command_options @ARGV\n"; 
+# print out command
+# $command_options = $split_sort>0?'-s $split_sort':'';
+# print OUT "#command: merged_nodup2pairs.pl $command_options @ARGV\n"; 
 print OUT "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2\n";
 
 my $n=0; # line count

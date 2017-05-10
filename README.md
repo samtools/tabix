@@ -382,13 +382,16 @@ Usage: process_old_merged_nodup.sh <merged_nodups.txt>
 ### merged_nodup2pairs.pl
 * This script converts Juicer's `merged_nodups.txt` format to 4dn-style pairs format. It requires pairix and bgzip binaries in PATH.
 ```
-Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
+Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <chromsize_file> <output_prefix>
 ```
 * An example output file (bgzipped and indexed) looks as below.
 ```
 ## pairs format v1.0
 #sorted: chr1-chr2-pos1-pos2
 #shape: upper triangle
+#chromsize: 1 
+#chromsize: 2 
+...
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2
 SRR1658650.8850202.2/2	1	16944943	1	151864549	-	+	45178	333257
 SRR1658650.8794979.1/1	1	21969282	1	50573348	-	-	59146	140641
