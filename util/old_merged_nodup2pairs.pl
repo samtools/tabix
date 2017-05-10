@@ -28,6 +28,7 @@ for my $chr (sort {$chromorder{$a} <=> $chromorder{$b}} keys %chromorder){
 # print out command
 #$command_options = $split_sort>0?'-s $split_sort':'';
 #print OUT "#command: merged_nodup2pairs.pl $command_options @ARGV\n";
+system("echo !!");  ## debugging
 
 print OUT "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2\n";
 open IN, "$infile" or die "Can't open $infile\n";
