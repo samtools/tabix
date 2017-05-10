@@ -62,7 +62,7 @@ fi
 
 
 ## process merged_nodups
-source util/process_merged_nodup.sh samples/test_merged_nodups.txt samples/hg19.chrom.sizes.-chr 
+source util/process_merged_nodup.sh samples/test_merged_nodups.txt
 pairix samples/test_merged_nodups.txt.bsorted.gz '10|20' > log1
 awk '$2=="10" && $6=="20"' samples/test_merged_nodups.txt > log2
 if [ ! -z "$(diff log1 log2)" ]; then
@@ -70,7 +70,7 @@ if [ ! -z "$(diff log1 log2)" ]; then
 fi
 
 ## process old merged_nodups
-source util/process_old_merged_nodup.sh samples/test_old_merged_nodups.txt samples/hg19.chrom.sizes.-chr 
+source util/process_old_merged_nodup.sh samples/test_old_merged_nodups.txt
 pairix samples/test_old_merged_nodups.txt.bsorted.gz '10|20' > log1
 awk '$3=="10" && $7=="20"' samples/test_old_merged_nodups.txt > log2
 if [ ! -z "$(diff log1 log2)" ]; then
