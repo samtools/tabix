@@ -62,7 +62,7 @@ fi
 
 
 ## process merged_nodups
-source util/process_merged_nodup.sh samples/test_merged_nodups.txt
+source util/process_merged_nodup.sh samples/test_merged_nodups.txt samples/hg19.chrom.sizes.-chr 
 pairix samples/test_merged_nodups.txt.bsorted.gz '10|20' > log1
 awk '$2=="10" && $6=="20"' samples/test_merged_nodups.txt > log2
 if [ ! -z "$(diff log1 log2)" ]; then
@@ -70,7 +70,7 @@ if [ ! -z "$(diff log1 log2)" ]; then
 fi
 
 ## process old merged_nodups
-source util/process_old_merged_nodup.sh samples/test_old_merged_nodups.txt
+source util/process_old_merged_nodup.sh samples/test_old_merged_nodups.txt samples/hg19.chrom.sizes.-chr 
 pairix samples/test_old_merged_nodups.txt.bsorted.gz '10|20' > log1
 awk '$3=="10" && $7=="20"' samples/test_old_merged_nodups.txt > log2
 if [ ! -z "$(diff log1 log2)" ]; then
@@ -78,10 +78,19 @@ if [ ! -z "$(diff log1 log2)" ]; then
 fi
 
 ## merged_nodups2pairs.pl
-gunzip -c samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | perl util/merged_nodup2pairs.pl - samples/merged_nodups.space.chrblock_sorted.subsample3
-pairix -f samples/merged_nodups.space.chrblock_sorted.subsample3.bsorted.pairs.gz
-pairix samples/merged_nodups.space.chrblock_sorted.subsample3.bsorted.pairs.gz '2|21' | cut -f2,3,4,5,8,9 > log1
-gunzip -c samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | awk '$2=="2" && $6=="21" {print $2"\t"$3"\t"$6"\t"$7"\t"$4"\t"$8 }' > log2
+perl util/merged_nodup2pairs.pl samples/test_merged_nodups.txt samples/hg19.chrom.sizes.-chr samples/test_merged_nodups
+pairix -f samples/test_merged_nodups.bsorted.pairs.gz
+pairix samples/test_merged_nodups.bsorted.pairs.gz 'X|8' | cut -f2,3,4,5,8,9 > log1
+gunzip -c samples/test_merged_nodups.txt.gz | awk '$2=="X" && $6=="8" {print $2"\t"$3"\t"$6"\t"$7"\t"$4"\t"$8 }' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  return 1;
+fi
+
+## oldmerged_nodups2pairs.pl
+perl util/oldmerged_nodup2pairs.pl samples/test_old_merged_nodups.txt samples/hg19.chrom.sizes.-chr samples/test_old_merged_nodups
+pairix -f samples/test_old_merged_nodups.bsorted.pairs.gz
+pairix samples/test_old_merged_nodups.bsorted.pairs.gz 'X|8' | cut -f2,3,4,5,8,9 > log1
+gunzip -c samples/test_old_merged_nodups.txt.gz | awk '$2=="X" && $6=="8" {print $2"\t"$3"\t"$6"\t"$7"\t"$4"\t"$8 }' > log2
 if [ ! -z "$(diff log1 log2)" ]; then
   return 1;
 fi
