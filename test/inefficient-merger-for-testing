@@ -1,0 +1,28 @@
+#!/bin/bash
+
+outdir=$1; shift
+outprefix=$1; shift
+type=$1; shift
+
+[ -d $outdir ] || mkdir -p $outdir
+
+rm -f $outdir/$outprefix.pairs
+touch $outdir/$outprefix.pairs
+for input_pair in $@
+do
+  gunzip -c $input_pair >> $outdir/$outprefix.pairs
+done
+
+
+if [ "$type" == "pairs" ]; then
+ sort -k2,2 -k4,4 -k3,3g -k5,5g $outdir/$outprefix.pairs | bin/bgzip -fc > $outdir/$outprefix.bsorted.pairs.gz
+ bin/pairix -f $outdir/$outprefix.bsorted.pairs.gz
+elif [ "$type" == "merged_nodups" ]; then
+ sort -t' ' -k2,2 -k6,6 -k3,3g -k7,7g $outdir/$outprefix.pairs | bin/bgzip -fc > $outdir/$outprefix.bsorted.pairs.gz
+ bin/pairix -f -p merged_nodups $outdir/$outprefix.bsorted.pairs.gz
+elif [ "$type" == "old_merged_nodups" ]; then
+ sort -t' ' -k3,3 -k7,7 -k4,4g -k8,8g $outdir/$outprefix.pairs | bin/bgzip -fc > $outdir/$outprefix.bsorted.pairs.gz
+ bin/pairix -f -p old_merged_nodups $outdir/$outprefix.bsorted.pairs.gz
+fi
+
+
