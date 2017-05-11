@@ -175,6 +175,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "         -H         print only the header lines\n");
         fprintf(stderr, "         -l         list chromosome names\n");
         fprintf(stderr, "         -f         force to overwrite the index\n");
+        fprintf(stderr, "         --help     print usage with exit 0\n");
         fprintf(stderr, "\n");
         if(help_flag) return 0; else return 1; 
     }
