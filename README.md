@@ -484,6 +484,7 @@ ulimit -n 2000
 ### 0.1.6
 * `merged_nodup2pairs.pl` and `old_merged_nodup2pairs.pl` now take chromsize file and adds chromsize in the output file header. Upper triangle is also defined according to the chromsize file.
 * `bam2pairs`: the option description in the usage printed out and the command field in the output pairs file has not been fixed. (-l instead of -5 for the opposite effect)
+* `pairix': command `pairix` alone now exits 0 after printing usage.
   
 ### 0.1.5
 * `pypairix`: function `build_index` now has option `zero` which created a zero-based index (defaut 1-based).
