@@ -69,8 +69,8 @@ system("bgzip -f $prefix.bsorted.pairs");
 system("pairix -f $prefix.bsorted.pairs.gz");
 
 sub print_usage {
-  print "usage: $0 [-5][-c <chromsize_file>] <input_bam> <out_prefix>\n";
-  print "  -5 : position is 5-end, not left-most position (default left-most).\n";
+  print "usage: $0 [-l][-c <chromsize_file>] <input_bam> <out_prefix>\n";
+  print "  -l : position is left-most position (default 5'end).\n";
   print "  -c|--chromsize : chrom size file is provided to define mate ordering. (default alpha-numeric)\n";
 }
 
@@ -101,7 +101,7 @@ sub print_headers {
   print $OUT "#shape: upper triangle\n";
   print $OUT "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2\n";
 
-  my $command_option = sprintf("%s %s", $pos_is_5end?'-5':'', $chrsizefile?"-c $chrsizefile":'');
+  my $command_option = sprintf("%s %s", $pos_is_5end?'':'-l', $chrsizefile?"-c $chrsizefile":'');
   print $OUT "#command: bam2pairs $command_option @ARGV\n";
 }
 

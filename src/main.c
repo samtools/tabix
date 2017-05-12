@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <getopt.h>
 #include "bgzf.h"
 #include "pairix.h"
 #include "knetfile.h"
@@ -98,14 +99,24 @@ int reheader_file(const char *header, const char *file, int meta)
 
 int main(int argc, char *argv[])
 {
-    int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0;
+    int skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0;
+    int c;
     ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
     char delimiter = 0;
     char line[MAX_REGIONLINE_LEN];
+    static int help_flag = 0;
 
-    while ((c = getopt(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:T")) >= 0) {
+    static struct option long_options[] =
+        {
+             {"help", no_argument, &help_flag, 1},
+             {0, 0, 0, 0}
+        };
+    int option_index = 0;
+
+    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:T", long_options, &option_index)) >= 0) {
         switch (c) {
+            case 0: break;  // long option
             case 'L': region_file=1; break;
             case '0': conf.preset |= TI_FLAG_UCSC; break;
             case 'S': skip = atoi(optarg); break;
@@ -130,7 +141,7 @@ int main(int argc, char *argv[])
             case 'e': conf.ec = atoi(optarg); break;
             case 'u': conf.bc2 = atoi(optarg); break;
             case 'v': conf.ec2 = atoi(optarg); break;
-            case 'T': delimiter=' '; break;
+            case 'T': delimiter = ' '; break;
             case 'l': list_chrms = 1; break;
             case 'h': print_header = 1; break;
             case 'H': print_only_header = 1; break;
@@ -142,7 +153,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "[main] custom column set must specify at least mate1 chromosome (-s)\n"); return 1;
     }
     if(conf.bc2 && !conf.ec2) conf.ec2=conf.bc2;
-    if (optind == argc) {
+    if (optind == argc || help_flag) {
         fprintf(stderr, "\n");
         fprintf(stderr, "Program: pairix (PAIRs file InderXer)\n");
         fprintf(stderr, "Version: %s\n\n", PACKAGE_VERSION);
@@ -164,8 +175,9 @@ int main(int argc, char *argv[])
         fprintf(stderr, "         -H         print only the header lines\n");
         fprintf(stderr, "         -l         list chromosome names\n");
         fprintf(stderr, "         -f         force to overwrite the index\n");
+        fprintf(stderr, "         --help     print usage with exit 0\n");
         fprintf(stderr, "\n");
-        return 1;
+        if(help_flag) return 0; else return 1; 
     }
     if ( !conf_ptr && conf.sc == 0 )
     {

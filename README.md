@@ -382,13 +382,16 @@ Usage: process_old_merged_nodup.sh <merged_nodups.txt>
 ### merged_nodup2pairs.pl
 * This script converts Juicer's `merged_nodups.txt` format to 4dn-style pairs format. It requires pairix and bgzip binaries in PATH.
 ```
-Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
+Usage: merged_nodup2pairs.pl <input_merged_nodups.txt> <chromsize_file> <output_prefix>
 ```
 * An example output file (bgzipped and indexed) looks as below.
 ```
 ## pairs format v1.0
 #sorted: chr1-chr2-pos1-pos2
 #shape: upper triangle
+#chromsize: 1 249250621
+#chromsize: 2 243199373
+...
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2
 SRR1658650.8850202.2/2	1	16944943	1	151864549	-	+	45178	333257
 SRR1658650.8794979.1/1	1	21969282	1	50573348	-	-	59146	140641
@@ -408,6 +411,9 @@ Usage: old_merged_nodup2pairs.pl <input_merged_nodups.txt> <output_prefix>
 ## pairs format v1.0
 #sorted: chr1-chr2-pos1-pos2
 #shape: upper triangle
+#chromsize: 1 249250621
+#chromsize: 2 243199373
+...
 #columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2
 SRR1658650.8850202.2/2	1	16944943	1	151864549	-	+	45178	333257
 SRR1658650.8794979.1/1	1	21969282	1	50573348	-	-	59146	140641
@@ -475,6 +481,11 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.1.6
+* `merged_nodup2pairs.pl` and `old_merged_nodup2pairs.pl` now take chromsize file and adds chromsize in the output file header. Upper triangle is also defined according to the chromsize file.
+* `bam2pairs`: the option description in the usage printed out and the command field in the output pairs file has not been fixed. (-l instead of -5 for the opposite effect)
+* `pairix': command `pairix --help` now exits 0 after printing usage (`pairix` alone exits 1 as before).
+  
 ### 0.1.5
 * `pypairix`: function `build_index` now has option `zero` which created a zero-based index (defaut 1-based).
 * `bam2pairs`: now adds chromsize in the header. Optionally takes chromsize file to define mate ordering and filter chromosomes. If chromsize file is not fed, the mate ordering is alphanumeric.
