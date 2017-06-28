@@ -369,6 +369,10 @@ pairix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->tb = tb;
     self->fn = strdup(fn);
     self->tb->idx = ti_index_load(self->fn);
+    if(self->tb->idx == NULL) {
+        PyErr_SetString(PairixError, "Can't open the index file.");
+        return NULL;
+    }
     blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
     self->blocknames = PyList_New(self->nblocks);
     if(!self->blocknames) { return NULL; }

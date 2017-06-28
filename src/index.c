@@ -467,7 +467,7 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 	int32_t i, size, ti_is_be;
 	khint_t k;
 	ti_is_be = bam_is_big_endian();
-	bgzf_write(fp, "TBI\1", 4);
+	bgzf_write(fp, "PX2\1", 4);
 	if (ti_is_be) {
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
@@ -552,8 +552,8 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 		return 0;
 	}
 	bgzf_read(fp, magic, 4);
-	if (strncmp(magic, "TBI\1", 4)) {
-		fprintf(stderr, "[ti_index_load] wrong magic number.\n");
+	if (strncmp(magic, "PX2\1", 4)) {
+		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
 		return 0;
 	}
 	idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));
@@ -687,7 +687,7 @@ static void download_from_remote(const char *url)
 
 static char *get_local_version(const char *fn)
 {
-    struct stat sbuf;
+        struct stat sbuf;
 	char *fnidx = (char*)calloc(strlen(fn) + 5, 1);
 	strcat(strcpy(fnidx, fn), ".px2");
 	if ((strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx)) {
@@ -704,8 +704,9 @@ static char *get_local_version(const char *fn)
 		download_from_remote(url);
 		free(url);
 	}
-    if (stat(fnidx, &sbuf) == 0) return fnidx;
-	free(fnidx); return 0;
+        if (stat(fnidx, &sbuf) == 0) return fnidx;
+	free(fnidx); 
+        return 0;
 }
 
 const char **ti_seqname(const ti_index_t *idx, int *n)
@@ -723,7 +724,7 @@ const char **ti_seqname(const ti_index_t *idx, int *n)
 ti_index_t *ti_index_load(const char *fn)
 {
 	ti_index_t *idx;
-    char *fname = get_local_version(fn);
+        char *fname = get_local_version(fn);
 	if (fname == 0) return 0;
 	idx = ti_index_load_local(fname);
 	if (idx == 0) fprintf(stderr, "[ti_index_load] fail to load the index: %s\n", fname);
