@@ -97,8 +97,8 @@ if [ ! -z "$(diff log1 log2)" ]; then
   return 1;
 fi
 
-## oldmerged_nodups2pairs.pl
-gunzip -c samples/test_old_merged_nodups.txt.bsorted.gz | perl util/oldmerged_nodup2pairs.pl - samples/hg19.chrom.sizes.-chr samples/test_old_merged_nodups
+## old_merged_nodups2pairs.pl
+gunzip -c samples/test_old_merged_nodups.txt.bsorted.gz | perl util/old_merged_nodup2pairs.pl - samples/hg19.chrom.sizes.-chr samples/test_old_merged_nodups
 pairix -f samples/test_old_merged_nodups.bsorted.pairs.gz
 pairix samples/test_old_merged_nodups.bsorted.pairs.gz 'X|8' | cut -f2,3,4,5,8,9 > log1
 gunzip -c samples/test_old_merged_nodups.bsorted.pairs.gz | awk '$2=="X" && $4=="8" {print $2"\t"$3"\t"$4"\t"$5"\t"$8"\t"$9 }' > log2
