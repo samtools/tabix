@@ -481,6 +481,10 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.1.7
+* Now pairix index contains a pairix-specific magic number that differentiates it from a tabix index.
+* Pypairix produces a better error message when the index file doesn't exist (instead of throwing a segfault).
+
 ### 0.1.6
 * `merged_nodup2pairs.pl` and `old_merged_nodup2pairs.pl` now take chromsize file and adds chromsize in the output file header. Upper triangle is also defined according to the chromsize file.
 * `bam2pairs`: the option description in the usage printed out and the command field in the output pairs file has not been fixed. (-l instead of -5 for the opposite effect)
