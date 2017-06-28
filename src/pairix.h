@@ -23,12 +23,12 @@
    SOFTWARE.
 */
 
-/* Contact: Heng Li <lh3@live.co.uk> */
+/* Contact: Soo Lee <duplexa@gmail.com> */
 
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
-#define PACKAGE_VERSION "0.1.6"
+#define PACKAGE_VERSION "0.1.7"
 
 #include <stdint.h>
 #include "kstring.h"
