@@ -728,7 +728,6 @@ ti_index_t *ti_index_load(const char *fn)
 	if (fname == 0) return 0;
 	idx = ti_index_load_local(fname);
 	if (idx == 0) fprintf(stderr, "[ti_index_load] fail to load the index: %s\n", fname);
-    free(fname);
 	return idx;
 }
 
