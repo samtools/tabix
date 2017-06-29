@@ -26,11 +26,7 @@ setup(
     name = "pypairix",
     version = "0.1.7",
     description = """
-        Pypairix is a Python module for fast querying on a pairix-indexed bgzipped text file that contains a pair of genomic coordinates per line.\n
-        Input file : bgzipped text file, first sorted by two chromosome columns and then by the first position column. The file should accompany an index file (.px2) created with pairix (https://github.com/4dn-dcic/pairix).\n\n
-        Pypairix works with Python >=2.7.\n
-        Dependency: python-devel (python-dev for ubuntu), zlib (zlib1g-dev for ubuntu) if not already installed.\n\n
-        Please reference the README for more information (https://github.com/4dn-dcic/pairix/blob/master/README.md)
+        Pypairix is a Python module for fast querying on a pairix-indexed bgzipped text file that contains a pair of genomic coordinates per line. For more information, see: https://github.com/4dn-dcic/pairix/blob/master/README.md.
         """,
     url = "https://github.com/4dn-dcic/pairix",
     download_url = "https://github.com/4dn-dcic/pairix/tarball/0.1.7",
