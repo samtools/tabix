@@ -47,6 +47,7 @@
     * [process_old_merged_nodup.sh](#process_old_merged_nodupsh)
     * [merged_nodup2pairs.pl](#merged_nodup2pairspl)
     * [old_merged_nodup2pairs.pl](#old_merged_nodup2pairspl)
+    * [fragment_4dnpairs.pl](#fragment_4dnpairspl)
     * [Pairs_merger](#pairs_merger)
         * [Usage](#usage-for-pairs_merger)
         * [Examples](#usage-examples-for-pairs_merger)
@@ -105,7 +106,7 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 * For the recognized file extensions, the `-p` option can be dropped: `.pairs.gz`, `.vcf.gz`, `gff.gz`, `bed.gz`, `sam.gz`
 * Custom column specification (-s, -d, -b, -e, -u, -v) overrides file extension recognition. The custom specification must always have at least chr1_column (-s).
 
-#### querying
+#### queryig
 ```
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
 
@@ -422,6 +423,12 @@ SRR1658650.6348458.2/2	1	40697468	1	40698014	+	-	113763	113763
 SRR1658650.12316544.1/1	1	41607001	1	41608253	+	+	116392	116398
 ```
 
+### fragment_4dnpairs.pl
+* This script adds juicer-style fragment information to 4DN-DCIC style pairs file.
+```
+Usage: gunzip -c <input.pairs.gz> | fragment_4dnpairs.pl [--allow-replacement] - <out.pairs> <juicer-style-restriction-site-file>
+```
+
 ### Pairs_merger
 Pairs_merger is a tool that merges indexed pairs files that are already sorted and creates a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k interators. It does not require additional memory nor produces temporary files.
 
@@ -481,6 +488,9 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.1.8
+* Now util has an (updated) fragment_4dnpairs.pl script in it, which allows adding juicer fragment index information to 4DN-DCIC style pairs file.
+
 ### 0.1.7
 * Now pairix index contains a pairix-specific magic number that differentiates it from a tabix index.
 * Pypairix produces a better error message when the index file doesn't exist (instead of throwing a segfault).
