@@ -65,8 +65,10 @@ system("grep '^#' $outfile_prefix.pairs > $outfile_prefix.bsorted.pairs");
 if($split_sort>1) {
   my $L = int($n/$split_sort)+1;
   system("grep -v '^#' $outfile_prefix.pairs | split -l $L - $outfile_prefix.pairs.split");
-  for my $i (0..$L-1){
-    system("sort -k2,2 -k4,4 -k3,3g -k5,5g $outfile_prefix.pairs.split$i >> $outfile_prefix.bsorted.pairs.split$i");
+  my $i=0;
+  for my $file (split/\n/,`ls -1 $outfile_prefix.pairs.split*`){
+    system("sort -k2,2 -k4,4 -k3,3g -k5,5g $file >> $outfile_prefix.bsorted.pairs.split$i");
+    $i++;
   }
   system("sort -m -k2,2 -k4,4 -k3,3g -k5,5g $outfile_prefix.bsorted.pairs.split* >> $outfile_prefix.bsorted.pairs"); 
 }else{
