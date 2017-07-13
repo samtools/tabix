@@ -488,6 +488,9 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.1.9
+* fixed an issue of not excluding chromosomes that are not in chrome size file in `merged_noduds2pairs.pl` and `old_merged_nodups2pairs.pl`
+
 ### 0.1.8
 * Now util has an (updated) fragment_4dnpairs.pl script in it, which allows adding juicer fragment index information to 4DN-DCIC style pairs file.
 
