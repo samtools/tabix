@@ -24,10 +24,10 @@ EXT_MODULES = [
 
 setup(
     name = "pypairix",
-    version = "0.1.8",
+    version = "0.1.9",
     description = "Pypairix is a Python module for fast querying on a pairix-indexed bgzipped text file that contains a pair of genomic coordinates per line. For more information, see: https://github.com/4dn-dcic/pairix/blob/master/README.md.",
     url = "https://github.com/4dn-dcic/pairix",
-    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.1.8",
+    download_url = "https://github.com/4dn-dcic/pairix/tarball/0.1.9",
     author = "Soo Lee, Carl Vitzthum",
     author_email = "duplexa@gmail.com",
     license = "MIT",
