@@ -37,6 +37,7 @@ while(<IN>){
   my ($ri,$c1,$p1,$c2,$p2,$s1,$s2,$f1,$f2) = (split/\s/)[0,2,3,6,7,1,5,4,8];
   $s1 = $s1==0?'+':'-';
   $s2 = $s2==0?'+':'-';
+  next if(!exists $chromorder{$c1} || !exists $chromorder{$c2});
   if($chromorder{$c1} > $chromorder{$c2} || ($chromorder{$c1} == $chromorder{$c2} && $p1>$p2)) { # flip
     print OUT "$ri\t$c2\t$p2\t$c1\t$p1\t$s2\t$s1\t$f2\t$f1\n";
   } else {
