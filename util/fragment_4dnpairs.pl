@@ -83,9 +83,9 @@ $frag2_colindex=-1;
 while (<INFILE>) {
   chomp;
   if(/^#columns:\s*/) { 
+      my @headers = split/\s+/,$_;
       if((/frag1/ || /frag2/) && $no_replacement) { die "frag columns already exist. Aborting..\n"; }
       elsif((/frag1/ || /frag2/) && !$no_replacement) { 
-          my @headers = split/\s+/,$_;
           for my $i (1..$#headers){
               if($headers[$i] eq 'frag1') { $frag1_colindex=$i-1; }
               elsif($headers[$i] eq 'frag2') { $frag2_colindex=$i-1; }
