@@ -7,8 +7,8 @@ python:
 - '2.7'
 script:
  - make
- - python setup.py install
+ - python setup.py install --install-dir .
  - python test/test.py
- - python3 setup.py install
+ - python3 setup.py install --install-dir .
  - python3 test/test.py
  - source test/test_c.sh
