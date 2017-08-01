@@ -1,4 +1,3 @@
-dist: precise
 language: c python
 sudo: required
 compiler: gcc
@@ -7,8 +6,8 @@ python:
 - '2.7'
 script:
  - make
- - python setup.py install --install-dir .
+ - sudo python setup.py install
  - python test/test.py
- - python3 setup.py install --install-dir .
+ - sudo python3 setup.py install
  - python3 test/test.py
  - source test/test_c.sh
