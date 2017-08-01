@@ -1,5 +1,5 @@
 language: c python
-sudo: true
+sudo: required
 compiler: gcc
 python:
 - '3.5'
