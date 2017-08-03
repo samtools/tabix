@@ -488,6 +488,9 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.2.1
+* fixed a newly introdued error in `fragment_4dnpairs.pl`
+
 ### 0.2.0
 * fixed --split option still not working in `merged_noduds2pairs.pl` and `old_merged_nodups2pairs.pl`.
 
