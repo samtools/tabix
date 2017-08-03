@@ -38,6 +38,8 @@ for my $chr (sort {$chromorder{$a} <=> $chromorder{$b}} keys %chromorder){
 #print OUT "#command: merged_nodup2pairs.pl $command_options @ARGV\n";
 system("echo !!");  ## debugging
 
+
+my $n=0; #line count
 print OUT "#columns: readID chr1 pos1 chr2 pos2 strand1 strand2 frag1 frag2\n";
 open IN, "$infile" or die "Can't open $infile\n";
 while(<IN>){
@@ -52,6 +54,7 @@ while(<IN>){
   } else {
     print OUT "$ri\t$c1\t$p1\t$c2\t$p2\t$s1\t$s2\t$f1\t$f2\n";
   }
+  $n++;
 }
 
 close IN;
