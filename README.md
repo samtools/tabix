@@ -488,6 +488,9 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.2.2
+* fixed -s option still not working in `old_merged_nodups2pairs.pl`.
+
 ### 0.2.1
 * fixed a newly introdued error in `fragment_4dnpairs.pl`
 
