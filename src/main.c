@@ -175,6 +175,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "         -h         print also the header lines\n");
         fprintf(stderr, "         -H         print only the header lines\n");
         fprintf(stderr, "         -l         list chromosome names\n");
+        fprintf(stderr, "         -n         print only the total line count (same as gunzip -c | wc -l but much faster)\n");
         fprintf(stderr, "         -f         force to overwrite the index\n");
         fprintf(stderr, "         --help     print usage with exit 0\n");
         fprintf(stderr, "\n");
