@@ -36,6 +36,11 @@
 * [Pairix](#pairix)
     * [Installation](#installation-for-pairix)
     * [Usage](#usage-for-pairix)
+        * [compression](#compression)
+        * [indexing](#indexing)
+        * [List of chromosome pairs](#list-of-chromosome-pairs)
+        * [Total linecount](#total-linecount)
+        * [querying](#querying)
     * [Examples](#usage-examples-for-pairix)
 * [Pypairix](#pypairix)
     * [Installation](#installation-for-pypairix)
@@ -113,7 +118,7 @@ pairix -l textfile.gz
 ```
 
 #### Total linecount
-# This is equivalent to but much faster than gunzip -c | wc -l
+This is equivalent to but much faster than `gunzip -c | wc -l`
 ```
 pairix -n textfile.gz
 ```
