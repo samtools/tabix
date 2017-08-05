@@ -99,7 +99,7 @@ int reheader_file(const char *header, const char *file, int meta)
 
 int main(int argc, char *argv[])
 {
-    int skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0;
+    int skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0, print_only_linecount = 0;
     int c;
     ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
         };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:T", long_options, &option_index)) >= 0) {
+    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tn", long_options, &option_index)) >= 0) {
         switch (c) {
             case 0: break;  // long option
             case 'L': region_file=1; break;
@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
             case 'H': print_only_header = 1; break;
             case 'f': force = 1; break;
             case 'r': reheader = optarg; break;
+            case 'n': print_only_linecount = 1; break;
         }
     }
     if(conf.sc==0 && (conf.bc || conf.ec || conf.sc2 || conf.bc2 || conf.ec2)) {
@@ -196,6 +197,20 @@ int main(int argc, char *argv[])
     if (skip >= 0) conf.line_skip = skip;
     if (meta >= 0) conf.meta_char = meta;
     if (delimiter) conf.delimiter = delimiter;
+    if(print_only_linecount) {
+        ti_index_t *idx;
+        int i, n;
+        const char **names;
+        idx = ti_index_load(argv[optind]);
+        if (idx == 0) {
+            fprintf(stderr, "[main] fail to load the index file.\n");
+            return 1;
+        }
+        int linecount = get_linecount(idx);
+        printf("%d\n", linecount);
+        ti_index_destroy(idx);
+        return 0;
+    }
     if (list_chrms) {
         ti_index_t *idx;
         int i, n;

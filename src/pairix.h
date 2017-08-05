@@ -146,6 +146,10 @@ extern "C" {
 	 * calling this function. The number of sequences is returned at *n. */
 	const char **ti_seqname(const ti_index_t *idx, int *n);
 
+        /* get linecount */
+        int get_linecount(const ti_index_t *idx);
+
+
 	/******************
 	 * Low-level APIs *
 	 ******************/
