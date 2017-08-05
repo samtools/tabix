@@ -106,7 +106,19 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 * For the recognized file extensions, the `-p` option can be dropped: `.pairs.gz`, `.vcf.gz`, `gff.gz`, `bed.gz`, `sam.gz`
 * Custom column specification (-s, -d, -b, -e, -u, -v) overrides file extension recognition. The custom specification must always have at least chr1_column (-s).
 
-#### queryig
+
+#### List of chromosome pairs
+```
+pairix -l textfile.gz
+```
+
+#### Total linecount
+# This is equivalent to but much faster than gunzip -c | wc -l
+```
+pairix -n textfile.gz
+```
+
+#### querying
 ```
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
 
@@ -488,6 +500,10 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.2.3
+* Total linecount is added to the index now with virtually no added runtime or memory for indexing (`pairix -n` and `pypairix` `get_linecount` to retrieve the total line count)
+* Index structure changed - please re-index if you're using an older version of index.
+
 ### 0.2.2
 * fixed -s option still not working in `old_merged_nodups2pairs.pl`.
 

@@ -68,6 +68,16 @@ if [ ! -z "$(diff log1 log2)" ]; then
   return 1;
 fi
 
+## linecount
+pairix -f samples/test_4dn.pairs.gz
+pairix -n samples/test_4dn.pairs.gz > log1
+gunzip -c samples/test_4dn.pairs.gz |wc -l > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "linecount test failed"
+  return 1;
+fi
+
+
 
 ## process merged_nodups
 source util/process_merged_nodup.sh samples/test_merged_nodups.txt
@@ -132,4 +142,5 @@ if [ ! -z "$(diff out.1d.pairs out2.1d.pairs)" ]; then
   return 1;
 fi
 rm -f out.1d.pairs out2.1d.pairs
+
 

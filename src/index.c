@@ -43,6 +43,7 @@ struct __ti_index_t {
         khash_t(s) *tname;
         khash_t(i) **index;
         ti_lidx_t *index2;
+        int linecount;
 };
 
 struct __ti_iter_t {
@@ -372,10 +373,12 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 	idx->tname = kh_init(s);
 	idx->index = 0;
 	idx->index2 = 0;
+        idx->linecount=0; 
 
 	save_bin = save_tid = last_tid = last_bin = 0xffffffffu;
 	save_off = last_off = bgzf_tell(fp); last_coor = 0xffffffffu;
 	while ((ret = ti_readline(fp, str)) >= 0) {
+                idx->linecount++; 
 		ti_intv_t intv;
 		++lineno;
 		if (lineno <= idx->conf.line_skip || str->s[0] == idx->conf.meta_char) {
@@ -383,22 +386,22 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 			continue;
 		}
 		get_intv(idx, str, &intv);
-        if ( intv.beg<0 || intv.end<0 )
-        {
-            fprintf(stderr,"[ti_index_core] the indexes overlap or are out of bounds\n");
-            return(NULL);
-        }
+                if ( intv.beg<0 || intv.end<0 )
+                {
+                    fprintf(stderr,"[ti_index_core] the indexes overlap or are out of bounds\n");
+                    return(NULL);
+                }
 		if (last_tid != intv.tid) { // change of chromosomes
-            if (last_tid>intv.tid )
-            {
-                fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted? [pos %d]\n",(unsigned long long)lineno,intv.beg+1);
-                return(NULL);
-            }
-			last_tid = intv.tid;
-			last_bin = 0xffffffffu;
+                if (last_tid>intv.tid )
+                {
+                    fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted? [pos %d]\n",(unsigned long long)lineno,intv.beg+1);
+                    return(NULL);
+                }
+		    last_tid = intv.tid;
+		    last_bin = 0xffffffffu;
 		} else if (last_coor > intv.beg) {
-			fprintf(stderr, "[ti_index_core] the file out of order at line %llu\n", (unsigned long long)lineno);
-			return(NULL);
+		    fprintf(stderr, "[ti_index_core] the file out of order at line %llu\n", (unsigned long long)lineno);
+		    return(NULL);
 		}
 		tmp = insert_offset2(&idx->index2[intv.tid], intv.beg, intv.end, last_off);
 		if (last_off == 0) offset0 = tmp;
@@ -472,6 +475,10 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
 	} else bgzf_write(fp, &idx->n, 4);
+	if (ti_is_be) {
+		uint32_t x = idx->linecount;
+		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
+	} else bgzf_write(fp, &idx->linecount, 4);
 	assert(sizeof(ti_conf_t) == 40);
 	if (ti_is_be) { // write ti_conf_t;
 		uint32_t x[6];
@@ -559,6 +566,8 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 	idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));
 	bgzf_read(fp, &idx->n, 4);
 	if (ti_is_be) bam_swap_endian_4p(&idx->n);
+	bgzf_read(fp, &idx->linecount, 4);
+	if (ti_is_be) bam_swap_endian_4p(&idx->linecount);
 	idx->tname = kh_init(s);
 	idx->index = (khash_t(i)**)calloc(idx->n, sizeof(void*));
 	idx->index2 = (ti_lidx_t*)calloc(idx->n, sizeof(ti_lidx_t));
@@ -926,6 +935,13 @@ ti_iter_t ti_iter_first()
 	iter->from_first = 1;
 	return iter;
 }
+
+
+int get_linecount(const ti_index_t *idx)
+{
+        return(idx->linecount);
+}
+
 
 ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int beg2, int end2 ){ //beg2, end2 should be -1 for 1d query.
 	uint16_t *bins;

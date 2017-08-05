@@ -41,6 +41,7 @@ typedef struct {
     pairix_t *tb;
     char *fn;
     PyObject *blocknames;
+    int linecount;
     int nblocks;
 } PairixObject;
 
@@ -373,6 +374,7 @@ pairix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         PyErr_SetString(PairixError, "Can't open the index file.");
         return NULL;
     }
+    self->linecount = get_linecount(self->tb->idx);
     blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
     self->blocknames = PyList_New(self->nblocks);
     if(!self->blocknames) { return NULL; }
@@ -584,6 +586,12 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
     return pairixiter_create(self, result);  // result may be null but that's okay
 }
 
+
+static PyObject *
+pairix_get_linecount(PairixObject *self)
+{
+  return Py_BuildValue("i", self->linecount);
+}
 
 static PyObject *
 pairix_get_blocknames(PairixObject *self)
@@ -843,6 +851,12 @@ static PyMethodDef pairix_methods[] = {
                   "    Query string like \"chr1:start-end|chr2:start-end\".\n"
                   "flip value: int\n"
                   "    If == 1, will attempt to flip chromsomes order on an error.\n")
+    },
+    {
+       "get_linecount",
+       (PyCFunction)pairix_get_linecount,
+        METH_VARARGS,
+        PyDoc_STR("Retrieve total linecount of the file.\n\n")
     },
     {
        "get_blocknames",

@@ -457,6 +457,13 @@ class PairixTestGetChromsize(unittest.TestCase):
         self.assertEqual(pr.get_chromsize(), get_chromsize(TEST_FILE_2D_4DN_2))
 
 
+class PairixTestGetLineCount(unittest.TestCase):
+
+    def test_linecount(self):
+        pr= pypairix.open(TEST_FILE_2D_4DN_2)
+        self.assertEqual(pr.get_linecount(), 60204)
+
+
 if __name__ == '__main__':
     unittest.main()
 
