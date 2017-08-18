@@ -470,7 +470,7 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 	int32_t i, size, ti_is_be;
 	khint_t k;
 	ti_is_be = bam_is_big_endian();
-	bgzf_write(fp, "PX2\1", 4);
+	bgzf_write(fp, "PX2.001\1", 8);
 	if (ti_is_be) {
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
@@ -551,15 +551,15 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 static ti_index_t *ti_index_load_core(BGZF *fp)
 {
 	int i, ti_is_be;
-	char magic[4];
+	char magic[8];
 	ti_index_t *idx;
 	ti_is_be = bam_is_big_endian();
 	if (fp == 0) {
 		fprintf(stderr, "[ti_index_load_core] fail to load index.\n");
 		return 0;
 	}
-	bgzf_read(fp, magic, 4);
-	if (strncmp(magic, "PX2\1", 4)) {
+	bgzf_read(fp, magic, 8);
+	if (strncmp(magic, "PX2.001\1", 8)) {
 		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
 		return 0;
 	}

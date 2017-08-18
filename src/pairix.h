@@ -28,7 +28,7 @@
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
-#define PACKAGE_VERSION "0.2.3"
+#define PACKAGE_VERSION "0.2.4"
 
 #include <stdint.h>
 #include "kstring.h"
