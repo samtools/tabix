@@ -500,6 +500,9 @@ ulimit -n 2000
 <br>
 
 ## Version history
+### 0.2.4
+* Updated magic number for the new index, to avoid crash caused by different index structure.
+
 ### 0.2.3
 * Total linecount is added to the index now with virtually no added runtime or memory for indexing (`pairix -n` and `pypairix` `get_linecount` to retrieve the total line count)
 * Index structure changed - please re-index if you're using an older version of index.
