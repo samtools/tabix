@@ -5,9 +5,15 @@ python:
 - '3.6'
 - '2.7'
 script:
- - make
- - sudo python setup.py install
- - python test/test.py
- - sudo python3 setup.py install
- - python3 test/test.py
- - source test/test_c.sh
+- make
+- |
+  if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
+  sudo python3 setup.py install
+  python3 test/test.py
+  fi
+- |
+  if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
+  sudo python setup.py install
+  python test/test.py
+  fi
+- source test/test_c.sh
