@@ -2,7 +2,7 @@ language: c python
 sudo: required
 compiler: gcc
 python:
-- '3.5'
+- '3.6'
 - '2.7'
 script:
  - make
