@@ -196,7 +196,7 @@ static PyTypeObject PairixIterator_Type = {
 
 /* ------------------------build_index------------------------- */
 
-int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int sc2, int bc2, int ec2, char *delimiter, char *meta_char, int line_skip, int force, int zero){
+int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int sc2, int bc2, int ec2, char *delimiter, char *meta_char, int line_skip, char *region_split_character, int force, int zero){
 
   if(force==0){
     char *fnidx = calloc(strlen(inputfilename) + 5, 1);
@@ -232,6 +232,7 @@ int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int s
       conf.bc2 = bc2;
       conf.ec2 = ec2;
       conf.delimiter = (delimiter)[0];
+      conf.region_split_character = (region_split_character)[0];
       conf.meta_char = (int)((meta_char)[0]);
       conf.line_skip = line_skip;
     }
@@ -252,7 +253,7 @@ int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int s
 }
 
 static char indexer_docstring[] = (
-"build_index(filename, preset, sc, bc, ec, sc2, bc2, ec2, delimiter, meta_char, force)\n\n"
+"build_index(filename, preset, sc, bc, ec, sc2, bc2, ec2, delimiter, meta_char, region_split_character, force)\n\n"
 "Build pairix index for a pairs file.\n\n"
 "Parameters\n"
 "----------\n"
@@ -277,6 +278,8 @@ static char indexer_docstring[] = (
 "    creating an index. If preset is given, preset overrides comment_char.\n"
 "line_skip : int, optional (default: 0)\n"
 "    Number of lines to skip in the beginning\n"
+"region_split_character : char, option (default: '|')\n"
+"    Character used to separate two regions.\n"
 "force : int, optional (default: 0)\n"
 "    If 1, overwrite existing index file. If 0, do not overwrite unless the \n"
 "    index file is older than the bgzipped file.\n"
@@ -286,13 +289,14 @@ static char indexer_docstring[] = (
 
 static PyObject *indexer_build_index(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // args: char *inputfilename, char *preset, int sc, int bc, int ec, int sc2, int bc2, int ec2, char *delimiter, char *meta_char, int line_skip, int force, int zero
-    char *inputfilename, *preset, *delimiter, *meta_char;
+    // args: char *inputfilename, char *preset, int sc, int bc, int ec, int sc2, int bc2, int ec2, char *delimiter, char *meta_char, int line_skip, char *region_split_character, int force, int zero
+    char *inputfilename, *preset, *delimiter, *meta_char, *region_split_character;
     int sc, bc, ec, sc2, bc2, ec2, line_skip, force, zero, result;
     // default arg values
-    preset = "";
-    delimiter = "\t";
-    meta_char = "#";
+    preset="";
+    delimiter="\t";
+    meta_char="#";
+    region_split_character=DEFAULT_REGION_SPLIT_CHARACTER_STR;
     sc = 0;
     bc = 0;
     ec = 0;
@@ -303,14 +307,14 @@ static PyObject *indexer_build_index(PyObject *self, PyObject *args, PyObject *k
     force = 0;
     zero = 0;
 
-    static char *kwlist[] = {"inputfilename", "preset", "sc", "bc", "ec", "sc2", "bc2", "ec2", "delimiter", "meta_char", "line_skip", "force", "zero", NULL};
+    static char *kwlist[] = {"inputfilename", "preset", "sc", "bc", "ec", "sc2", "bc2", "ec2", "delimiter", "meta_char", "line_skip", "region_split_character", "force", "zero", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|siiiiiissiii", kwlist, &inputfilename, &preset, &sc, &bc, &ec, &sc2, &bc2, &ec2, &delimiter, &meta_char, &line_skip, &force, &zero)){
-        PyErr_SetString(PairixError, "Argument error! build_index() requires the following args:\n<filename (str)>.\nOptional args:\n<preset (str)> one of the following strings: 'gff', 'bed', 'sam', 'vcf', 'psltbl' (1D-indexing) or 'pairs', 'merged_nodups', 'old_merged_nodups' (2D-indexing). If preset is '', at least some of the custom parameters must be given instead (sc, bc, ec, sc2, bc2, ec2, delimiter, comment_char, line_skip). (default '')\n<sc (int)> first sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc. If preset is not given, this one is required. (default 0)\n<bc (int)> first start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc. If preset is not given, this one is required. (default 0)\n<ec (int)> first end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec. (default 0)\n<sc2 (int)> second sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc2. If sc, bc are specified but not sc2 and bc2, it is 1D-indexed. (default 0)\n<bc2 (int)> second start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc2. (default 0)\n<ec2 (int)> second end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec2. (default 0)\n<delimiter (str)> delimiter (e.g. '\\t' or ' ') (default '\\t'). If preset is given, preset overrides delimiter.\n<meta_char (str)> comment character. Lines beginning with this character are skipped when creating an index. If preset is given, preset overrides comment_char (default '#')\n<line_skip (int)> number of lines to skip in the beginning. (default 0)\n<force (int)> If 1, overwrite existing index file. If 0, do not overwrite unless the index file is older than the bgzipped file. (default 0). <zero (int)> If 1, create a zero-based index. (default one-based)\n");
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|siiiiiissisii", kwlist, &inputfilename, &preset, &sc, &bc, &ec, &sc2, &bc2, &ec2, &delimiter, &meta_char, &line_skip, &region_split_character, &force, &zero)){
+        PyErr_SetString(PairixError, "Argument error! build_index() requires the following args:\n<filename (str)>.\nOptional args:\n<preset (str)> one of the following strings: 'gff', 'bed', 'sam', 'vcf', 'psltbl' (1D-indexing) or 'pairs', 'merged_nodups', 'old_merged_nodups' (2D-indexing). If preset is '', at least some of the custom parameters must be given instead (sc, bc, ec, sc2, bc2, ec2, delimiter, comment_char, line_skip, region_split_character). (default '')\n<sc (int)> first sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc. If preset is not given, this one is required. (default 0)\n<bc (int)> first start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc. If preset is not given, this one is required. (default 0)\n<ec (int)> first end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec. (default 0)\n<sc2 (int)> second sequence (chromosome) column index (1-based). Zero (0) means not specified. If preset is given, preset overrides sc2. If sc, bc are specified but not sc2 and bc2, it is 1D-indexed. (default 0)\n<bc2 (int)> second start position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides bc2. (default 0)\n<ec2 (int)> second end position column index (1-based). Zero (0) means not specified. If preset is given, preset overrides ec2. (default 0)\n<delimiter (str)> delimiter (e.g. '\\t' or ' ') (default '\\t'). If preset is given, preset overrides delimiter.\n<meta_char (str)> comment character. Lines beginning with this character are skipped when creating an index. If preset is given, preset overrides comment_char (default '#')\n<line_skip (int)> number of lines to skip in the beginning. (default 0)\n<region_split_character (char)> character used to separate two regions. (default '|')\n<force (int)> If 1, overwrite existing index file. If 0, do not overwrite unless the index file is older than the bgzipped file. (default 0). <zero (int)> If 1, create a zero-based index. (default one-based)\n");
         return NULL;
     }
 
-    result = build_index(inputfilename, preset, sc, bc, ec, sc2, bc2, ec2, delimiter, meta_char, line_skip, force, zero);
+    result = build_index(inputfilename, preset, sc, bc, ec, sc2, bc2, ec2, delimiter, meta_char, line_skip, region_split_character, force, zero);
 
     if (result == -1) {
         PyErr_SetString(PairixError, "Can't create index.");

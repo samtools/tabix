@@ -505,6 +505,11 @@ ulimit -n 2000
 <br>
 
 ## Version history
+
+### 0.2.5
+* `pairix` has now option `-w` which specifies region split character (default '|'). This option should be used for both indexing and querying.
+* `juicer_shortform2pairs.pl` is now available in the `util` folder.
+
 ### 0.2.4
 * Updated magic number for the new index, to avoid crash caused by different index structure.
 

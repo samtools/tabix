@@ -186,8 +186,11 @@ class PairixTest(unittest.TestCase):
         self.assertEqual(self.result, pr_result)
 
     def test_build_index_with_force_vcf(self):  ## recognizing file extension vcf.gz
+        print("ok")
         pypairix.build_index(TEST_FILE_1D, force=1)
+        print("ok")
         pr2 = pypairix.open(TEST_FILE_1D)
+        print("ok")
         query = '{}:{}-{}'.format(self.chrom, self.start, self.end)
         it2 = pr2.querys(query)
         pr2_result = [[x[0], x[1], x[1]] for x in it2]

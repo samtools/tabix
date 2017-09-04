@@ -35,6 +35,7 @@
 #include "bgzf.h"
 
 #define DEFAULT_REGION_SPLIT_CHARACTER   '|'
+#define DEFAULT_REGION_SPLIT_CHARACTER_STR  "|"
 
 #define TI_PRESET_GENERIC 0
 #define TI_PRESET_SAM     1
