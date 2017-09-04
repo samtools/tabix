@@ -56,17 +56,17 @@ struct __ti_iter_t {
         ti_intv_t intv;
 };
 
+ti_conf_t ti_conf_null = { 0, 0, 0, 0, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '@', 0 };
+ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_pairs = { TI_PRESET_PAIRS, 2, 3, 3, 4, 5, 5, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_merged_nodups = { TI_PRESET_MERGED_NODUPS, 2, 3, 3, 6, 7, 7, ' ', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_old_merged_nodups = { TI_PRESET_OLD_MERGED_NODUPS, 3, 4, 4, 7, 8, 8, ' ', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
 
-
-ti_conf_t ti_conf_null = { 0, 0, 0, 0, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '\t', '@', 0 };
-ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_pairs = { TI_PRESET_PAIRS, 2, 3, 3, 4, 5, 5, '\t', '#', 0 };
-ti_conf_t ti_conf_merged_nodups = { TI_PRESET_MERGED_NODUPS, 2, 3, 3, 6, 7, 7, ' ', '#', 0 };
-ti_conf_t ti_conf_old_merged_nodups = { TI_PRESET_OLD_MERGED_NODUPS, 3, 4, 4, 7, 8, 8, ' ', '#', 0 };
+char region_split_character = DEFAULT_REGION_SPLIT_CHARACTER;
 
 
 /***************
@@ -247,6 +247,10 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
         char *str_ptr;
         char sname_double[strlen(str->s)+1];
 	intv->tid = intv->beg = intv->end = intv->beg2 = intv->end2 = intv->bin = intv->bin2 =  -1;
+        if (idx->conf.region_split_character != region_split_character) {
+            fprintf(stderr, "[get_intv] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, idx->conf.region_split_character);
+            return -1;
+        }
 	if (ti_get_intv(&idx->conf, str->l, str->s, &x) == 0) {
 
 		char c = *x.se;
@@ -259,7 +263,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
                   *x.se2 = '\0';
                   strcpy(sname_double,x.ss);
                   str_ptr = sname_double+strlen(sname_double);
-                  *str_ptr=REGION_SPLIT_CHARACTER;
+                  *str_ptr=region_split_character;
                   str_ptr++;
                   strcpy(str_ptr,x.ss2);
                   intv->tid = get_tid(idx, sname_double);
@@ -470,7 +474,7 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 	int32_t i, size, ti_is_be;
 	khint_t k;
 	ti_is_be = bam_is_big_endian();
-	bgzf_write(fp, "PX2.001\1", 8);
+	bgzf_write(fp, "PX2.002\1", 8);
 	if (ti_is_be) {
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
@@ -559,7 +563,7 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 		return 0;
 	}
 	bgzf_read(fp, magic, 8);
-	if (strncmp(magic, "PX2.001\1", 8)) {
+	if (strncmp(magic, "PX2.002\1", 8)) {
 		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
 		return 0;
 	}
@@ -824,12 +828,18 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 
 // thie function can handle both 1d and 2d query automatically
 // if 1d, begin2 and end2 will have value -1.
+// query string error: -1
+// region_split_character not matching error: -2
 int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2)
 {
 	char *s, *p, *sname;
 	int i, l, k, h;
         int coord1s, coord1e, coord2s, coord2e, pos1s, pos2s;
 
+        if (idx->conf.region_split_character != region_split_character) {
+            fprintf(stderr, "[ti_parse_region2d] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, idx->conf.region_split_character);
+            return(-2);
+        }
 
 	l = strlen(str);
 	p = s = (char*)malloc(l+1);
@@ -839,7 +849,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	s[k] = 0;
 
         /* split by dimension */
-        for(i = 0; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
+        for(i = 0; i != k; i++) if( s[i] == region_split_character) break;
         s[i]=0;
 
         if(i == k) { //1d query
@@ -860,7 +870,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
           sname = (char*)malloc(l+1);
           strcpy(sname, s + coord1s);
           h=strlen(sname);
-          sname[h]= REGION_SPLIT_CHARACTER;
+          sname[h]= region_split_character;
           strcpy(sname+h+1, s+coord2s);
 
 
@@ -1153,7 +1163,12 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
    char chronly=1;
    int i;
 
-   if((sp = strchr(reg, REGION_SPLIT_CHARACTER)) != NULL){
+   if (t->idx->conf.region_split_character != region_split_character) {
+       fprintf(stderr, "[ti_querys_2d_general] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, t->idx->conf.region_split_character);
+       return(NULL);
+   }
+
+   if((sp = strchr(reg, region_split_character)) != NULL){
       if(sp == reg + 1 && reg[0]=='*') {    // '*|c:s-e'
          char *chr2 = sp + 1;
 
@@ -1171,7 +1186,7 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
             regions[i] = malloc((strlen(chr1list[i]) + strlen(chr2) + 2) * sizeof(char));
             strcpy(regions[i], chr1list[i]); 
             *(regions[i] + strlen(regions[i]) + 1) = 0;
-            *(regions[i] + strlen(regions[i])) = REGION_SPLIT_CHARACTER; 
+            *(regions[i] + strlen(regions[i])) = region_split_character; 
             strcat(regions[i], chr2);
          }
          free(chrpairlist);
@@ -1199,7 +1214,7 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
             regions[i] = malloc((strlen(chr2list[i]) + strlen(chr1) + 2) * sizeof(char));
             strcpy(regions[i], chr1);
             *(regions[i] + strlen(regions[i]) + 1) = 0;
-            *(regions[i] + strlen(regions[i])) = REGION_SPLIT_CHARACTER;
+            *(regions[i] + strlen(regions[i])) = region_split_character;
             strcat(regions[i], chr2list[i]);
          }
          free(chrpairlist);
@@ -1302,9 +1317,15 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 {
 	int tid;
         char namepair[1000], *str_ptr;
+
+        if (t->idx->conf.region_split_character != region_split_character) {
+            fprintf(stderr, "[ti_query_2d] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, t->idx->conf.region_split_character);
+            return 0;
+        }
+
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
-        *str_ptr = REGION_SPLIT_CHARACTER;
+        *str_ptr = region_split_character;
         str_ptr++;
         strcpy(str_ptr,name2);
 
@@ -1350,9 +1371,14 @@ int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
         char namepair[1000], *str_ptr;
+        if (t->idx->conf.region_split_character != region_split_character) {
+            fprintf(stderr, "[ti_query_2d_tid] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, t->idx->conf.region_split_character);
+            return -3;
+        }
+
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
-        *str_ptr = REGION_SPLIT_CHARACTER;
+        *str_ptr = region_split_character;
         str_ptr++;
         strcpy(str_ptr,name2);
 
@@ -1535,8 +1561,8 @@ int strcmp2d(const void* a, const void* b)
     char *aa=*(char**)a;
     char *bb=*(char**)b;
     char *a2,*b2;
-    char *a_split = strchr(aa,REGION_SPLIT_CHARACTER);
-    char *b_split = strchr(bb,REGION_SPLIT_CHARACTER);
+    char *a_split = strchr(aa,region_split_character);
+    char *b_split = strchr(bb,region_split_character);
     if(a_split && b_split) {  // 2D name
       c = a_split[0]; d=b_split[0];
       a2 = a_split+1; b2 = b_split+1;
@@ -1619,7 +1645,7 @@ char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpa
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
@@ -1631,7 +1657,7 @@ char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpa
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) { 
@@ -1658,7 +1684,7 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) k++;
     }
     *pn_sub_list = k;
@@ -1667,12 +1693,12 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) { 
          *b_split=0;
          sublist[k] = malloc((strlen(seqpair_list[i])+1)*sizeof(char));
          strcpy(sublist[k], seqpair_list[i]); 
-         *b_split =  REGION_SPLIT_CHARACTER;
+         *b_split =  region_split_character;
          k++;
       }
     }
@@ -1686,14 +1712,14 @@ char *flip_region ( char* s) {
     char s_flp[MAX_REGION_STR_LEN];
     int l, i, l2, split_pos;  
     l = strlen(s);
-    for(i = 0; i != l; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
+    for(i = 0; i != l; i++) if( s[i] == region_split_character) break;
     s[i]=0;
     split_pos = i;
     l2 = l-1-i;
     strcpy(s_flp, s + i + 1);
-    s_flp[l2] = REGION_SPLIT_CHARACTER;
+    s_flp[l2] = region_split_character;
     strcpy(s_flp + l2 + 1, s);
-    s[i]= REGION_SPLIT_CHARACTER;
+    s[i]= region_split_character;
     return(s_flp);
 }
 
@@ -1708,7 +1734,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
@@ -1720,7 +1746,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) { sublist[k] = seqpair_list[i]; k++; }
@@ -1743,7 +1769,7 @@ char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_se
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) k++;
     }
     *pn_sub_list = k;
@@ -1752,7 +1778,7 @@ char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_se
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], REGION_SPLIT_CHARACTER);
+      b_split = strchr(seqpair_list[i], region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) { sublist[k] = seqpair_list[i]; k++; }
     }
     assert (k = *pn_sub_list);
@@ -1775,7 +1801,7 @@ char **get_seq1_list_from_seqpair_list(char** seqpair_list, int n_seqpair_list, 
         // extract seq1 from all seqpairs in the seqpair_list 
         for(i=0;i<n_seqpair_list;i++){
           seqpair = seqpair_list[i];
-          b_split = strchr(seqpair, REGION_SPLIT_CHARACTER);
+          b_split = strchr(seqpair, region_split_character);
           b = b_split[0];
           b_split[0] = 0;
           seq1_list[i] = malloc((strlen(seqpair)+1)*sizeof(char));

@@ -659,7 +659,7 @@ pairix_exists2(PairixObject *self, PyObject *args)
     sname = (char*)malloc(strlen(chr1)+strlen(chr2)+2);
     strcpy(sname, chr1);
     h=strlen(sname);
-    sname[h]= REGION_SPLIT_CHARACTER;
+    sname[h]= DEFAULT_REGION_SPLIT_CHARACTER;
     strcpy(sname+h+1, chr2);
     int res = ti_get_tid(self->tb->idx, sname)!=-1?1:0;
     free(sname);
