@@ -42,7 +42,7 @@ open IN, "$infile" or die "Can't open $infile\n";
 while(<IN>){
   chomp;
   my ($s1,$c1,$p1,$f1,$s2,$c2,$p2,$f2) = (split/\s/)[0..7];
-  my $r1=$r2='.'; 
+  my $ri='.'; 
   $s1 = $s1==0?'+':'-';
   $s2 = $s2==0?'+':'-';
   next if(!exists $chromorder{$c1} || !exists $chromorder{$c2});  # chromosome filtering
