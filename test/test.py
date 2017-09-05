@@ -380,7 +380,7 @@ class PairixTest2DSpace(unittest.TestCase):
         pr2_result = build_it_result(it2, self.f_type)
         self.assertEqual(self.result, pr2_result)
 
-    def test_build_index_with_force_merged_nodups(self):  ## recognizing preset merged_nodups
+    def test_build_index_with_force_merged_nodups_with_no_preset(self):  ## recognizing custom parameters
         pypairix.build_index(TEST_FILE_2D_SPACE, delimiter=' ', sc=2, bc=3, ec=3, sc2=6, bc2=7, ec2=7, force=1)
         pr2 = pypairix.open(TEST_FILE_2D_SPACE)
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
