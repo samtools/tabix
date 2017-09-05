@@ -1,3 +1,4 @@
+#!/bin/bash
 ls -1 samples/*pairs.gz |xargs -I{} pairix -f {}
 pairix -f samples/SRR1171591.variants.snp.vqsr.p.vcf.gz
 pairix -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample1.txt.gz
