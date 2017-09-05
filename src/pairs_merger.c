@@ -64,7 +64,13 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
 
     // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
     fprintf(stderr,"Opening files...\n");
-    for(i=0;i<n;i++)  tbs[i] = load_from_file(fn[i]);
+    for(i=0;i<n;i++)  {
+       tbs[i] = load_from_file(fn[i]);
+       if(i==0) region_split_character = get_region_split_character(tbs[i]);
+       else if(region_split_character != get_region_split_character(tbs[i])){
+           fprintf(stderr,"Merging is allowed only for files with the same region_split_character.\n"); return(1);
+       }
+    }
 
     // get a sorted unique seqname list
     fprintf(stderr,"creating a sorted unique seqname list...\n");

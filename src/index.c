@@ -247,10 +247,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
         char *str_ptr;
         char sname_double[strlen(str->s)+1];
 	intv->tid = intv->beg = intv->end = intv->beg2 = intv->end2 = intv->bin = intv->bin2 =  -1;
-        if (idx->conf.region_split_character != region_split_character) {
-            fprintf(stderr, "[get_intv] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, idx->conf.region_split_character);
-            return -1;
-        }
+        char region_split_character = idx->conf.region_split_character;
 	if (ti_get_intv(&idx->conf, str->l, str->s, &x) == 0) {
 
 		char c = *x.se;
@@ -835,11 +832,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	char *s, *p, *sname;
 	int i, l, k, h;
         int coord1s, coord1e, coord2s, coord2e, pos1s, pos2s;
-
-        if (idx->conf.region_split_character != region_split_character) {
-            fprintf(stderr, "[ti_parse_region2d] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, idx->conf.region_split_character);
-            return(-2);
-        }
+        char region_split_character = idx->conf.region_split_character;
 
 	l = strlen(str);
 	p = s = (char*)malloc(l+1);
@@ -1163,10 +1156,7 @@ sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
    char chronly=1;
    int i;
 
-   if (t->idx->conf.region_split_character != region_split_character) {
-       fprintf(stderr, "[ti_querys_2d_general] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, t->idx->conf.region_split_character);
-       return(NULL);
-   }
+   char region_split_character = t->idx->conf.region_split_character;
 
    if((sp = strchr(reg, region_split_character)) != NULL){
       if(sp == reg + 1 && reg[0]=='*') {    // '*|c:s-e'
@@ -1317,11 +1307,7 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 {
 	int tid;
         char namepair[1000], *str_ptr;
-
-        if (t->idx->conf.region_split_character != region_split_character) {
-            fprintf(stderr, "[ti_query_2d] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, t->idx->conf.region_split_character);
-            return 0;
-        }
+        char region_split_character = t->idx->conf.region_split_character;
 
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
@@ -1371,10 +1357,7 @@ int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
         char namepair[1000], *str_ptr;
-        if (t->idx->conf.region_split_character != region_split_character) {
-            fprintf(stderr, "[ti_query_2d_tid] The region split character (%c) doesn't match the region split character in the index (%c). Consider -w option?\n", region_split_character, t->idx->conf.region_split_character);
-            return -3;
-        }
+        char region_split_character = t->idx->conf.region_split_character;
 
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
@@ -1863,4 +1846,7 @@ char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
 }
 
 
-
+char get_region_split_character(pairix_t *t)
+{
+    return(t->idx->conf.region_split_character);
+}

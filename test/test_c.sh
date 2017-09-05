@@ -78,6 +78,16 @@ if [ ! -z "$(diff log1 log2)" ]; then
 fi
 
 
+## region_split_character
+pairix -w'^' -f samples/test_4dn.pairs.gz
+pairix samples/test_4dn.pairs.gz 'chr10^chr20' > log1
+gunzip -c samples/test_4dn.pairs.gz | awk '$2=="chr10" && $4=="chr20"' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "test region_split_character failed"
+  return 1;
+fi
+pairix -f samples/test_4dn.pairs.gz  ## revert
+
 
 ## process merged_nodups
 source util/process_merged_nodup.sh samples/test_merged_nodups.txt
@@ -140,6 +150,22 @@ if [ ! -z "$(diff out out2.bsorted.pairs)" ]; then
 fi
 rm -f out out2.bsorted.pairs out2.pairs out.gz.px2 out2.bsorted.pairs.gz.px2
 
+## pairs_merger w/ region_split_character
+bin/pairs_merger samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | bgzip -c > out.gz
+pairix -w'^' -f -s2 -d6 -b3 -e3 -u7 -T out.gz
+# compare with the approach of concatenating and resorting.
+chmod +x test/inefficient-merger-for-testing
+test/inefficient-merger-for-testing . out2 merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz
+gunzip -f out2.bsorted.pairs.gz
+gunzip -f out.gz
+if [ ! -z "$(diff out out2.bsorted.pairs)" ]; then
+  echo "test 13 w/ region_split_character failed"
+  return 1;
+fi
+rm -f out out2.bsorted.pairs out2.pairs out.gz.px2 out2.bsorted.pairs.gz.px2
+# pairix -f -s2 -d6 -b3 -e3 -u7 -T out.gz  ## no need to revert since the file has been deleted
+
+
 
 ## streamer_1d
 bin/streamer_1d samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | bgzip -c > out.1d.pairs.gz
@@ -152,4 +178,16 @@ if [ ! -z "$(diff out.1d.pairs out2.1d.pairs)" ]; then
 fi
 rm -f out.1d.pairs out2.1d.pairs
 
+# streamer_1d with region_split_character
+pairix -w'^' -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz 
+bin/streamer_1d samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | bgzip -c > out.1d.pairs.gz
+gunzip -c samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | sort -t' ' -k2,2 -k3,3g | bgzip -c > out2.1d.pairs.gz
+gunzip -f out.1d.pairs.gz
+gunzip -f out2.1d.pairs.gz
+if [ ! -z "$(diff out.1d.pairs out2.1d.pairs)" ]; then
+  echo "test 14 w/ region_split_character failed"
+  return 1;
+fi
+rm -f out.1d.pairs out2.1d.pairs
+pairix -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz  ## revert
 

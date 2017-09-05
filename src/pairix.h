@@ -201,7 +201,7 @@ extern "C" {
 
         /* get delimiter */
         char ti_get_delimiter(ti_index_t *idx);
-
+        char get_region_split_character(pairix_t *t);
 
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 

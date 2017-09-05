@@ -60,6 +60,9 @@ int stream_1d(char *fn)
 
     tb = load_from_file(fn);
     if(tb==NULL) { fprintf(stderr,"file load failed\n"); return(1); }
+
+    region_split_character = get_region_split_character(tb);
+
     chrpair_list = ti_seqname(tb->idx, &n_chrpairs);
     if(chrpair_list==NULL) { fprintf(stderr, "Cannot retrieve key list\n"); return(1); }
     chr1_list = get_seq1_list_from_seqpair_list(chrpair_list, n_chrpairs, &n_chr1);  // 'chr1','chr2',...
