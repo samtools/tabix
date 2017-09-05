@@ -186,11 +186,8 @@ class PairixTest(unittest.TestCase):
         self.assertEqual(self.result, pr_result)
 
     def test_build_index_with_force_vcf(self):  ## recognizing file extension vcf.gz
-        print("ok")
         pypairix.build_index(TEST_FILE_1D, force=1)
-        print("ok")
         pr2 = pypairix.open(TEST_FILE_1D)
-        print("ok")
         query = '{}:{}-{}'.format(self.chrom, self.start, self.end)
         it2 = pr2.querys(query)
         pr2_result = [[x[0], x[1], x[1]] for x in it2]
@@ -258,7 +255,7 @@ class PairixTest2D(unittest.TestCase):
         it2 = pr2.querys2D(query)
         pr2_result = build_it_result(it2, self.f_type)
         self.assertEqual(self.result, pr2_result)
-
+        
 
 ## 2D query on 2D indexed file with chromosomes input in reverse order
 class PairixTest2D_reverse(unittest.TestCase):
@@ -332,6 +329,14 @@ class PairixTest2D_4DN(unittest.TestCase):
             self.assertEqual(error.exception.__str__(), "The index file exists. Please use force=1 to overwrite.")
         else:
             self.assertEqual(error.exception.message, "The index file exists. Please use force=1 to overwrite.")
+
+    def test_build_index_with_region_split_character(self):
+        pypairix.build_index(TEST_FILE_2D_4DN, region_split_character="^", force=1)
+        pr2 = pypairix.open(TEST_FILE_2D_4DN)
+        query = '{}:{}-{}^{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it2 = pr2.querys2D(query)
+        pr2_result = build_it_result(it2, self.f_type)
+        self.assertEqual(self.result, pr2_result)
 
     def test_build_index_with_force(self):   ## recognizing file extension pairs.gz
         pypairix.build_index(TEST_FILE_2D_4DN, force=1)
