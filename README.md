@@ -96,7 +96,7 @@ If you get an error message saying zlib cannot be found, try installing zlib fir
 sudo apt-get install zlib1g-dev
 
 # centos
-sudo apt-get install zlib-devel
+sudo yum install zlib-devel
 ```
 
 <br>
