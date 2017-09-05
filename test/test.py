@@ -336,6 +336,7 @@ class PairixTest2D_4DN(unittest.TestCase):
         query = '{}:{}-{}^{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
         it2 = pr2.querys2D(query)
         pr2_result = build_it_result(it2, self.f_type)
+        pypairix.build_index(TEST_FILE_2D_4DN, force=1)  # revert
         self.assertEqual(self.result, pr2_result)
 
     def test_build_index_with_force(self):   ## recognizing file extension pairs.gz
@@ -373,6 +374,14 @@ class PairixTest2DSpace(unittest.TestCase):
 
     def test_build_index_with_force_merged_nodups(self):  ## recognizing preset merged_nodups
         pypairix.build_index(TEST_FILE_2D_SPACE, "merged_nodups", force=1)
+        pr2 = pypairix.open(TEST_FILE_2D_SPACE)
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it2 = pr2.querys2D(query)
+        pr2_result = build_it_result(it2, self.f_type)
+        self.assertEqual(self.result, pr2_result)
+
+    def test_build_index_with_force_merged_nodups(self):  ## recognizing preset merged_nodups
+        pypairix.build_index(TEST_FILE_2D_SPACE, delimiter=' ', sc=2, bc=3, ec=3, sc2=6, bc2=7, ec2=7, force=1)
         pr2 = pypairix.open(TEST_FILE_2D_SPACE)
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
         it2 = pr2.querys2D(query)

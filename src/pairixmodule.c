@@ -231,9 +231,9 @@ int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int s
       conf.sc2 = sc2;
       conf.bc2 = bc2;
       conf.ec2 = ec2;
-      conf.delimiter = (delimiter)[0];
-      conf.region_split_character = (region_split_character)[0];
-      conf.meta_char = (int)((meta_char)[0]);
+      conf.delimiter = delimiter[0];
+      conf.region_split_character = region_split_character[0];
+      conf.meta_char = (int)(meta_char[0]);
       conf.line_skip = line_skip;
     }
     else if (strcmp(preset, "gff") == 0) conf = ti_conf_gff;
@@ -245,6 +245,18 @@ int build_index(char *inputfilename, char *preset, int sc, int bc, int ec, int s
     else if (strcmp(preset, "merged_nodups") == 0) conf = ti_conf_merged_nodups;
     else if (strcmp(preset, "old_merged_nodups") == 0) conf = ti_conf_old_merged_nodups;
     else return(-2);  // wrong preset
+
+    if(sc!=0) conf.sc=sc;
+    if(bc!=0) conf.bc=bc;
+    if(ec!=0) conf.ec=ec;
+    if(sc2!=0) conf.sc2=sc2;
+    if(bc2!=0) conf.bc2=bc2;
+    if(ec2!=0) conf.ec2=ec2;
+    if(line_skip!=0) conf.line_skip=line_skip;
+    if(strcmp(delimiter, "\t")) conf.delimiter = delimiter[0];
+    if(strcmp(meta_char, "#")) conf.meta_char = meta_char[0];
+    if(strcmp(region_split_character, DEFAULT_REGION_SPLIT_CHARACTER_STR)) conf.region_split_character = region_split_character[0];
+
 
     if(zero) conf.preset |= TI_FLAG_UCSC; // zero-based indexing
 
@@ -654,6 +666,7 @@ static PyObject *
 pairix_exists2(PairixObject *self, PyObject *args)
 {
     char *chr1, *chr2, *sname;
+    char region_split_character = get_region_split_character(self->tb);
     int h;
     if (!PyArg_ParseTuple(args, "ss:exists2", &chr1, &chr2)){
         PyErr_SetString(PairixError, "Argument error! exists2() takes the following args: <seqname1(chr1)> <seqname2(chr2)>\n");
@@ -663,7 +676,7 @@ pairix_exists2(PairixObject *self, PyObject *args)
     sname = (char*)malloc(strlen(chr1)+strlen(chr2)+2);
     strcpy(sname, chr1);
     h=strlen(sname);
-    sname[h]= DEFAULT_REGION_SPLIT_CHARACTER;
+    sname[h]= region_split_character;
     strcpy(sname+h+1, chr2);
     int res = ti_get_tid(self->tb->idx, sname)!=-1?1:0;
     free(sname);
