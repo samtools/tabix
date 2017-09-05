@@ -255,7 +255,7 @@ class PairixTest2D(unittest.TestCase):
         it2 = pr2.querys2D(query)
         pr2_result = build_it_result(it2, self.f_type)
         self.assertEqual(self.result, pr2_result)
-        
+
 
 ## 2D query on 2D indexed file with chromosomes input in reverse order
 class PairixTest2D_reverse(unittest.TestCase):
