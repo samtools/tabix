@@ -90,6 +90,15 @@ make
 # eg: PATH=~/git/pairix/bin/:~/git/pairix/util:~/git/pairix/util/bam2pairs:$PATH
 ```
 
+If you get an error message saying zlib cannot be found, try installing zlib first as below before `make`.
+```
+# ubuntu
+sudo apt-get install zlib1g-dev
+
+# centos
+sudo apt-get install zlib-devel
+```
+
 <br>
 
 ### Usage for pairix
