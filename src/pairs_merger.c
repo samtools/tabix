@@ -66,8 +66,8 @@ int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result shoul
     fprintf(stderr,"Opening files...\n");
     for(i=0;i<n;i++)  {
        tbs[i] = load_from_file(fn[i]);
-       if(i==0) region_split_character = get_region_split_character(tbs[i]);
-       else if(region_split_character != get_region_split_character(tbs[i])){
+       if(i==0) global_region_split_character = get_region_split_character(tbs[i]);
+       else if(global_region_split_character != get_region_split_character(tbs[i])){
            fprintf(stderr,"Merging is allowed only for files with the same region_split_character.\n"); return(1);
        }
     }

@@ -66,7 +66,7 @@ ti_conf_t ti_conf_pairs = { TI_PRESET_PAIRS, 2, 3, 3, 4, 5, 5, '\t', DEFAULT_REG
 ti_conf_t ti_conf_merged_nodups = { TI_PRESET_MERGED_NODUPS, 2, 3, 3, 6, 7, 7, ' ', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
 ti_conf_t ti_conf_old_merged_nodups = { TI_PRESET_OLD_MERGED_NODUPS, 3, 4, 4, 7, 8, 8, ' ', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
 
-char region_split_character = DEFAULT_REGION_SPLIT_CHARACTER;
+char global_region_split_character = DEFAULT_REGION_SPLIT_CHARACTER;
 
 
 /***************
@@ -1544,8 +1544,8 @@ int strcmp2d(const void* a, const void* b)
     char *aa=*(char**)a;
     char *bb=*(char**)b;
     char *a2,*b2;
-    char *a_split = strchr(aa,region_split_character);
-    char *b_split = strchr(bb,region_split_character);
+    char *a_split = strchr(aa, global_region_split_character);
+    char *b_split = strchr(bb, global_region_split_character);
     if(a_split && b_split) {  // 2D name
       c = a_split[0]; d=b_split[0];
       a2 = a_split+1; b2 = b_split+1;
@@ -1628,7 +1628,7 @@ char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpa
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
@@ -1640,7 +1640,7 @@ char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpa
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) { 
@@ -1667,7 +1667,7 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) k++;
     }
     *pn_sub_list = k;
@@ -1676,12 +1676,12 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) { 
          *b_split=0;
          sublist[k] = malloc((strlen(seqpair_list[i])+1)*sizeof(char));
          strcpy(sublist[k], seqpair_list[i]); 
-         *b_split =  region_split_character;
+         *b_split =  global_region_split_character;
          k++;
       }
     }
@@ -1691,7 +1691,7 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
 }
 
 /* convert string 'region1|region2' to 'region2|region1' */
-char *flip_region ( char* s) {
+char *flip_region ( char* s, char region_split_character) {
     char s_flp[MAX_REGION_STR_LEN];
     int l, i, l2, split_pos;  
     l = strlen(s);
@@ -1717,7 +1717,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
@@ -1729,7 +1729,7 @@ char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_se
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       b = b_split[0];
       b_split[0] = 0;
       if ( strcmp(seqpair_list[i], seq1)==0 ) { sublist[k] = seqpair_list[i]; k++; }
@@ -1752,7 +1752,7 @@ char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_se
     // first round, count the number 
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) k++;
     }
     *pn_sub_list = k;
@@ -1761,7 +1761,7 @@ char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_se
     sublist = malloc((*pn_sub_list)*sizeof(char*));
     k=0;
     for(i=0;i<n_seqpair_list;i++){
-      b_split = strchr(seqpair_list[i], region_split_character);
+      b_split = strchr(seqpair_list[i], global_region_split_character);
       if ( strcmp(b_split+1, seq2)==0 ) { sublist[k] = seqpair_list[i]; k++; }
     }
     assert (k = *pn_sub_list);
@@ -1784,7 +1784,7 @@ char **get_seq1_list_from_seqpair_list(char** seqpair_list, int n_seqpair_list, 
         // extract seq1 from all seqpairs in the seqpair_list 
         for(i=0;i<n_seqpair_list;i++){
           seqpair = seqpair_list[i];
-          b_split = strchr(seqpair, region_split_character);
+          b_split = strchr(seqpair, global_region_split_character);
           b = b_split[0];
           b_split[0] = 0;
           seq1_list[i] = malloc((strlen(seqpair)+1)*sizeof(char));

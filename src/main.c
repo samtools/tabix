@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     int c;
     ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
-    char delimiter = 0;
+    char delimiter = 0, region_split_character = DEFAULT_REGION_SPLIT_CHARACTER;
     char line[MAX_REGIONLINE_LEN];
     static int help_flag = 0;
 

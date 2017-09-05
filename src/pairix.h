@@ -102,7 +102,7 @@ typedef struct {
 
 
 extern ti_conf_t ti_conf_null, ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam, ti_conf_pairs, ti_conf_merged_nodups, ti_conf_old_merged_nodups; // preset
-extern char region_split_character; // separator for 2D (e.g. '|' in "X:1-2000|Y:1-2000")
+extern char global_region_split_character; // separator for 2D (e.g. '|' in "X:1-2000|Y:1-2000")
 
 
 #ifdef __cplusplus
@@ -206,7 +206,7 @@ extern "C" {
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
         /* convert string 'region1|region2' to 'region2|region1' */
-        char* flip_region(char *s);
+        char* flip_region(char *s, char region_split_character);
 
         /* create an empty merge_iter_t struct */
         merged_iter_t *create_merged_iter(int n);

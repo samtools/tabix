@@ -557,7 +557,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
 
     tid_test = ti_querys_tid(self->tb, reg);
     if (tid_test == -1) {
-        reg2 = flip_region(reg);
+        reg2 = flip_region(reg, get_region_split_character(self->tb));
         tid_test_rev = ti_querys_tid(self->tb, reg2);
         if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
             result = ti_querys_2d_general(self->tb, reg2);
