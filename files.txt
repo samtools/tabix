@@ -1,0 +1,9 @@
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/pypairix.cpython-35m-darwin.so
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/pypairix.py
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/__pycache__/pypairix.cpython-35.pyc
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/EGG-INFO/dependency_links.txt
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/EGG-INFO/native_libs.txt
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/EGG-INFO/not-zip-safe
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/EGG-INFO/PKG-INFO
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/EGG-INFO/SOURCES.txt
+/Users/soo/anaconda3/lib/python3.5/site-packages/pypairix-0.2.5-py3.5-macosx-10.6-x86_64.egg/EGG-INFO/top_level.txt
