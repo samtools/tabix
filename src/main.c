@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     int c;
     ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
-    char delimiter = 0;
+    char delimiter = 0, region_split_character = DEFAULT_REGION_SPLIT_CHARACTER;
     char line[MAX_REGIONLINE_LEN];
     static int help_flag = 0;
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
         };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tn", long_options, &option_index)) >= 0) {
+    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tnw:", long_options, &option_index)) >= 0) {
         switch (c) {
             case 0: break;  // long option
             case 'L': region_file=1; break;
@@ -142,6 +142,7 @@ int main(int argc, char *argv[])
             case 'u': conf.bc2 = atoi(optarg); break;
             case 'v': conf.ec2 = atoi(optarg); break;
             case 'T': delimiter = ' '; break;
+            case 'w': region_split_character = optarg[0]; break;
             case 'l': list_chrms = 1; break;
             case 'h': print_header = 1; break;
             case 'H': print_only_header = 1; break;
@@ -170,6 +171,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "         -L         query region is not a string but a file listing query regions\n");
         fprintf(stderr, "         -S INT     skip first INT lines [0]\n");
         fprintf(stderr, "         -c CHAR    symbol for comment/meta lines [#]\n");
+        fprintf(stderr, "         -w CHAR    symbol for query region separator [|]\n");
         fprintf(stderr, "         -r FILE    replace the header with the content of FILE [null]\n");
         fprintf(stderr, "         -0         zero-based coordinate\n");
         fprintf(stderr, "         -h         print also the header lines\n");
@@ -198,6 +200,7 @@ int main(int argc, char *argv[])
     if (skip >= 0) conf.line_skip = skip;
     if (meta >= 0) conf.meta_char = meta;
     if (delimiter) conf.delimiter = delimiter;
+    if (region_split_character != conf.region_split_character) conf.region_split_character = region_split_character;
     if(print_only_linecount) {
         ti_index_t *idx;
         int i, n;
@@ -262,6 +265,8 @@ int main(int argc, char *argv[])
                 && conf.sc==ti_conf_gff.sc
                 && conf.bc==ti_conf_gff.bc
                 && conf.ec==ti_conf_gff.ec
+                && conf.delimiter==ti_conf_gff.delimiter
+                && conf.region_split_character==ti_conf_gff.region_split_character
                 && conf.meta_char==ti_conf_gff.meta_char
                 && conf.line_skip==ti_conf_gff.line_skip )
                 fprintf(stderr,"[pairix] The file type not recognised and -p not given, using the preset [gff].\n");
@@ -347,6 +352,7 @@ int main(int argc, char *argv[])
                     while( fgets(line, MAX_REGIONLINE_LEN, FH)) {
                         line[strlen(line)-1]=0; // trim '\n'
                         sequential_iter_t *siter = ti_querys_2d_general(t,line);
+                        if(siter == NULL) return 1;
                         while((s = sequential_ti_read(siter, &len)) != 0){
                             fputs(s, stdout); fputc('\n',stdout);
                         }
@@ -357,6 +363,7 @@ int main(int argc, char *argv[])
             } else {
                 for (i = optind + 1; i < argc; ++i) {
                     sequential_iter_t *siter = ti_querys_2d_general(t,argv[i]);
+                    if(siter == NULL) return 1;
                     while((s = sequential_ti_read(siter, &len)) != 0){
                         fputs(s, stdout); fputc('\n',stdout);
                     }

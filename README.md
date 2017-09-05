@@ -90,6 +90,15 @@ make
 # eg: PATH=~/git/pairix/bin/:~/git/pairix/util:~/git/pairix/util/bam2pairs:$PATH
 ```
 
+If you get an error message saying zlib cannot be found, try installing zlib first as below before `make`.
+```
+# ubuntu
+sudo apt-get install zlib1g-dev
+
+# centos
+sudo yum install zlib-devel
+```
+
 <br>
 
 ### Usage for pairix
@@ -505,6 +514,13 @@ ulimit -n 2000
 <br>
 
 ## Version history
+
+### 0.2.5
+* `pairix` has now option `-w` which specifies region split character (default '|') during indexing. A query string should use this character as a separater.
+* `pypairix` also now has a parameter `region_split_character` in function `build_index` (default '|')
+* `juicer_shortform2pairs.pl` is now available in the `util` folder.
+* Index structure changed - please re-index if you're using an older version of index.
+
 ### 0.2.4
 * Updated magic number for the new index, to avoid crash caused by different index structure.
 

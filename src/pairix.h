@@ -28,13 +28,14 @@
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
-#define PACKAGE_VERSION "0.2.4"
+#define PACKAGE_VERSION "0.2.5"
 
 #include <stdint.h>
 #include "kstring.h"
 #include "bgzf.h"
 
-#define REGION_SPLIT_CHARACTER   '|'
+#define DEFAULT_REGION_SPLIT_CHARACTER   '|'
+#define DEFAULT_REGION_SPLIT_CHARACTER_STR  "|"
 
 #define TI_PRESET_GENERIC 0
 #define TI_PRESET_SAM     1
@@ -63,7 +64,8 @@ typedef struct {
 	int32_t preset;
 	int32_t sc, bc, ec; // seq col., beg col. and end col.
 	int32_t sc2, bc2, ec2; // seq col., beg col. and end col. for the second coordinate
-        char delimiter;  // 1 byte for char, but 3 bytes padded so that integers are aligned by 4 bytes.
+        char delimiter;  // 2 bytes for 2 chars (this and region_split_character), but 2 bytes padded so that integers are aligned by 4 bytes.
+        char region_split_character;
 	int32_t meta_char, line_skip;
 } ti_conf_t;  // size 40.
 
@@ -100,6 +102,8 @@ typedef struct {
 
 
 extern ti_conf_t ti_conf_null, ti_conf_gff, ti_conf_bed, ti_conf_psltbl, ti_conf_vcf, ti_conf_sam, ti_conf_pairs, ti_conf_merged_nodups, ti_conf_old_merged_nodups; // preset
+extern char global_region_split_character; // separator for 2D (e.g. '|' in "X:1-2000|Y:1-2000")
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -197,12 +201,12 @@ extern "C" {
 
         /* get delimiter */
         char ti_get_delimiter(ti_index_t *idx);
-
+        char get_region_split_character(pairix_t *t);
 
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
         /* convert string 'region1|region2' to 'region2|region1' */
-        char* flip_region(char *s);
+        char* flip_region(char *s, char region_split_character);
 
         /* create an empty merge_iter_t struct */
         merged_iter_t *create_merged_iter(int n);
