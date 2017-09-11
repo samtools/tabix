@@ -1,8 +1,14 @@
 # pairix
-* Pairix is a tool for indexing and querying on a block-compressed text file containing a pair of genomic coordinates.
+* Pairix is a tool for indexing and querying on a block-compressed text file containing pairs of genomic coordinates.
 * Pairix is a stand-alone C program that was written on top of tabix (https://github.com/samtools/tabix) as a tool for the 4DN-standard pairs file format describing Hi-C data: [pairs_format_specification.md](pairs_format_specification.md)
 * However, Pairix can be used as a generic tool for indexing and querying any bgzipped text file containing genomic coordinates, for either 2D- or 1D- indexing and querying.
-* For example, given a text file like below, you want to extract specific lines. An awk command, for example, would read the file from the beginning to the end. Pairix creates an index and uses it to accesses the file from a relevant position by taking advantage of the bgzf compression, allowing for a fast query for large files.
+* For example: given the custom text file below, you want to extract specific lines from the Pairs file further below. An `awk` command would read the Pairs file from beginning to end. Pairix creates an index and uses it to access the file from a relevant position by taking advantage of bgzf compression, allowing for a fast query on large files.
+
+  **Some custom text file**
+  ```
+  chr1  10000  20000 chr2  30000  50000  3.5
+  chr1  30000  40000 chr3  10000  70000  4.6
+  ```
 
   **Pairs format**
   ```
@@ -21,13 +27,7 @@
   EAS139:136:FC706VJ:2:1286:25:275154 chr1 30000 chr3 40000 + -
   ```
 
-  **Some custom text file**
-  ```
-  chr1  10000  20000 chr2  30000  50000  3.5
-  chr1  30000  40000 chr3  10000  70000  4.6
-  ```
-
-* Bgzip can be found either in this repo or https://github.com/samtools/tabix (original).
+* Bgzip can be found either in *this repo* or https://github.com/samtools/tabix (original).
 
 
 ## Table of contents
@@ -65,16 +65,16 @@
 <br>
 
 ## Availability
-* Pairix is available either as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
+* Pairix is available as a stand-alone command-line program, a python library (pypairix), and an R package (Rpairix https://github.com/4dn-dcic/Rpairix)
 * Various utils including `bam2pairs`, `merged_nodups2pairs.pl`, `pairs_merger` etc. are available within this repo.
 * The `bgzip` program that is provided as part of the repo is identical to the original program in https://github.com/samtools/tabix.
 
 <br>
 
 ## Input file format
-* For 2D indexing, the text file must be first sorted by two chromosome columns and then by the first position column. For 1D-indexing, the file must be sorted by a chromosome column and then by a position column.
-* The file must be compressed using bgzip. The file is either tab-delimited or space-delimited.
-* The index file has an extension `.px2`.
+* For 2D indexing, the input file of paired coordinates must first be sorted by the two chromosome columns and then by the first genomic position column. For 1D indexing, the file must be sorted by a chromosome column and then by a position column.
+* The input file must be compressed using bgzip and is either tab-delimited or space-delimited.
+* The resulting index file will be given the extension `.px2`.
 
 <br>
 
@@ -140,7 +140,7 @@ pairix textfile.gz region1 [region2 [...]]  ## region is in the following format
 pairix textfile.gz '<chr>:<start>-<end>' '<chr>:<start>-<end>' ...
 
 # for 2D indexed file
-pairix textfile.gz '<chr1>:<start1>-<end1>|<chr2>:<start2>-<end2>' ...    # make sure to quote, so '|' is not interpreted as a pipe.
+pairix textfile.gz '<chr1>:<start1>-<end1>|<chr2>:<start2>-<end2>' ...    # make sure to quote so '|' is not interpreted as a pipe.
 pairix textfile.gz '*|<chr2>:<start2>-<end2>'  # wild card is accepted for 1D query on 2D indexed file
 pairix textfile.gz '<chr1>:<start1>-<end1>|*' # wild card is accepted for 1D query on 2D indexed file
 
@@ -165,8 +165,8 @@ pairix -f samples/4dn.bsorted.chr21_22_only.pairs.gz
 # Pairs extension .pairs.gz is automatically recognized.
 ```
 
-#### Preparing a double-chromosome-block sorted `merged_nodups.txt` file (Juicer style pairs file)
-(column 2 and 6 are chromosomes (chr1 and chr2), column 3 is position of the first coordinate (pos1)).
+#### Preparing a double-chromosome-block sorted `merged_nodups.txt` file (Juicer-style pairs file)
+(columns 2 and 6 are chromosomes (chr1 and chr2), and column 3 is position of the first coordinate (pos1)).
 ```
 # sorting & bgzipping
 sort -t' ' -k2,2 -k6,6 -k3,3n -k7,7n merged_nodups.txt |bgzip -c > samples/merged_nodups.space.chrblock_sorted.subsample3.txt
@@ -456,7 +456,7 @@ Usage: gunzip -c <input.pairs.gz> | fragment_4dnpairs.pl [--allow-replacement] -
 ```
 
 ### Pairs_merger
-Pairs_merger is a tool that merges indexed pairs files that are already sorted and creates a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k interators. It does not require additional memory nor produces temporary files.
+Pairs_merger is a tool that merges indexed pairs files that are already sorted, creating a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k iterators. It neither requires additional memory nor produces any temporary files.
 
 #### Usage for pairs_merger
 ```
@@ -472,7 +472,7 @@ pairs_merger <in1.gz> <in2.gz> <in3.gz> ... | bgzip -c > <out.gz>
 pairix [options] out.gz
 ```
 
-#### Usage Examples for pairs_merger
+#### Usage examples for pairs_merger
 ```
 bin/pairs_merger samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz samples/merged_nodups.space.chrblock_sorted.subsample3.txt.gz | bin/bgzip -c > out.gz
 bin/pairix -f -p merged_nodups out.gz
@@ -481,7 +481,7 @@ bin/pairix -f -p merged_nodups out.gz
 
 
 ### Streamer_1d
-Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort (not recommended).
+Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort and is therefore *not recommended*.
 
 #### Usage for streamer_1d
 ```
@@ -498,7 +498,7 @@ bin/streamer_1d samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz | 
 ##### The tool creates many file pointers for the input file, which is equivalent to opening many files simultaneously. Your OS may have a limit on the number of files that can be open at a time. For example, for Mac El Captain and Sierra, it is by default set to 256. This is usually enough, but in case the number of chromosomes in your pairs file happen to be larger than or close to this limit, the tool may produce an error message saying file limit is exceeded. You can increase this limit outside the program. For example, for Mac El Captain and Sierra, the following command raises the limit to 2000.
 ```
 # view the limits
-uimit -a
+ulimit -a
 
 # raise the limit to 2000
 ulimit -n 2000
