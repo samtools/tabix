@@ -125,7 +125,6 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 * Custom column specification (-s, -d, -b, -e, -u, -v) overrides file extension recognition. The custom specification must always have at least chr1_column (-s).
 * use `-w <character>` option to change region split character (default '|', see below the [Querying](#querying) section for details). This is useful when your chromosome names contain the '|' character. (e.g. `-w '^'`)
 
-<br>
 
 #### Querying
 ```
@@ -144,14 +143,11 @@ pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one
 ```
 * The default region split character is '|', which can be changed by using the `-w` option when building an index.
 
-<br>
-
 #### List of chromosome pairs
 This command prints out all chromosome pairs in the file.
 ```
 pairix -l textfile.gz
 ```
-<br>
 
 #### Total linecount
 This is equivalent to but much faster than `gunzip -c | wc -l`.
