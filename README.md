@@ -38,9 +38,9 @@
     * [Usage](#usage-for-pairix)
         * [compression](#compression)
         * [indexing](#indexing)
+        * [querying](#querying)
         * [List of chromosome pairs](#list-of-chromosome-pairs)
         * [Total linecount](#total-linecount)
-        * [querying](#querying)
     * [Examples](#usage-examples-for-pairix)
 * [Pypairix](#pypairix)
     * [Installation](#installation-for-pypairix)
@@ -125,20 +125,7 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 * Custom column specification (-s, -d, -b, -e, -u, -v) overrides file extension recognition. The custom specification must always have at least chr1_column (-s).
 * use `-w <character>` option to change region split character (default '|', see below the [Querying](#querying) section for details). This is useful when your chromosome names contain the '|' character. (e.g. `-w '^'`)
 
-
-#### List of chromosome pairs
-This command prints out all chromosome pairs in the file. It assumes that the index file exists.
-```
-pairix -l textfile.gz
-```
-
-#### Total linecount
-This is equivalent to but much faster than `gunzip -c | wc -l`. The line count is stored in the index and this command assumes that the index file exists.
-```
-pairix -n textfile.gz
-```
-
-#### querying
+#### Querying
 ```
 pairix textfile.gz region1 [region2 [...]]  ## region is in the following format.
 
@@ -154,6 +141,18 @@ pairix textfile.gz '<chr1>:<start1>-<end1>|*' # wild card is accepted for 1D que
 pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one region string per line
 ```
 * The default region split character is '|', which can be changed by using the `-w` option when building an index.
+
+#### List of chromosome pairs
+This command prints out all chromosome pairs in the file.
+```
+pairix -l textfile.gz
+```
+
+#### Total linecount
+This is equivalent to but much faster than `gunzip -c | wc -l`.
+```
+pairix -n textfile.gz
+```
 
 <br>
 
