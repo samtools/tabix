@@ -89,6 +89,10 @@ make
 # In order to use bam2pairs, add util/bam2pairs to PATH
 # eg: PATH=~/git/pairix/bin/:~/git/pairix/util:~/git/pairix/util/bam2pairs:$PATH
 ```
+Alternatively, `conda install pairix` can be used to install both Pairix and Pypairix together. This requires Anaconda or Miniconda.
+```
+conda install pairix
+```
 
 If you get an error message saying zlib cannot be found, try installing zlib first as below before `make`.
 ```
@@ -119,15 +123,17 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 * presets can be used for indexing : `pairs`, `merged_nodups`, `old_merged_nodups` for 2D indexing, `gff`, `vcf`, `bed`, `sam` for 1D indexing. Default is `pairs`.
 * For the recognized file extensions, the `-p` option can be dropped: `.pairs.gz`, `.vcf.gz`, `gff.gz`, `bed.gz`, `sam.gz`
 * Custom column specification (-s, -d, -b, -e, -u, -v) overrides file extension recognition. The custom specification must always have at least chr1_column (-s).
+* use `-w <character>` option to change region split character (default '|', see below the [Querying](#querying) section for details). This is useful when your chromosome names contain the '|' character. (e.g. `-w '^'`)
 
 
 #### List of chromosome pairs
+This command prints out all chromosome pairs in the file. It assumes that the index file exists.
 ```
 pairix -l textfile.gz
 ```
 
 #### Total linecount
-This is equivalent to but much faster than `gunzip -c | wc -l`
+This is equivalent to but much faster than `gunzip -c | wc -l`. The line count is stored in the index and this command assumes that the index file exists.
 ```
 pairix -n textfile.gz
 ```
@@ -147,6 +153,7 @@ pairix textfile.gz '<chr1>:<start1>-<end1>|*' # wild card is accepted for 1D que
 # using a file listing query regions
 pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one region string per line
 ```
+* The default region split character is '|', which can be changed by using the `-w` option when building an index.
 
 <br>
 
@@ -298,6 +305,11 @@ python setup.py install
 # testing the python module
 python test/test.py
 ```
+Alternatively, `conda install pairix` can be used to install both Pairix and Pypairix together. This requires Anaconda or Miniconda.
+```
+conda install pairix
+```
+
 
 <br>
 
