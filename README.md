@@ -90,9 +90,7 @@ make
 # eg: PATH=~/git/pairix/bin/:~/git/pairix/util:~/git/pairix/util/bam2pairs:$PATH
 ```
 Alternatively, `conda install pairix` can be used to install both Pairix and Pypairix together. This requires Anaconda or Miniconda.
-```
-conda install pairix
-```
+<br>
 
 If you get an error message saying zlib cannot be found, try installing zlib first as below before `make`.
 ```
@@ -306,10 +304,6 @@ python setup.py install
 python test/test.py
 ```
 Alternatively, `conda install pairix` can be used to install both Pairix and Pypairix together. This requires Anaconda or Miniconda.
-```
-conda install pairix
-```
-
 
 <br>
 
