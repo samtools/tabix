@@ -36,9 +36,9 @@
 * [Pairix](#pairix)
     * [Installation](#installation-for-pairix)
     * [Usage](#usage-for-pairix)
-        * [compression](#compression)
-        * [indexing](#indexing)
-        * [querying](#querying)
+        * [Compression](#compression)
+        * [Indexing](#indexing)
+        * [Querying](#querying)
         * [List of chromosome pairs](#list-of-chromosome-pairs)
         * [Total linecount](#total-linecount)
     * [Examples](#usage-examples-for-pairix)
@@ -106,12 +106,12 @@ sudo yum install zlib-devel
 <br>
 
 ### Usage for pairix
-#### compression
+#### Compression
 ```
 bgzip textfile
 ```
 
-#### indexing
+#### Indexing
 ```
 pairix textfile.gz  # for recognized file extension
 pairix -p <preset> textfile.gz
@@ -124,6 +124,8 @@ pairix -s<chr1_column> [-d<chr2_column>] -b<pos1_start_column> -e<pos1_end_colum
 * For the recognized file extensions, the `-p` option can be dropped: `.pairs.gz`, `.vcf.gz`, `gff.gz`, `bed.gz`, `sam.gz`
 * Custom column specification (-s, -d, -b, -e, -u, -v) overrides file extension recognition. The custom specification must always have at least chr1_column (-s).
 * use `-w <character>` option to change region split character (default '|', see below the [Querying](#querying) section for details). This is useful when your chromosome names contain the '|' character. (e.g. `-w '^'`)
+
+<br>
 
 #### Querying
 ```
@@ -142,11 +144,14 @@ pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one
 ```
 * The default region split character is '|', which can be changed by using the `-w` option when building an index.
 
+<br>
+
 #### List of chromosome pairs
 This command prints out all chromosome pairs in the file.
 ```
 pairix -l textfile.gz
 ```
+<br>
 
 #### Total linecount
 This is equivalent to but much faster than `gunzip -c | wc -l`.
