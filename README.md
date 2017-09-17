@@ -53,6 +53,8 @@
     * [merged_nodup2pairs.pl](#merged_nodup2pairspl)
     * [old_merged_nodup2pairs.pl](#old_merged_nodup2pairspl)
     * [fragment_4dnpairs.pl](#fragment_4dnpairspl)
+    * [duplicate_header_remover.pl](#duplicate_header_removerpl)
+    * [column_remover.pl](#column_removerpl)
     * [Pairs_merger](#pairs_merger)
         * [Usage](#usage-for-pairs_merger)
         * [Examples](#usage-examples-for-pairs_merger)
@@ -461,6 +463,23 @@ SRR1658650.12316544.1/1	1	41607001	1	41608253	+	+	116392	116398
 Usage: gunzip -c <input.pairs.gz> | fragment_4dnpairs.pl [--allow-replacement] - <out.pairs> <juicer-style-restriction-site-file>
 ```
 
+### duplicate_header_remover.pl
+* This script removes duplicate headers from a pairs file (either ungzipped or streamed). This is useful when you accidentally created a wrong pairs file with duplicate headers. The order of the headers doesn't change. Duplicates don't necessarily have to be in consecutive lines.
+```
+Usage: gunzip -c <input.pairs.gz> | duplicate_header_remover.pl - | bgzip -c > <out.pairs.gz>
+```
+
+### column_remover.pl
+* This script removes columns from a pairs file (either ungzipped or streamed).
+```
+# The following removes multiple columns from both header and content. The columns to be removed should be referred to by column names.
+Usage: gunzip -c <input.pairs.gz> | column_remover.pl - <colname1> [<colname2> ...] | bgzip -c > <out.pairs.gz>
+
+# The following removes a single column from only the content. The column to be removed should be referred to by column index (0-based).
+Usage: gunzip -c <input.pairs.gz> | column_remover.pl --do-not-fix-header - <colindex> | bgzip -c > <out.pairs.gz>
+```
+
+
 ### Pairs_merger
 Pairs_merger is a tool that merges indexed pairs files that are already sorted, creating a sorted output pairs file. Pairs_merger uses a k-way merge sort algorithm starting with k file streams. Specifically, it loops over a merged iterator composed of a dynamically sorted array of k iterators. It neither requires additional memory nor produces any temporary files.
 
@@ -520,6 +539,9 @@ ulimit -n 2000
 <br>
 
 ## Version history
+
+### 0.2.6
+* Two utils are added: `duplicate_header_remover.pl` and `column_remover.pl` for pairs file format correction.
 
 ### 0.2.5
 * `pairix` has now option `-w` which specifies region split character (default '|') during indexing. A query string should use this character as a separater.
