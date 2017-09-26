@@ -1107,6 +1107,7 @@ int ti_get_bc2(ti_index_t *idx) { return idx? idx->conf.bc2-1 : -1; }
 int ti_get_ec(ti_index_t *idx) { return idx? idx->conf.ec-1 : -1; }
 int ti_get_ec2(ti_index_t *idx) { return idx? idx->conf.ec2-1 : -1; }
 char ti_get_delimiter(ti_index_t *idx) { return idx? idx->conf.delimiter : 0; }
+char ti_get_region_split_character(ti_index_t *idx){ return idx? idx->conf.region_split_character : 0; }
 
 
 /*******************
@@ -1849,4 +1850,44 @@ char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
 char get_region_split_character(pairix_t *t)
 {
     return(t->idx->conf.region_split_character);
+}
+
+
+sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip)
+{
+    const char *reg2;
+    int tid_test, tid_test_rev;
+    sequential_iter_t *result;
+
+    tid_test = ti_querys_tid(tb, reg);
+    if (tid_test == -1) {
+        reg2 = flip_region(reg, get_region_split_character(tb));
+        tid_test_rev = ti_querys_tid(tb, reg2);
+        if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
+            result = ti_querys_2d_general(tb, reg2);
+            if (flip == 1){
+                if (result == NULL) {
+                   fprintf(stderr, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.");
+                   return(NULL);
+                }else{
+                    return(result);
+                }
+            }
+            else{
+                fprintf(stderr, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
+                return(NULL);
+            }
+        }
+    }
+    else if (tid_test == -2){
+        fprintf(stderr, "The start coordinate must be less than the end coordinate.");
+        return(NULL);
+    }
+    else if (tid_test == -3){
+        fprintf(stderr, "The specific cause could not be found. Please adjust your arguments.");
+        return(NULL);
+    }
+
+    result = ti_querys_2d_general(tb, reg);
+    return(result);  // result may be null but that's okay
 }

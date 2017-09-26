@@ -58,6 +58,9 @@
     * [Pairs_merger](#pairs_merger)
         * [Usage](#usage-for-pairs_merger)
         * [Examples](#usage-examples-for-pairs_merger)
+    * [run-merge-pairs.sh](#run-merge-pairssh)
+        * [Usage](#usage-for-run-merge-pairssh)
+        * [Examples](#usage-examples-for-run-merge-pairssh)
     * [Streamer_1d](#streamer_1d)
         * [Usage](#usage-for-streamer-1d)
         * [Examples](#usage-examples-for-streamer-1d)
@@ -134,9 +137,25 @@ pairix textfile.gz region1 [region2 [...]]  ## region is in the following format
 pairix textfile.gz '<chr>:<start>-<end>' '<chr>:<start>-<end>' ...
 
 # for 2D indexed file
-pairix textfile.gz '<chr1>:<start1>-<end1>|<chr2>:<start2>-<end2>' ...    # make sure to quote so '|' is not interpreted as a pipe.
-pairix textfile.gz '*|<chr2>:<start2>-<end2>'  # wild card is accepted for 1D query on 2D indexed file
-pairix textfile.gz '<chr1>:<start1>-<end1>|*' # wild card is accepted for 1D query on 2D indexed file
+pairix [-a] textfile.gz '<chr1>:<start1>-<end1>|<chr2>:<start2>-<end2>' ...    # make sure to quote so '|' is not interpreted as a pipe.
+pairix [-a] textfile.gz '*|<chr2>:<start2>-<end2>'  # wild card is accepted for 1D query on 2D indexed file
+pairix [-a] textfile.gz '<chr1>:<start1>-<end1>|*' # wild card is accepted for 1D query on 2D indexed file
+```
+
+* The -a option (auto-flip) flips query when a given chromosome pair doesn't exist.
+```
+pairix -a samples/test_4dn.pairs.gz 'chrY|chrX' |head
+SRR1658581.13808070	chrX	359030	chrY	308759	-	+
+SRR1658581.1237993	chrX	711481	chrY	3338402	+	-
+SRR1658581.38694206	chrX	849049	chrY	2511913	-	-
+SRR1658581.6691868	chrX	1017548	chrY	967955	+	-
+SRR1658581.2398986	chrX	1215519	chrY	569356	-	+
+SRR1658581.21090183	chrX	1406586	chrY	2621557	+	-
+SRR1658581.35447261	chrX	1501769	chrY	1458068	+	-
+SRR1658581.26384827	chrX	1857703	chrY	1807309	-	+
+SRR1658581.13824346	chrX	2129016	chrY	2411576	-	-
+SRR1658581.6160690	chrX	2194708	chrY	2485859	-	-
+```
 
 # using a file listing query regions
 pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one region string per line
@@ -154,6 +173,13 @@ This is equivalent to but much faster than `gunzip -c | wc -l`.
 ```
 pairix -n textfile.gz
 ```
+
+#### Print out region split character
+By default '|' is used to split the two genomic regions, but in some cases, a different character is used and it is stored in the index. This command prints out the character used for a specific pairs file.
+```
+pairix -W textfile.gz
+```
+
 
 <br>
 
@@ -505,6 +531,22 @@ bin/pairix -f -p merged_nodups out.gz
 ```
 
 
+### run-merge-pairs.sh
+Run-merge-pairs.sh is a merger specifically for the 4DN pairs file. This merger is header-friendly. The input pairs files do not need to be indexed, but need to be sorted properly.
+
+#### Usage for run-merge-pairs.sh
+
+```
+# The following command will create outprefix.pairs.gz and outprefix.pairs.gz.px2, given in1.pairs.gz, in2.pairs.gz, ....
+run-merge-pairs.sh <outprefix> <in1.pairs.gz> <in2.pairs.gz> ...
+```
+
+#### Usage examples for run-merge-pairs.sh
+```
+util/run-merge-pairs.sh output sample1.pairs.gz sample2.pairs.gz
+```
+
+
 ### Streamer_1d
 Streamer_1d is a tool that converts a 2d-sorted pairs file to a 1d-sorted stream (sorted by chr1-chr2-pos1-pos2  ->  sorted by chr1-pos1). This tool uses a k-way merge sort on k file pointers on the same input file, operates linearly without producing any temporary files. Currently, the speed is actually slower than unix sort and is therefore *not recommended*.
 
@@ -539,6 +581,11 @@ ulimit -n 2000
 <br>
 
 ## Version history
+
+### 0.2.7
+* `pairix` now has option `-a` (autoflip) that flips the query in case the matching chromosome pair doesn't exist in the file.
+* `pairix` now has option `-W` that prints out region split character use for indexing a specific file.
+* `run-merge-pairs.sh` is now included in `util`.
 
 ### 0.2.6
 * Two utils are added: `duplicate_header_remover.pl` and `column_remover.pl` for pairs file format correction.
