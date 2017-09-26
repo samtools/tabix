@@ -1855,14 +1855,13 @@ char get_region_split_character(pairix_t *t)
 
 sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip)
 {
-    const char *reg2;
-    int tid_test, tid_test_rev;
+    int tid_test;
     sequential_iter_t *result;
 
     tid_test = ti_querys_tid(tb, reg);
     if (tid_test == -1) {
-        reg2 = flip_region(reg, get_region_split_character(tb));
-        tid_test_rev = ti_querys_tid(tb, reg2);
+        const char *reg2 = flip_region(reg, get_region_split_character(tb));
+        int tid_test_rev = ti_querys_tid(tb, reg2);
         if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
             result = ti_querys_2d_general(tb, reg2);
             if (flip == 1){
