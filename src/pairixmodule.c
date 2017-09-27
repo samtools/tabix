@@ -297,7 +297,7 @@ static char indexer_docstring[] = (
 "    index file is older than the bgzipped file.\n"
 "zero : int, optional (default 0)\n"
 "    If 1, create a zero-based index. (default one-based)\n");
-   
+
 
 static PyObject *indexer_build_index(PyObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -710,7 +710,7 @@ pairix_get_header(PairixObject *self)
         if(!val) { Py_DECREF(headers); return NULL; }
         PyList_SET_ITEM(headers, i, val);
         i++;
-    } 
+    }
     destroy_sequential_iter(siter);
     bgzf_seek(self->tb->fp, 0, SEEK_SET);
     return(headers);
@@ -754,7 +754,7 @@ pairix_get_chromsize(PairixObject *self)
             PyList_SET_ITEM(headers, i, header_line);
             i++;
         }
-    } 
+    }
     destroy_sequential_iter(siter);
     bgzf_seek(self->tb->fp, 0, SEEK_SET);
     return(headers);
@@ -1009,11 +1009,15 @@ static PyMethodDef pairix_functions[] = {
 PyDoc_STRVAR(module_doc,
 "Python interface to pairix.");
 
+PyDoc_STRVAR(module_version,
+"0.2.73");
+
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef pypairixmodule = {
     PyModuleDef_HEAD_INIT,
     "pypairix",
     module_doc,
+    module_version,
     -1,
     pairix_functions,
     NULL,
@@ -1037,7 +1041,7 @@ PyMODINIT_FUNC PyInit_pypairix(void)
         goto fail;
 
 #if PY_MAJOR_VERSION < 3
-    m = Py_InitModule3("pypairix", pairix_functions, module_doc);
+    m = Py_InitModule3("pypairix", pairix_functions, module_doc, module_version);
 #else
     m = PyModule_Create(&pypairixmodule);
 #endif
