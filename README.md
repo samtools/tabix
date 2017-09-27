@@ -277,6 +277,33 @@ SRR1658581.38248307	chr18	18518988	chr21	9452846	-	+
 SRR1658581.9143926	chr2	90452598	chr21	9486716	+	-
 ```
 
+Symmetric query - 1D query on a 2D-index file is interpreted as a symmetric 2D query. The two commands below are equivalent.
+```
+pairix samples/test_4dn.pairs.gz 'chr22:50000000-60000000'
+SRR1658581.11011611	chr22	50224888	chr22	50225362	+	-
+SRR1658581.37423580	chr22	50528835	chr22	50529355	+	-
+SRR1658581.20673732	chr22	50638372	chr22	51062837	+	-
+SRR1658581.38906907	chr22	50661701	chr22	50813018	+	-
+SRR1658581.7631402	chr22	50767962	chr22	50773437	-	+
+SRR1658581.31517355	chr22	50910780	chr22	50911083	+	-
+SRR1658581.31324262	chr22	50991542	chr22	50991895	+	-
+SRR1658581.46124457	chr22	51143411	chr22	51143793	+	-
+SRR1658581.23040702	chr22	51229529	chr22	51229809	+	-
+```
+```
+pairix samples/test_4dn.pairs.gz 'chr22:50000000-60000000|chr22:50000000-60000000'
+SRR1658581.11011611	chr22	50224888	chr22	50225362	+	-
+SRR1658581.37423580	chr22	50528835	chr22	50529355	+	-
+SRR1658581.20673732	chr22	50638372	chr22	51062837	+	-
+SRR1658581.38906907	chr22	50661701	chr22	50813018	+	-
+SRR1658581.7631402	chr22	50767962	chr22	50773437	-	+
+SRR1658581.31517355	chr22	50910780	chr22	50911083	+	-
+SRR1658581.31324262	chr22	50991542	chr22	50991895	+	-
+SRR1658581.46124457	chr22	51143411	chr22	51143793	+	-
+SRR1658581.23040702	chr22	51229529	chr22	51229809	+	-
+```
+
+
 Query using a region file
 ```
 cat samples/test.regions
@@ -574,8 +601,7 @@ ulimit -n 2000
 <br>
 
 ## Note
-* Currently 2D indexing supports only 2D query (one of the mates can be a wildcard *) and 1D indexing supports only 1D query. Ideally, it will be extended to support 1D query for 2D indexed files. (future plan)
-* Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric.
+* Note that if the chromosome pair block are ordered in a way that the first coordinate is always smaller than the second ('upper-triangle'), a lower-triangle query will return an empty result. For example, if there is a block with chr1='6' and chr2='X', but not with chr1='X' and chr2='6', then the query for X|6 will not return any result. The search is not symmetric. However, using the `-a` option for `pairix` or `flip` option for `pypairix` turns on autoflip, which searches for '6|X' if 'X|6' doesn't exist.
 * Tabix and pairix indices are not cross-compatible.
 
 <br>
@@ -586,6 +612,7 @@ ulimit -n 2000
 * `pairix` now has option `-a` (autoflip) that flips the query in case the matching chromosome pair doesn't exist in the file.
 * `pairix` now has option `-W` that prints out region split character use for indexing a specific file.
 * `merge-pairs.sh` is now included in `util`.
+* `pairix` can now take 1D query for 2D data. e.g.) `pairix file.gz 'chr22:50000-60000'` is equivalent to `pairix file.gz 'chr22:50000-60000|chr22:50000-60000'` if file.gz is 2D indexed.
 
 ### 0.2.6
 * Two utils are added: `duplicate_header_remover.pl` and `column_remover.pl` for pairs file format correction.

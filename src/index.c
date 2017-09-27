@@ -832,7 +832,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	char *s, *p, *sname;
 	int i, l, k, h;
         int coord1s, coord1e, coord2s, coord2e, pos1s, pos2s;
-        char region_split_character = idx->conf.region_split_character;
+        char region_split_character = ti_get_region_split_character(idx);
 
 	l = strlen(str);
 	p = s = (char*)malloc(l+1);
@@ -845,66 +845,74 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
         for(i = 0; i != k; i++) if( s[i] == region_split_character) break;
         s[i]=0;
 
-        if(i == k) { //1d query
+        /* get data dimension */
+        int dim = ti_get_sc2(idx)+1==0?1:2;
+
+        if(i == k && dim == 1) { //1d query
           *begin2=-1; *end2=-1;
           int res = ti_parse_region(idx,str,tid,begin,end);
           free(s); return (res);
-
-        }else{ //2d query
-          coord1s=0; coord1e=i; coord2s=i+1; coord2e=k;
-
-          /* split into chr and pos */
-          for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
-          s[i]=0; pos1s=i+1;
-          for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
-          s[i]=0; pos2s=i+1;
-
-          /* concatenate chromosomes */
-          sname = (char*)malloc(l+1);
-          strcpy(sname, s + coord1s);
-          h=strlen(sname);
-          sname[h]= region_split_character;
-          strcpy(sname+h+1, s+coord2s);
-
-
-  	  if ((*tid = ti_get_tid(idx, sname)) < 0) {
-  		free(s); free(sname);
-  		return -1;
-  	  }
-
-          /* parsing pos1 */
-  	  if (pos1s-1 == coord1e) { /* dump the whole sequence */
-  		*begin = 0; *end = 1<<29;
-    	  } else {
-            p = s + pos1s;
-  	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
-  	    *begin = atoi(p);
-  	    if (i < coord1e) {
-  		p = s + i + 1;
-  		*end = atoi(p);
-    	    } else *end = 1<<29;
-    	    if (*begin > 0) --*begin;
-          }
-
-          /* parsing pos2 */
-  	  if (pos2s-1 == coord2e) { /* dump the whole sequence */
-  		*begin2 = 0; *end2 = 1<<29;
-  	  } else{
-            p = s + pos2s;
-  	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
-  	    *begin2 = atoi(p);
-  	    if (i < coord2e) {
-  		p = s + i + 1;
-  		*end2 = atoi(p);
-  	    } else *end2 = 1<<29;
-  	    if (*begin2 > 0) --*begin2;
-          }
-
-  	  free(s); free(sname);
-  	  if (*begin > *end) return -1;
-     	  if (*begin2!=-1 && *begin2 > *end2) return -1;
-   	  return 0;
         }
+        if(i == k && dim == 2) { //1d query on 2d data : interprete query 'x' as 'x|x'
+          s = (char*)realloc(s, l*2+2);
+          strcpy(s+i+1, s);
+          s[i] = region_split_character;
+        }
+
+        //2d query on 2d data
+        coord1s=0; coord1e=i; coord2s=i+1; coord2e=k;
+
+        /* split into chr and pos */
+        for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
+        s[i]=0; pos1s=i+1;
+        for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
+        s[i]=0; pos2s=i+1;
+
+        /* concatenate chromosomes */
+        sname = (char*)malloc(l+1);
+        strcpy(sname, s + coord1s);
+        h=strlen(sname);
+        sname[h]= region_split_character;
+        strcpy(sname+h+1, s+coord2s);
+
+
+        if ((*tid = ti_get_tid(idx, sname)) < 0) {
+	    free(s); free(sname);
+	    return -1;
+        }
+
+        /* parsing pos1 */
+        if (pos1s-1 == coord1e) { /* dump the whole sequence */
+	    *begin = 0; *end = 1<<29;
+        } else {
+            p = s + pos1s;
+	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
+	    *begin = atoi(p);
+	    if (i < coord1e) {
+		p = s + i + 1;
+		*end = atoi(p);
+  	    } else *end = 1<<29;
+  	    if (*begin > 0) --*begin;
+        }
+
+        /* parsing pos2 */
+        if (pos2s-1 == coord2e) { /* dump the whole sequence */
+		*begin2 = 0; *end2 = 1<<29;
+        } else {
+            p = s + pos2s;
+	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
+	    *begin2 = atoi(p);
+	    if (i < coord2e) {
+		p = s + i + 1;
+		*end2 = atoi(p);
+	    } else *end2 = 1<<29;
+	    if (*begin2 > 0) --*begin2;
+        }
+
+	free(s); free(sname);
+	if (*begin > *end) return -1;
+   	if (*begin2!=-1 && *begin2 > *end2) return -1;
+ 	return 0;
 }
 
 
