@@ -857,6 +857,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
           s = (char*)realloc(s, l*2+2);
           strcpy(s+i+1, s);
           s[i] = region_split_character;
+          l = l*2+1;
         }
 
         //2d query on 2d data
@@ -1316,7 +1317,7 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 {
 	int tid;
         char namepair[1000], *str_ptr;
-        char region_split_character = t->idx->conf.region_split_character;
+        char region_split_character = get_region_split_character(t);
 
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
