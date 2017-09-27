@@ -1067,21 +1067,7 @@ PyMODINIT_FUNC PyInit_pypairix(void)
     module_dict = PyModule_GetDict(m);
     indexer_func = PyCFunction_NewEx(&indexer_methods[0], (PyObject*)NULL, mod_name);
     PyDict_SetItemString(module_dict, "build_index", indexer_func);
-    /* ---- Read version ---- */
-    FILE *ver_file = fopen("VERSION", "r");
-    const char *this_ver;
-    char line[256];
-    if (ver_file != NULL){
-        while(fgets(line, sizeof line, ver_file) != NULL){
-            this_ver = line;
-        }
-        fclose(ver_file);
-    }
-    else
-    {
-        this_ver = "unknown";
-    }
-    PyDict_SetItemString(module_dict, "__version__", PYOBJECT_FROM_STRING(this_ver));
+    PyDict_SetItemString(module_dict, "__version__", PYOBJECT_FROM_STRING(PACKAGE_VERSION));
 
 #if PY_MAJOR_VERSION >= 3
     return m;

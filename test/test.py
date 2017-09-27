@@ -57,7 +57,7 @@ def get_chromsize(filename):
             fields = line.rstrip().split('\s+')
             chrname = fields[1]
             chrsize = fields[2]
-            retval.append([chrname, chrsize]) 
+            retval.append([chrname, chrsize])
     return retval
 
 
@@ -479,6 +479,16 @@ class PairixTestGetLineCount(unittest.TestCase):
     def test_linecount(self):
         pr= pypairix.open(TEST_FILE_2D_4DN_2)
         self.assertEqual(pr.get_linecount(), 60204)
+
+
+class PairixVersionCheck(unittest.TestCase):
+
+    def test_linecount(self):
+        # version defined by PACKAGE_VERSION in src/pairix.h
+        pkg_version = pypairix.__version__
+        # setup.py version defined in root VERSION file
+        py_version = open("VERSION").readlines()[-1].split()[-1].strip("\"'")
+        self.assertEqual(pkg_version, py_version)
 
 
 if __name__ == '__main__':
