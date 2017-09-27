@@ -532,7 +532,7 @@ bin/pairix -f -p merged_nodups out.gz
 
 
 ### merge-pairs.sh
-Run-merge-pairs.sh is a merger specifically for the 4DN pairs file. This merger is header-friendly. The input pairs files do not need to be indexed, but need to be sorted properly.
+Merge-pairs.sh is a merger specifically for the 4DN pairs file. This merger is header-friendly. The input pairs files do not need to be indexed, but need to be sorted properly.
 
 #### Usage for merge-pairs.sh
 
