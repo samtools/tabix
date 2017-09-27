@@ -1009,15 +1009,11 @@ static PyMethodDef pairix_functions[] = {
 PyDoc_STRVAR(module_doc,
 "Python interface to pairix.");
 
-PyDoc_STRVAR(module_version,
-"0.2.73");
-
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef pypairixmodule = {
     PyModuleDef_HEAD_INIT,
     "pypairix",
     module_doc,
-    module_version,
     -1,
     pairix_functions,
     NULL,
@@ -1041,7 +1037,7 @@ PyMODINIT_FUNC PyInit_pypairix(void)
         goto fail;
 
 #if PY_MAJOR_VERSION < 3
-    m = Py_InitModule3("pypairix", pairix_functions, module_doc, module_version);
+    m = Py_InitModule3("pypairix", pairix_functions, module_doc);
 #else
     m = PyModule_Create(&pypairixmodule);
 #endif
