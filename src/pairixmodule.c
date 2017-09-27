@@ -297,7 +297,7 @@ static char indexer_docstring[] = (
 "    index file is older than the bgzipped file.\n"
 "zero : int, optional (default 0)\n"
 "    If 1, create a zero-based index. (default one-based)\n");
-   
+
 
 static PyObject *indexer_build_index(PyObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -710,7 +710,7 @@ pairix_get_header(PairixObject *self)
         if(!val) { Py_DECREF(headers); return NULL; }
         PyList_SET_ITEM(headers, i, val);
         i++;
-    } 
+    }
     destroy_sequential_iter(siter);
     bgzf_seek(self->tb->fp, 0, SEEK_SET);
     return(headers);
@@ -754,7 +754,7 @@ pairix_get_chromsize(PairixObject *self)
             PyList_SET_ITEM(headers, i, header_line);
             i++;
         }
-    } 
+    }
     destroy_sequential_iter(siter);
     bgzf_seek(self->tb->fp, 0, SEEK_SET);
     return(headers);
@@ -1067,6 +1067,7 @@ PyMODINIT_FUNC PyInit_pypairix(void)
     module_dict = PyModule_GetDict(m);
     indexer_func = PyCFunction_NewEx(&indexer_methods[0], (PyObject*)NULL, mod_name);
     PyDict_SetItemString(module_dict, "build_index", indexer_func);
+    PyDict_SetItemString(module_dict, "__version__", PYOBJECT_FROM_STRING(PACKAGE_VERSION));
 
 #if PY_MAJOR_VERSION >= 3
     return m;

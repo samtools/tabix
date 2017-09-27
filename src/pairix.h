@@ -28,7 +28,7 @@
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
-#define PACKAGE_VERSION "0.2.6"
+#define PACKAGE_VERSION "0.2.7"
 
 #include <stdint.h>
 #include "kstring.h"
@@ -202,6 +202,7 @@ extern "C" {
         /* get delimiter */
         char ti_get_delimiter(ti_index_t *idx);
         char get_region_split_character(pairix_t *t);
+        char ti_get_region_split_character(ti_index_t *idx);
 
 	int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv);
 
@@ -253,6 +254,9 @@ extern "C" {
 
         /* add an iter to sequential_iter - the array size is dynamically incremented */
         void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter);
+
+        /* wrapper for 2D string query that allows autoflip */
+        sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip);
 
 
 	/*******************

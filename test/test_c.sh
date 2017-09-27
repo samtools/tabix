@@ -9,6 +9,28 @@ if [ ! -z "$(diff log1 log2)" ]; then
   return 1;
 fi
 
+pairix -a samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20' > log1
+gunzip -c samples/merged_nodup.tab.chrblock_sorted.txt.gz | awk '$2=="10" && $3>=1 && $3<=1000000 && $6=="20"' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "test 1b failed"
+  return 1;
+fi
+
+pairix -a samples/merged_nodup.tab.chrblock_sorted.txt.gz '20|10:1-1000000' > log1
+gunzip -c samples/merged_nodup.tab.chrblock_sorted.txt.gz | awk '$2=="10" && $3>=1 && $3<=1000000 && $6=="20"' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "test 1c failed"
+  return 1;
+fi
+
+pairix samples/test_4dn.pairs.gz 'chr22:50000000-60000000' > log1
+pairix samples/test_4dn.pairs.gz 'chr22:50000000-60000000|chr22:50000000-60000000' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "test 1d failed"
+  return 1;
+fi
+
+
 pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20:50000000-60000000' > log1
 gunzip -c samples/merged_nodup.tab.chrblock_sorted.txt.gz | awk '$2=="10" && $3>=1 && $3<=1000000 && $6=="20" && $7>=50000000 && $7<=60000000' > log2
 if [ ! -z "$(diff log1 log2)" ]; then
@@ -84,6 +106,11 @@ pairix samples/test_4dn.pairs.gz 'chr10^chr20' > log1
 gunzip -c samples/test_4dn.pairs.gz | awk '$2=="chr10" && $4=="chr20"' > log2
 if [ ! -z "$(diff log1 log2)" ]; then
   echo "test region_split_character failed"
+  return 1;
+fi
+rsc=$(pairix -W samples/test_4dn.pairs.gz)
+if [ "$rsc" != "^" ]; then
+  echo "test region_split_character printing failed"
   return 1;
 fi
 pairix -f samples/test_4dn.pairs.gz  ## revert

@@ -100,6 +100,7 @@ int reheader_file(const char *header, const char *file, int meta)
 int main(int argc, char *argv[])
 {
     int skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0, print_only_linecount = 0;
+    int flip = 0, print_only_region_split_character = 0;
     int c;
     ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
         };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tnw:", long_options, &option_index)) >= 0) {
+    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tnw:aW", long_options, &option_index)) >= 0) {
         switch (c) {
             case 0: break;  // long option
             case 'L': region_file=1; break;
@@ -142,10 +143,12 @@ int main(int argc, char *argv[])
             case 'u': conf.bc2 = atoi(optarg); break;
             case 'v': conf.ec2 = atoi(optarg); break;
             case 'T': delimiter = ' '; break;
+            case 'a': flip = 1; break;
             case 'w': region_split_character = optarg[0]; break;
             case 'l': list_chrms = 1; break;
             case 'h': print_header = 1; break;
             case 'H': print_only_header = 1; break;
+            case 'W': print_only_region_split_character = 1; break;
             case 'f': force = 1; break;
             case 'r': reheader = optarg; break;
             case 'n': print_only_linecount = 1; break;
@@ -176,9 +179,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, "         -0         zero-based coordinate\n");
         fprintf(stderr, "         -h         print also the header lines\n");
         fprintf(stderr, "         -H         print only the header lines\n");
+        fprintf(stderr, "         -W         print only the region split character\n");
         fprintf(stderr, "         -l         list chromosome names\n");
         fprintf(stderr, "         -n         print only the total line count (same as gunzip -c | wc -l but much faster)\n");
         fprintf(stderr, "         -f         force to overwrite the index\n");
+        fprintf(stderr, "         -a         autoflip query when the matching chromosome pair doesn't exist\n");
         fprintf(stderr, "         --help     print usage with exit 0\n");
         fprintf(stderr, "\n");
         if(help_flag) return 0; else return 1; 
@@ -212,6 +217,20 @@ int main(int argc, char *argv[])
         }
         int linecount = get_linecount(idx);
         printf("%d\n", linecount);
+        ti_index_destroy(idx);
+        return 0;
+    }
+    if(print_only_region_split_character) {
+        ti_index_t *idx;
+        int i, n;
+        const char **names;
+        idx = ti_index_load(argv[optind]);
+        if (idx == 0) {
+            fprintf(stderr, "[main] fail to load the index file.\n");
+            return 1;
+        }
+        char region_split_character = ti_get_region_split_character(idx);
+        printf("%c\n", region_split_character);
         ti_index_destroy(idx);
         return 0;
     }
@@ -351,7 +370,8 @@ int main(int argc, char *argv[])
                     if(!FH) { fprintf(stderr, "[main] Can't open region file %s\n", argv[i]); return(1); }
                     while( fgets(line, MAX_REGIONLINE_LEN, FH)) {
                         line[strlen(line)-1]=0; // trim '\n'
-                        sequential_iter_t *siter = ti_querys_2d_general(t,line);
+                        sequential_iter_t *siter = querys_2D_wrapper(t, line, flip);
+                        //sequential_iter_t *siter = ti_querys_2d_general(t,line);
                         if(siter == NULL) return 1;
                         while((s = sequential_ti_read(siter, &len)) != 0){
                             fputs(s, stdout); fputc('\n',stdout);
@@ -362,7 +382,8 @@ int main(int argc, char *argv[])
                 }
             } else {
                 for (i = optind + 1; i < argc; ++i) {
-                    sequential_iter_t *siter = ti_querys_2d_general(t,argv[i]);
+                    sequential_iter_t *siter = querys_2D_wrapper(t, argv[i], flip);
+                    //sequential_iter_t *siter = ti_querys_2d_general(t,argv[i]);
                     if(siter == NULL) return 1;
                     while((s = sequential_ti_read(siter, &len)) != 0){
                         fputs(s, stdout); fputc('\n',stdout);
