@@ -58,9 +58,9 @@
     * [Pairs_merger](#pairs_merger)
         * [Usage](#usage-for-pairs_merger)
         * [Examples](#usage-examples-for-pairs_merger)
-    * [run-merge-pairs.sh](#run-merge-pairssh)
-        * [Usage](#usage-for-run-merge-pairssh)
-        * [Examples](#usage-examples-for-run-merge-pairssh)
+    * [merge-pairs.sh](#merge-pairssh)
+        * [Usage](#usage-for-merge-pairssh)
+        * [Examples](#usage-examples-for-merge-pairssh)
     * [Streamer_1d](#streamer_1d)
         * [Usage](#usage-for-streamer-1d)
         * [Examples](#usage-examples-for-streamer-1d)
@@ -531,19 +531,19 @@ bin/pairix -f -p merged_nodups out.gz
 ```
 
 
-### run-merge-pairs.sh
+### merge-pairs.sh
 Run-merge-pairs.sh is a merger specifically for the 4DN pairs file. This merger is header-friendly. The input pairs files do not need to be indexed, but need to be sorted properly.
 
-#### Usage for run-merge-pairs.sh
+#### Usage for merge-pairs.sh
 
 ```
 # The following command will create outprefix.pairs.gz and outprefix.pairs.gz.px2, given in1.pairs.gz, in2.pairs.gz, ....
-run-merge-pairs.sh <outprefix> <in1.pairs.gz> <in2.pairs.gz> ...
+merge-pairs.sh <outprefix> <in1.pairs.gz> <in2.pairs.gz> ...
 ```
 
-#### Usage examples for run-merge-pairs.sh
+#### Usage examples for merge-pairs.sh
 ```
-util/run-merge-pairs.sh output sample1.pairs.gz sample2.pairs.gz
+util/merge-pairs.sh output sample1.pairs.gz sample2.pairs.gz
 ```
 
 
@@ -585,7 +585,7 @@ ulimit -n 2000
 ### 0.2.7
 * `pairix` now has option `-a` (autoflip) that flips the query in case the matching chromosome pair doesn't exist in the file.
 * `pairix` now has option `-W` that prints out region split character use for indexing a specific file.
-* `run-merge-pairs.sh` is now included in `util`.
+* `merge-pairs.sh` is now included in `util`.
 
 ### 0.2.6
 * Two utils are added: `duplicate_header_remover.pl` and `column_remover.pl` for pairs file format correction.
