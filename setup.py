@@ -22,9 +22,11 @@ EXT_MODULES = [
     )
 ]
 
+__version__ = "0.2.7"
+
 setup(
     name = "pypairix",
-    version = "0.2.7",
+    version = __version__,
     description = "Pypairix is a Python module for fast querying on a pairix-indexed bgzipped text file that contains a pair of genomic coordinates per line. For more information, see: https://github.com/4dn-dcic/pairix/blob/master/README.md.",
     url = "https://github.com/4dn-dcic/pairix",
     download_url = "https://github.com/4dn-dcic/pairix/tarball/0.2.7",
