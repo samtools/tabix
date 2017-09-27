@@ -158,6 +158,7 @@ SRR1658581.6160690	chrX	2194708	chrY	2485859	-	-
 ```
 
 # using a file listing query regions
+```
 pairix -L textfile.gz regionfile1 [regionfile2 [...]] # region file contains one region string per line
 ```
 * The default region split character is '|', which can be changed by using the `-w` option when building an index.
