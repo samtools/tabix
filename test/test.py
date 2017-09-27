@@ -487,10 +487,9 @@ class PairixVersionCheck(unittest.TestCase):
         # version defined by PACKAGE_VERSION in src/pairix.h
         pkg_version = pypairix.__version__
         # setup.py version defined in root VERSION file
-        py_version = open("VERSION").readlines()[-1].split()[-1].strip("\"'")
+        py_version = open("VERSION.txt").readlines()[-1].split()[-1].strip("\"'")
         self.assertEqual(pkg_version, py_version)
 
 
 if __name__ == '__main__':
     unittest.main()
-

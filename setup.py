@@ -22,7 +22,7 @@ EXT_MODULES = [
     )
 ]
 
-this_version = open("VERSION").readlines()[-1].split()[-1].strip("\"'")
+this_version = open("VERSION.txt").readlines()[-1].split()[-1].strip("\"'")
 
 setup(
     name = "pypairix",
