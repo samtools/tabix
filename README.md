@@ -608,7 +608,7 @@ ulimit -n 2000
 
 ## Version history
 
-### 0.2.7
+### 0.2.8
 * `pairix` now has option `-a` (autoflip) that flips the query in case the matching chromosome pair doesn't exist in the file.
 * `pairix` now has option `-W` that prints out region split character use for indexing a specific file.
 * `merge-pairs.sh` is now included in `util`.
@@ -655,7 +655,7 @@ ulimit -n 2000
 * `merged_nodup2pairs.pl` and `old_merged_nodup2pairs.pl` now take chromsize file and adds chromsize in the output file header. Upper triangle is also defined according to the chromsize file.
 * `bam2pairs`: the option description in the usage printed out and the command field in the output pairs file has not been fixed. (-l instead of -5 for the opposite effect)
 * `pairix': command `pairix --help` now exits 0 after printing usage (`pairix` alone exits 1 as before).
-  
+
 ### 0.1.5
 * `pypairix`: function `build_index` now has option `zero` which created a zero-based index (defaut 1-based).
 * `bam2pairs`: now adds chromsize in the header. Optionally takes chromsize file to define mate ordering and filter chromosomes. If chromsize file is not fed, the mate ordering is alphanumeric.
