@@ -613,7 +613,7 @@ ulimit -n 2000
 * `pairix` now has option `-a` (autoflip) that flips the query in case the matching chromosome pair doesn't exist in the file.
 * `pairix` now has option `-W` that prints out region split character use for indexing a specific file.
 * `merge-pairs.sh` is now included in `util`.
-* `pairix` can now take 1D query for 2D data. e.g.) `pairix file.gz 'chr22:50000-60000'` is equivalent to `pairix file.gz 'chr22:50000-60000|chr22:50000-60000'` if file.gz is 2D indexed.
+* ~`pairix` can now take 1D query for 2D data. e.g.) `pairix file.gz 'chr22:50000-60000'` is equivalent to `pairix file.gz 'chr22:50000-60000|chr22:50000-60000'` if file.gz is 2D indexed.~  This one currently does not work. 
 
 ### 0.2.6
 * Two utils are added: `duplicate_header_remover.pl` and `column_remover.pl` for pairs file format correction.
