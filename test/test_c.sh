@@ -93,7 +93,7 @@ fi
 ## linecount
 pairix -f samples/test_4dn.pairs.gz
 pairix -n samples/test_4dn.pairs.gz > log1
-gunzip -c samples/test_4dn.pairs.gz |wc -l > log2
+gunzip -c samples/test_4dn.pairs.gz |wc -l | sed "s/ //g" > log2
 if [ ! -z "$(diff log1 log2)" ]; then
   echo "linecount test failed"
   return 1;
