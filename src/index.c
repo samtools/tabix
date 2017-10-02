@@ -854,10 +854,10 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
           free(s); return (res);
         }
         if(i == k && dim == 2) { //1d query on 2d data : interprete query 'x' as 'x|x'
-          s = (char*)realloc(s, l*2+2);
+          s = (char*)realloc(s, k*2+2);
           strcpy(s+i+1, s);
           s[i] = region_split_character;
-          l = l*2+1;
+          k = k*2+1;
         }
 
         //2d query on 2d data

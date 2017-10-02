@@ -88,7 +88,7 @@ def find_pairs_type(filename, delimiter='\t'):
         except AttributeError:
             pass
         fields = line.rstrip().split(delimiter)
-        if is_str(fields[2]) and is_str(fields[6]):
+        if len(fields)>=6 and is_str(fields[2]) and is_str(fields[6]):
             is_juicer = True
         if is_str(fields[2]) and is_str(fields[4]):
             is_4DN = True
@@ -119,6 +119,8 @@ def read_pairs(filename, file_type='undetermined', delimiter='\t'):
             line = line.decode('utf-8')
         except AttributeError:
             pass
+        if line.startswith('#'):
+            continue
         fields = line.rstrip().split(delimiter)
         if file_type == 'juicer':
             chrom1 = fields[1]
@@ -150,6 +152,14 @@ def get_result_2D(regions, chrom, start, end, chrom2, start2, end2):
     retval = []
     for r in regions:
         if r[0] == chrom and overlap1(r[1], r[2], start, end) and r[3] == chrom2 and overlap1(r[4], r[5], start2, end2):
+            retval.append(r)
+    return retval
+
+
+def get_result_2D_4DN(regions, chrom, start, end, chrom2, start2, end2):
+    retval = []
+    for r in regions:
+        if r[1] == chrom and overlap1(r[2], r[2], start, end) and r[3] == chrom2 and overlap1(r[4], r[4], start2, end2):
             retval.append(r)
     return retval
 
@@ -387,6 +397,26 @@ class PairixTest2DSpace(unittest.TestCase):
         it2 = pr2.querys2D(query)
         pr2_result = build_it_result(it2, self.f_type)
         self.assertEqual(self.result, pr2_result)
+
+
+## 1D query on 2D indexed file
+class PairixTest_1_on_2(unittest.TestCase):
+    f_type='4DN'
+    regions = read_pairs(TEST_FILE_2D_4DN_2, f_type)
+    chrom = 'chrY'
+    start = 1
+    end = 2000000
+    chrom2 = chrom
+    start2 = start
+    end2 = end
+    result = get_result_2D_4DN(regions, chrom, start, end, chrom2, 0, sys.maxsize)
+    pr = pypairix.open(TEST_FILE_2D_4DN_2)
+
+    def test_querys(self):
+        query = '{}:{}-{}'.format(self.chrom, self.start, self.end)
+        it = self.pr.querys2D(query)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
 
 
 class PairixTestBlocknames(unittest.TestCase):
