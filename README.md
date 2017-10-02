@@ -609,6 +609,9 @@ ulimit -n 2000
 
 ## Version history
 
+### 0.2.9
+* `pairix` can now take 1D query for 2D data. e.g.) `pairix file.gz 'chr22:50000-60000'` is equivalent to `pairix file.gz 'chr22:50000-60000|chr22:50000-60000'` if file.gz is 2D indexed.
+
 ### 0.2.8
 * `pairix` now has option `-a` (autoflip) that flips the query in case the matching chromosome pair doesn't exist in the file.
 * `pairix` now has option `-W` that prints out region split character use for indexing a specific file.
