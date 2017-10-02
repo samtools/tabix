@@ -30,6 +30,12 @@ if [ ! -z "$(diff log1 log2)" ]; then
   return 1;
 fi
 
+pairix samples/test_4dn.pairs.gz 'chrY:1-2000000' > log1
+pairix samples/test_4dn.pairs.gz 'chrY:1-2000000|chrY:1-2000000' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "test 1e failed"
+  return 1;
+fi
 
 pairix samples/merged_nodup.tab.chrblock_sorted.txt.gz '10:1-1000000|20:50000000-60000000' > log1
 gunzip -c samples/merged_nodup.tab.chrblock_sorted.txt.gz | awk '$2=="10" && $3>=1 && $3<=1000000 && $6=="20" && $7>=50000000 && $7<=60000000' > log2
