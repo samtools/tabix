@@ -91,11 +91,11 @@ while (<INFILE>) {
               elsif($headers[$i] eq 'frag2') { $frag2_colindex=$i-1; }
           }
           print STDERR "$frag1_colindex, $frag2_colindex\n";  # Soo
-          if($frag1_colindex == -1) { $frag1_colindex=$#headers+1; print OUTFILE "$_ frag1\n"; next; }
-          elsif($frag2_colindex == -1) { $frag2_colindex=$#headers+1; print OUTFILE "$_ frag2\n"; next; }
+          if($frag1_colindex == -1) { $frag1_colindex=$#headers; print OUTFILE "$_ frag1\n"; next; }
+          elsif($frag2_colindex == -1) { $frag2_colindex=$#headers; print OUTFILE "$_ frag2\n"; next; }
           else { print OUTFILE "$_\n"; next; }
       }
-      else { $frag1_colindex=$#headers+1; $frag2_colindex=$#headers+2; print OUTFILE "$_ frag1 frag2\n"; next; }
+      else { $frag1_colindex=$#headers; $frag2_colindex=$#headers+1; print OUTFILE "$_ frag1 frag2\n"; next; }
   }
   elsif(/^#/) { print OUTFILE "$_\n"; next; }
   my @original_record = split;
