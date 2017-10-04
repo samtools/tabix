@@ -611,7 +611,7 @@ ulimit -n 2000
 
 ### 0.3.0
 * The problem with `fragment_4dnpairs.pl` of adding an extra column is now fixed.
-* Fixed bug with 1D querying.
+* Fixed bug with 1D querying on 2D data.
 
 ### 0.2.9
 * `pairix` can now take 1D query for 2D data. e.g.) `pairix file.gz 'chr22:50000-60000'` is equivalent to `pairix file.gz 'chr22:50000-60000|chr22:50000-60000'` if file.gz is 2D indexed.
