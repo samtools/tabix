@@ -403,16 +403,26 @@ it = tb.querys2D(querystr, 1)
 for x in it:
    print(x)
 
-# 1D query usage example 1
+# 1D query on 2D indexed file
+tb=pypairix.open("textfile.gz")
+querystr='{}:{}-{}'.format(chrom, start, end)
+it = tb.querys2D(querystr)
+# The above two lines are equivalent to the following:
+# querystr='{}:{}-{}|{}:{}-{}'.format(chrom, start, end, chrom, start, end)
+# it = tb.querys2D(querystr)
+for x in it:
+   print(x)
+
+# 1D query on 1D indexed file, example 1
 tb=pypairix.open("textfile.gz")
 it = tb.query(chrom, start, end)
 for x in it:
    print(x)
 
-# 1D query usage example 2
+# 1D query on 1D indexed file, example 2
 tb=pypairix.open("textfile.gz")
 querystr='{}:{}-{}'.format(chrom, start, end)
-it = tb.querys2D(querystr)
+it = tb.querys(querystr)
 for x in it:
    print(x)
 
@@ -611,7 +621,7 @@ ulimit -n 2000
 
 ### 0.3.0
 * The problem with `fragment_4dnpairs.pl` of adding an extra column is now fixed.
-* Fixed bug with 1D querying on 2D data.
+* 1D querying on 2D data now works with `pypairix` (function `querys2D`).
 
 ### 0.2.9
 * `pairix` can now take 1D query for 2D data. e.g.) `pairix file.gz 'chr22:50000-60000'` is equivalent to `pairix file.gz 'chr22:50000-60000|chr22:50000-60000'` if file.gz is 2D indexed.
