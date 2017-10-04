@@ -18,7 +18,7 @@ Juicer: chr1[1] pos1[2] chr2[5] pos2[6]
 4DN: chr1[1] pos1[2] chr2[3] pos2[4]
 """
 
-
+from __future__ import unicode_literals
 import unittest
 import gzip
 import sys
@@ -150,17 +150,17 @@ def get_result(regions, chrom, start, end):
 
 def get_result_2D(regions, chrom, start, end, chrom2, start2, end2):
     retval = []
-    for r in regions:
-        if r[0] == chrom and overlap1(r[1], r[2], start, end) and r[3] == chrom2 and overlap1(r[4], r[5], start2, end2):
-            retval.append(r)
+    for reg in regions:
+        if reg[0] == chrom and overlap1(reg[1], reg[2], start, end) and reg[3] == chrom2 and overlap1(reg[4], reg[5], start2, end2):
+            retval.append(reg)
     return retval
 
 
-def get_result_2D_4DN(regions, chrom, start, end, chrom2, start2, end2):
+def get_result_1D_on_2D(regions, chrom, start, end, chrom2, start2, end2):
     retval = []
-    for r in regions:
-        if r[1] == chrom and overlap1(r[2], r[2], start, end) and r[3] == chrom2 and overlap1(r[4], r[4], start2, end2):
-            retval.append(r)
+    for reg in regions:
+        if reg[0] == chrom and overlap1(reg[2], reg[2], start, end) and reg[3] == chrom2 and overlap1(reg[4], reg[4], start2, end2):
+            retval.append(reg)
     return retval
 
 
@@ -409,7 +409,7 @@ class PairixTest_1_on_2(unittest.TestCase):
     chrom2 = chrom
     start2 = start
     end2 = end
-    result = get_result_2D_4DN(regions, chrom, start, end, chrom2, 0, sys.maxsize)
+    result = get_result_1D_on_2D(regions, chrom, start, end, chrom2, start2, end2)
     pr = pypairix.open(TEST_FILE_2D_4DN_2)
 
     def test_querys(self):
