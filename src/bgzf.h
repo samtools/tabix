@@ -186,6 +186,11 @@ extern "C" {
 	 */
 	int bgzf_read_block(BGZF *fp);
 
+        /**
+         * returns block length for a given block start offset
+         */
+        int bgzf_block_length(BGZF *fp, int64_t block_start_offset);
+
 #ifdef __cplusplus
 }
 #endif

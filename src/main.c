@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
 {
     int skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0, print_only_linecount = 0;
     int flip = 0, print_only_region_split_character = 0;
+    int print_only_nblocks = 0;
     int c;
     ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
@@ -115,7 +116,7 @@ int main(int argc, char *argv[])
         };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tnw:aW", long_options, &option_index)) >= 0) {
+    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tnw:aWB", long_options, &option_index)) >= 0) {
         switch (c) {
             case 0: break;  // long option
             case 'L': region_file=1; break;
@@ -148,6 +149,7 @@ int main(int argc, char *argv[])
             case 'l': list_chrms = 1; break;
             case 'h': print_header = 1; break;
             case 'H': print_only_header = 1; break;
+            case 'B': print_only_nblocks = 1; break;
             case 'W': print_only_region_split_character = 1; break;
             case 'f': force = 1; break;
             case 'r': reheader = optarg; break;
@@ -209,7 +211,6 @@ int main(int argc, char *argv[])
     if(print_only_linecount) {
         ti_index_t *idx;
         int i, n;
-        const char **names;
         idx = ti_index_load(argv[optind]);
         if (idx == 0) {
             fprintf(stderr, "[main] fail to load the index file.\n");
@@ -223,7 +224,6 @@ int main(int argc, char *argv[])
     if(print_only_region_split_character) {
         ti_index_t *idx;
         int i, n;
-        const char **names;
         idx = ti_index_load(argv[optind]);
         if (idx == 0) {
             fprintf(stderr, "[main] fail to load the index file.\n");
@@ -232,6 +232,24 @@ int main(int argc, char *argv[])
         char region_split_character = ti_get_region_split_character(idx);
         printf("%c\n", region_split_character);
         ti_index_destroy(idx);
+        return 0;
+    }
+    if(print_only_nblocks) {
+        ti_index_t *idx;
+        int i, n;
+        const char **names;
+        idx = ti_index_load(argv[optind]);
+        if (idx == 0) {
+            fprintf(stderr, "[main] fail to load the index file.\n");
+            return 1;
+        }
+        names = ti_seqname(idx, &n);
+        BGZF *fp = bgzf_open(argv[optind],"r");
+        for(i=0;i<n;i++){
+            printf("%s\t%d\n", names[i], get_nblocks(idx, i, fp));
+        }
+        ti_index_destroy(idx);
+        free(names);
         return 0;
     }
     if (list_chrms) {
