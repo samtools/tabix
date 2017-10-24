@@ -1912,6 +1912,7 @@ int get_nblocks(ti_index_t *idx, int tid, BGZF *fp)
       nblocks++;
       curr_off += block_length<<16;
     } while(curr_off <= iter->off[0].v);
+    ti_iter_destroy(iter);
 
     return((int)nblocks);
 }
