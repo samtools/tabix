@@ -28,7 +28,7 @@
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
-#define PACKAGE_VERSION "0.3.0"
+#define PACKAGE_VERSION "0.3.1"
 
 #include <stdint.h>
 #include "kstring.h"
@@ -153,6 +153,9 @@ extern "C" {
         /* get linecount */
         int get_linecount(const ti_index_t *idx);
 
+        /* get file offset
+         * returns number of bgzf blocks spanning a sequence (pair) */
+        int get_nblocks(ti_index_t *idx, int tid, BGZF *fp);
 
 	/******************
 	 * Low-level APIs *

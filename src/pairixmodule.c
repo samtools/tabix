@@ -761,6 +761,32 @@ pairix_get_chromsize(PairixObject *self)
 }
 
 static PyObject *
+pairix_bgzf_block_count(PairixObject *self, PyObject *args)
+{
+    char *chr1, *chr2, *sname;
+    char region_split_character = get_region_split_character(self->tb);
+    int h;
+    if (!PyArg_ParseTuple(args, "ss:bgzf_block_count", &chr1, &chr2)){
+        PyErr_SetString(PairixError, "Argument error! bgzf_block_count() takes the following args: <seqname1(chr1)> <seqname2(chr2)>\n");
+        return Py_BuildValue("i", -1);
+    }
+    /* concatenate chromosomes */
+    sname = (char*)malloc(strlen(chr1)+strlen(chr2)+2);
+    strcpy(sname, chr1);
+    h=strlen(sname);
+    sname[h]= region_split_character;
+    strcpy(sname+h+1, chr2);
+    int tid = ti_get_tid(self->tb->idx, sname);
+    free(sname);
+    if (tid == -1) {
+        return Py_BuildValue("i", 0);
+    }
+
+    int res = get_nblocks(self->tb->idx, tid, self->tb->fp);
+    return Py_BuildValue("i", res);
+}
+
+static PyObject *
 pairix_repr(PairixObject *self)
 {
 #if PY_MAJOR_VERSION < 3
@@ -941,6 +967,12 @@ static PyMethodDef pairix_methods[] = {
         METH_VARARGS,
         PyDoc_STR("return chromsize as a list of 2-element lists \
                    [chromosome_name, chromosome_size]\n\n")
+    },
+    {
+       "bgzf_block_count",
+       (PyCFunction)pairix_bgzf_block_count,
+        METH_VARARGS,
+        PyDoc_STR("return count of bgzf blocks for given key\n\n")
     },
     /*
     {
