@@ -776,7 +776,7 @@ pairix_bgzf_block_count(PairixObject *self, PyObject *args)
     h=strlen(sname);
     sname[h]= region_split_character;
     strcpy(sname+h+1, chr2);
-    int tid = ti_get_tid(self->tb->idx, sname)!=-1?1:0;
+    int tid = ti_get_tid(self->tb->idx, sname);
     free(sname);
     int res = get_nblocks(self->tb->idx, tid, self->tb->fp);
     return Py_BuildValue("i", res);
