@@ -631,7 +631,7 @@ ulimit -n 2000
 
 ### 0.3.1
 * `pairix -B` option is now available to print out the number of bgzf blocks for each chromosome (pair).
-* The same function is available for pypairix.
+* The same function is available for pypairix (`bgzf_block_count`).
 
 ### 0.3.0
 * The problem with `fragment_4dnpairs.pl` of adding an extra column is now fixed.
