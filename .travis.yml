@@ -19,4 +19,4 @@ script:
   python test/test.py
   fi
 - source test/test_c.sh
-- valgrind --error-exitcode=42 --leak-check=full test/test_c.sh
+- valgrind --error-exitcode=42 --leak-check=full source test/test_c.sh

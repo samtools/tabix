@@ -122,6 +122,10 @@ fi
 pairix -f samples/test_4dn.pairs.gz  ## revert
 
 
+## bgzf block count (currently no auto test for the accuracy of the result)
+pairix -B samples/test_4dn.pairs.gz
+
+
 ## process merged_nodups
 source util/process_merged_nodup.sh samples/test_merged_nodups.txt
 pairix samples/test_merged_nodups.txt.bsorted.gz '10|20' > log1
@@ -223,4 +227,3 @@ if [ ! -z "$(diff out.1d.pairs out2.1d.pairs)" ]; then
 fi
 rm -f out.1d.pairs out2.1d.pairs
 pairix -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz  ## revert
-
