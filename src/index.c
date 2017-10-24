@@ -1904,14 +1904,14 @@ int get_nblocks(ti_index_t *idx, int tid, BGZF *fp)
 {
     ti_iter_t iter = ti_iter_query(idx, tid, 0, 1<<29, 0, 1<<29);
     int64_t start_block_address = iter->off[0].u>>16;  // in bytes
-    int64_t end_block_address = iter->off[0].v>>16;  // in bytes
+    int64_t end_block_offset = iter->off[0].v;
     int nblocks=0;
     int64_t curr_off = start_block_address<<16;
     do {
       int block_length = bgzf_block_length(fp, curr_off);
       nblocks++;
       curr_off += block_length<<16;
-    } while(curr_off <= iter->off[0].v);
+    } while(curr_off <= end_block_offset);
     ti_iter_destroy(iter);
 
     return((int)nblocks);

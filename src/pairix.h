@@ -154,7 +154,7 @@ extern "C" {
         int get_linecount(const ti_index_t *idx);
 
         /* get file offset
-         * returns number of blocks spanning a sequence (pair) */
+         * returns number of bgzf blocks spanning a sequence (pair) */
         int get_nblocks(ti_index_t *idx, int tid, BGZF *fp);
 
 	/******************

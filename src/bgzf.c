@@ -328,7 +328,7 @@ static void cache_block(BGZF *fp, int size) {}
 int bgzf_block_length(BGZF *fp, int64_t block_start_offset)
 {
 	uint8_t header[BLOCK_HEADER_LENGTH], *compressed_block;
-	int count, size = 0, block_length, remaining;
+	int count, block_length, remaining;
 	int64_t block_address;
         bgzf_seek(fp, block_start_offset, SEEK_SET);
 	block_address = _bgzf_tell((_bgzf_file_t)fp->fp);
@@ -342,7 +342,6 @@ int bgzf_block_length(BGZF *fp, int64_t block_start_offset)
 		fp->errcode |= BGZF_ERR_HEADER;
 		return -1;
 	}
-	size = count;
 	block_length = unpackInt16((uint8_t*)&header[16]) + 1; // +1 because when writing this number, we used "-1"
         return(block_length);
 }
