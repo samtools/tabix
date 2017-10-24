@@ -461,7 +461,7 @@ print (tb.get_chromsize())
 
 # get the number of bgzf blocks that span a given chromosome pair
 tb=pypairix.open("textfile.gz")
-print (tb.bgzf_block_counts())
+print (tb.bgzf_block_count("chr1", "chr2"))
 ```
 
 <br>

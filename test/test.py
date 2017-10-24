@@ -486,6 +486,19 @@ class PairixTestExists2(unittest.TestCase):
         self.assertEqual(pr.exists2("1","2"),0)
 
 
+class PairixTestBgzfBlockCounts(unittest.TestCase):
+
+    def test_exists2(self):
+        pr = pypairix.open(TEST_FILE_2D_4DN)
+        self.assertEqual(pr.bgzf_block_count("chr21","chr21"),8)
+        self.assertEqual(pr.bgzf_block_count("chr21","chr22"),1)
+        self.assertEqual(pr.bgzf_block_count("chr22","chr22"),12)
+        self.assertEqual(pr.bgzf_block_count("chr22","chr21"),0)
+        self.assertEqual(pr.bgzf_block_count("chr21","chrY"),0)
+        self.assertEqual(pr.bgzf_block_count("chr1","chr2"),0)
+        self.assertEqual(pr.bgzf_block_count("1","2"),0)
+
+
 class PairixTestGetHeader(unittest.TestCase):
 
     def tet_get_header(self):
