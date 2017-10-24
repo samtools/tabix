@@ -181,6 +181,12 @@ By default '|' is used to split the two genomic regions, but in some cases, a di
 pairix -W textfile.gz
 ```
 
+#### Print out number of bgzf blocks that span each chromosome pair.
+This command prints out the number of bgzk blocks for all chromosome pairs.
+```
+pairix -B textfile.gz
+```
+
 
 <br>
 
@@ -618,6 +624,10 @@ ulimit -n 2000
 <br>
 
 ## Version history
+
+### 0.3.1
+* `pairix -B` option is now available to print out the number of bgzf blocks for each chromosome (pair).
+* The same function is available for pypairix.
 
 ### 0.3.0
 * The problem with `fragment_4dnpairs.pl` of adding an extra column is now fixed.
