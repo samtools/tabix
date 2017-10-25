@@ -131,6 +131,21 @@ $VALGRIND pairix -f samples/test_4dn.pairs.gz  ## revert
 ## bgzf block count (currently no auto test for the accuracy of the result)
 $VALGRIND pairix -B samples/test_4dn.pairs.gz
 
+## check triangle
+$VALGRIND pairix -Y samples/4dn.bsorted.chr21_22_only.pairs.gz
+$VALGRIND pairix -Y samples/4dn.bsorted.chr21_22_only.nontriangle.pairs.gz
+res=$(pairix -Y samples/4dn.bsorted.chr21_22_only.nontriangle.pairs.gz)
+if [ "$res" != "The file is not a triangle." ]; then
+  echo "test check triangle failed"
+  return 1;
+fi
+
+res=$(pairix -Y samples/4dn.bsorted.chr21_22_only.pairs.gz)
+if [ "$res" != "The file is a triangle." ]; then
+  echo "test check triangle #2 failed"
+  return 1;
+fi
+
 
 ## process merged_nodups
 source util/process_merged_nodup.sh samples/test_merged_nodups.txt
