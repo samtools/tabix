@@ -4,6 +4,8 @@ compiler: gcc
 python:
 - '3.6'
 - '2.7'
+env:
+- VALGRIND_TEST_ON=1
 before_install:
 - sudo apt-get install -qq valgrind
 script:
@@ -18,5 +20,4 @@ script:
   sudo python setup.py install
   python test/test.py
   fi
-- source test/test_c.sh
-- valgrind --error-exitcode=42 --leak-check=full source test/test_c.sh
+- source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
