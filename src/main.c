@@ -331,6 +331,7 @@ int main(int argc, char *argv[])
                 && conf.line_skip==ti_conf_gff.line_skip )
                 fprintf(stderr,"[pairix] The file type not recognised and -p not given, using the preset [gff].\n");
         }
+        free(fnidx);
         return ti_index_build(argv[optind], &conf);
     }
     { // retrieve
