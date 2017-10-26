@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
           return 0;
         } else {
           if(res == -1) fprintf(stderr, "[main] cannot retrieve seqnames.\n");
-          else if(res == -2) fprintf(stderr, "[main] the file is 1D-indexed (option not applicable)\n");
+          else if(res == -2) fprintf(stderr, "[main] the file is 1D-indexed (option -Y not applicable)\n");
           return 1;
         }
     }
