@@ -266,8 +266,8 @@ int main(int argc, char *argv[])
         int res = check_triangle(idx);
         ti_index_destroy(idx);
         if(res>=0) {
-          if(res == 0) printf("The file is a triangle.\n");
-          else if(res == 1) printf("The file is not a triangle.\n");
+          if(res == 1) printf("The file is a triangle.\n");
+          else if(res == 0) printf("The file is not a triangle.\n");
           return 0;
         } else {
           if(res == -1) fprintf(stderr, "[main] cannot retrieve seqnames.\n");

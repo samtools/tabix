@@ -786,6 +786,22 @@ pairix_bgzf_block_count(PairixObject *self, PyObject *args)
     return Py_BuildValue("i", res);
 }
 
+
+static PyObject *
+pairix_check_triangle(PairixObject *self)
+{
+    int res = check_triangle(self->tb);
+    if(res>=0) {
+        if(res == 1) printf("The file is a triangle.\n");
+        else if(res == 0) printf("The file is not a triangle.\n");
+        return Py_BuildValue("i", res);
+    } else {
+        if(res == -1) PyErr_SetString(PairixError, "Cannot retrieve seqnames.\n");
+        else if(res == -2) PyErr_SetString(PairixError, "The file is 1D-indexed (option not applicable)\n");
+        return Py_BuildValue("i", res);
+    }
+}
+
 static PyObject *
 pairix_repr(PairixObject *self)
 {
@@ -973,6 +989,12 @@ static PyMethodDef pairix_methods[] = {
        (PyCFunction)pairix_bgzf_block_count,
         METH_VARARGS,
         PyDoc_STR("return count of bgzf blocks for given key\n\n")
+    },
+    {
+       "check_triangle",
+       (PyCFunction)pairix_check_triangle,
+        METH_VARARGS,
+        PyDoc_STR("return 1 if triangle (a chromosome pair occurs only in one direction (e.g. if chr1|chr2 exists, chr2|chr1 doesn't), 0 if not, -1/-2 if error\n\n")
     },
     /*
     {
