@@ -790,7 +790,7 @@ pairix_bgzf_block_count(PairixObject *self, PyObject *args)
 static PyObject *
 pairix_check_triangle(PairixObject *self)
 {
-    int res = check_triangle(self->tb);
+    int res = check_triangle(self->tb->idx);
     if(res>=0) {
         if(res == 1) printf("The file is a triangle.\n");
         else if(res == 0) printf("The file is not a triangle.\n");
