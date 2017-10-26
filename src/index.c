@@ -1926,9 +1926,8 @@ int check_triangle(ti_index_t *idx)
 {
     if(ti_get_sc2(idx) == -1) return(-2);  // not a 2d file (not applicable)
 
-    char **seqnames=NULL;
     int len;
-    seqnames = ti_seqname(idx,&len);
+    char **seqnames = ti_seqname(idx,&len);
     if(seqnames){
       int i;
       for(i=0;i<len;i++){
