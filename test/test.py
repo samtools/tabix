@@ -28,6 +28,7 @@ import warnings
 TEST_FILE_2D = 'samples/merged_nodup.tab.chrblock_sorted.txt.gz'
 TEST_FILE_2D_4DN = 'samples/4dn.bsorted.chr21_22_only.pairs.gz'
 TEST_FILE_2D_4DN_2 = 'samples/test_4dn.pairs.gz'
+TEST_FILE_2D_4DN_NOT_TRIANGLE = 'samples/4dn.bsorted.chr21_22_only.nontriangle.pairs.gz'
 TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 TEST_FILE_2D_SPACE = 'samples/merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
 
@@ -522,6 +523,21 @@ class PairixTestGetLineCount(unittest.TestCase):
     def test_linecount(self):
         pr= pypairix.open(TEST_FILE_2D_4DN_2)
         self.assertEqual(pr.get_linecount(), 60204)
+
+
+class PairixTestCheckTriangle(unittest.TestCase):
+
+    def test_check_triangle(self):
+        pr= pypairix.open(TEST_FILE_2D_4DN)
+        self.assertEqual(pr.check_triangle(), 1)
+
+    def test_check_triangle2(self):
+        pr= pypairix.open(TEST_FILE_2D_4DN_2)
+        self.assertEqual(pr.check_triangle(), 1)
+
+    def test_check_triangle_false(self):
+        pr= pypairix.open(TEST_FILE_2D_4DN_NOT_TRIANGLE)
+        self.assertEqual(pr.check_triangle(), 1)
 
 
 class PairixVersionCheck(unittest.TestCase):
