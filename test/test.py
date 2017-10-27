@@ -537,7 +537,7 @@ class PairixTestCheckTriangle(unittest.TestCase):
 
     def test_check_triangle_false(self):
         pr= pypairix.open(TEST_FILE_2D_4DN_NOT_TRIANGLE)
-        self.assertEqual(pr.check_triangle(), 1)
+        self.assertEqual(pr.check_triangle(), 0)
 
 
 class PairixVersionCheck(unittest.TestCase):
