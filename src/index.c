@@ -1916,3 +1916,29 @@ int get_nblocks(ti_index_t *idx, int tid, BGZF *fp)
 
     return((int)nblocks);
 }
+
+
+// returns 1 if triangle
+// returns 0 if not a triangle
+// returns -1 if no chrom (pairs) is found in file
+// returns -2 if the file is 1D-indexed (not applicable)
+int check_triangle(ti_index_t *idx)
+{
+    if(ti_get_sc2(idx) == -1) return(-2);  // not a 2d file (not applicable)
+
+    int len;
+    char **seqnames = ti_seqname(idx,&len);
+    if(seqnames){
+      int i;
+      for(i=0;i<len;i++){
+        const char *reg2 = flip_region(seqnames[i], ti_get_region_split_character(idx));
+        if(strcmp(seqnames[i], reg2)!=0)
+          if(ti_get_tid(idx, reg2)!=-1) { free(seqnames); return(0); }  // not a triangle
+      }
+      free(seqnames);
+      return(1);  // is a triangle
+    } else return(-1);  // no chromosome (pairs) found in file 
+
+}
+
+

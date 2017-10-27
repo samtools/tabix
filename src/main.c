@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
     int skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, region_file = 0, print_only_linecount = 0;
     int flip = 0, print_only_region_split_character = 0;
     int print_only_nblocks = 0;
+    int check_triangle_only = 0;
     int c;
     ti_conf_t conf = ti_conf_null, *conf_ptr = NULL;
     const char *reheader = NULL;
@@ -116,7 +117,7 @@ int main(int argc, char *argv[])
         };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tnw:aWB", long_options, &option_index)) >= 0) {
+    while ((c = getopt_long(argc, argv, "Lp:s:b:e:0S:c:lhHfr:d:u:v:Tnw:aWBY", long_options, &option_index)) >= 0) {
         switch (c) {
             case 0: break;  // long option
             case 'L': region_file=1; break;
@@ -151,6 +152,7 @@ int main(int argc, char *argv[])
             case 'H': print_only_header = 1; break;
             case 'B': print_only_nblocks = 1; break;
             case 'W': print_only_region_split_character = 1; break;
+            case 'Y': check_triangle_only = 1; break;
             case 'f': force = 1; break;
             case 'r': reheader = optarg; break;
             case 'n': print_only_linecount = 1; break;
@@ -181,7 +183,9 @@ int main(int argc, char *argv[])
         fprintf(stderr, "         -0         zero-based coordinate\n");
         fprintf(stderr, "         -h         print also the header lines\n");
         fprintf(stderr, "         -H         print only the header lines\n");
+        fprintf(stderr, "         -B         print only the number of bgzf blocks for existing chromosome (pairs)\n");
         fprintf(stderr, "         -W         print only the region split character\n");
+        fprintf(stderr, "         -Y         Only check if the file is a triangle (i.e. a chromosome pair occurs only in one direction (e.g. if chr1|chr2 exists, chr2|chr1 doesn't))\n");
         fprintf(stderr, "         -l         list chromosome names\n");
         fprintf(stderr, "         -n         print only the total line count (same as gunzip -c | wc -l but much faster)\n");
         fprintf(stderr, "         -f         force to overwrite the index\n");
@@ -252,6 +256,25 @@ int main(int argc, char *argv[])
         free(names);
         return 0;
     }
+    if(check_triangle_only){
+        ti_index_t *idx;
+        idx = ti_index_load(argv[optind]);
+        if (idx == 0) {
+            fprintf(stderr, "[main] fail to load the index file.\n");
+            return 1;
+        }
+        int res = check_triangle(idx);
+        ti_index_destroy(idx);
+        if(res>=0) {
+          if(res == 1) printf("The file is a triangle.\n");
+          else if(res == 0) printf("The file is not a triangle.\n");
+          return 0;
+        } else {
+          if(res == -1) fprintf(stderr, "[main] cannot retrieve seqnames.\n");
+          else if(res == -2) fprintf(stderr, "[main] the file is 1D-indexed (option -Y not applicable)\n");
+          return 1;
+        }
+    }
     if (list_chrms) {
         ti_index_t *idx;
         int i, n;
@@ -308,6 +331,7 @@ int main(int argc, char *argv[])
                 && conf.line_skip==ti_conf_gff.line_skip )
                 fprintf(stderr,"[pairix] The file type not recognised and -p not given, using the preset [gff].\n");
         }
+        free(fnidx);
         return ti_index_build(argv[optind], &conf);
     }
     { // retrieve

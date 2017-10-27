@@ -28,7 +28,7 @@
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
-#define PACKAGE_VERSION "0.3.1"
+#define PACKAGE_VERSION "0.3.2"
 
 #include <stdint.h>
 #include "kstring.h"
@@ -156,6 +156,16 @@ extern "C" {
         /* get file offset
          * returns number of bgzf blocks spanning a sequence (pair) */
         int get_nblocks(ti_index_t *idx, int tid, BGZF *fp);
+
+
+        /* check if a pairix-indexed file is a triangle 
+           ( chromosome pairs occur only in one direction. e.g. if chr1|chr2 exists, chr2|chr1 shouldn't. )
+         * returns 1 if triangle
+         * returns 0 if not a triangle
+         * returns -1 if no chrom (pairs) is found in file
+         * returns -2 if the file is 1D-indexed (not applicable) */
+        int check_triangle(ti_index_t *idx);
+
 
 	/******************
 	 * Low-level APIs *
