@@ -40,9 +40,7 @@ typedef struct {
     PyObject_HEAD
     pairix_t *tb;
     char *fn;
-    PyObject *blocknames;
     int linecount;
-    int nblocks;
 } PairixObject;
 
 typedef struct {
@@ -366,7 +364,6 @@ pairix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     const char *fn, *fnidx=NULL;
     static char *kwnames[]={"fn", "fnidx", NULL};
     pairix_t *tb;
-    char **blocknames;
     int i;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|z:open",
@@ -391,15 +388,6 @@ pairix_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
     self->linecount = get_linecount(self->tb->idx);
-    blocknames = ti_seqname(self->tb->idx, &(self->nblocks));
-    self->blocknames = PyList_New(self->nblocks);
-    if(!self->blocknames) { return NULL; }
-    for(i=0;i<self->nblocks;i++){
-      PyObject *val = Py_BuildValue("s",blocknames[i]);
-      if(!val) { Py_DECREF(self->blocknames); return NULL; }
-      PyList_SET_ITEM(self->blocknames,i,val);
-    }
-    free(blocknames);
     return (PyObject *)self;
 }
 
@@ -407,7 +395,6 @@ static void
 pairix_dealloc(PairixObject *self)
 {
     free(self->fn);
-    Py_DECREF(self->blocknames);
     ti_close(self->tb);
     PyObject_Del(self);
 }
@@ -612,7 +599,17 @@ pairix_get_linecount(PairixObject *self)
 static PyObject *
 pairix_get_blocknames(PairixObject *self)
 {
-  return self->blocknames;
+  int n,i;
+  char **blocknames = ti_seqname(self->tb->idx, &n);
+  PyObject *bnames = PyList_New(n);
+  if(!bnames) return NULL;
+  for(i=0;i<n;i++){
+      PyObject *val = Py_BuildValue("s",blocknames[i]);
+      if(!val) { Py_DECREF(bnames); return NULL; }
+      PyList_SET_ITEM(bnames,i,val);
+  }
+  free(blocknames);
+  return bnames;
 }
 
 static PyObject *
