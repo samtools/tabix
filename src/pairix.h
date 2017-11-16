@@ -28,7 +28,7 @@
 #ifndef __TABIDX_H
 #define __TABIDX_H
 
-#define PACKAGE_VERSION "0.3.2"
+#define PACKAGE_VERSION "0.3.3"
 
 #include <stdint.h>
 #include "kstring.h"
@@ -158,7 +158,7 @@ extern "C" {
         int get_nblocks(ti_index_t *idx, int tid, BGZF *fp);
 
 
-        /* check if a pairix-indexed file is a triangle 
+        /* check if a pairix-indexed file is a triangle
            ( chromosome pairs occur only in one direction. e.g. if chr1|chr2 exists, chr2|chr1 shouldn't. )
          * returns 1 if triangle
          * returns 0 if not a triangle
