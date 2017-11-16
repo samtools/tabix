@@ -633,6 +633,9 @@ ulimit -n 2000
 
 ## Version history
 
+### 0.3.3
+* The problem of `pypairix` `get_blocknames` crashing python when called twice now fixed.
+
 ### 0.3.2
 * `pairix -Y` option is now available to check whether a pairix-indexed file is a triangle (i.e. a chromosome pair occurs in one direction. e.g. if chr1|chr2 exists, chr2|chr1 doesn't)
 * `pypairix` `check_triangle` function is also now available to check whether a pairix-indexed file is a triangle.
