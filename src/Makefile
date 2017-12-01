@@ -1,9 +1,9 @@
 CC=			gcc
-CFLAGS=		-g -Wall -O2 -fPIC #-m64 #-arch ppc
+CFLAGS=		-g -w -O2 -fPIC #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE -DBGZF_CACHE
 LOBJS=		bgzf.o kstring.o knetfile.o index.o bedidx.o
 AOBJS=		main.o
-PROG=		pairix bgzip pairs_merger merge-pairs
+PROG=		pairix bgzip pairs_merger streamer_1d 
 INCLUDES=
 SUBDIRS=	.
 LIBPATH=
@@ -25,6 +25,8 @@ all-recur lib-recur clean-recur cleanlocal-recur install-recur:
 		done;
 
 all:$(PROG)
+		mkdir -p ../bin; mv pairix bgzip pairs_merger streamer_1d ../bin;
+		chmod +x ../bin/*;
 
 lib:libpairix.a
 
@@ -46,8 +48,9 @@ bgzip:bgzip.o bgzf.o knetfile.o
 pairs_merger:pairs_merger.o lib
 		$(CC) $(CFLAGS) -o $@ pairs_merger.o -L. -lpairix -lm $(LIBPATH) -lz
 
-TabixReader.class:TabixReader.java
-		javac -cp .:sam.jar TabixReader.java
+streamer_1d:streamer_1d.o lib
+		$(CC) $(CFLAGS) -o $@ streamer_1d.o -L. -lpairix -lm $(LIBPATH) -lz
+
 
 kstring.o:kstring.h
 knetfile.o:knetfile.h
@@ -55,11 +58,12 @@ bgzf.o:bgzf.h knetfile.h
 index.o:bgzf.h pairix.h khash.h ksort.h kstring.h
 main.o:pairix.h kstring.h bgzf.h
 pairs_merger.o:pairix.h kstring.h bgzf.h
+streamer_1d.o:pairix.h kstring.h bgzf.h
 bgzip.o:bgzf.h
 bedidx.o:kseq.h khash.h
 
 
 cleanlocal:
-		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log *.class libpairix.*.dylib libpairix.so*
+		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a *.class libpairix.*.dylib libpairix.so*
 
 clean:cleanlocal-recur

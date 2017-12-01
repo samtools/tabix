@@ -5,3 +5,4 @@ bin/
 pypairix.egg-info/
 dist/
 build/
+samples/1_2_merged11.bsorted.pairs.gz*

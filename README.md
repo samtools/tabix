@@ -96,6 +96,7 @@ make
 # In order to use utils, add util path to PATH
 # In order to use bam2pairs, add util/bam2pairs to PATH
 # eg: PATH=~/git/pairix/bin/:~/git/pairix/util:~/git/pairix/util/bam2pairs:$PATH
+
 ```
 Alternatively, `conda install pairix` can be used to install both Pairix and Pypairix together. This requires Anaconda or Miniconda.
 <br>
@@ -108,6 +109,8 @@ sudo apt-get install zlib1g-dev
 # centos
 sudo yum install zlib-devel
 ```
+
+<br>
 
 <br>
 

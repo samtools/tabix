@@ -9,13 +9,13 @@
 #include "knetfile.h"
 #endif
 #include "pairix.h"
+#include <time.h>
 
 #define TAD_MIN_CHUNK_GAP 32768
 // 1<<14 is the size of minimum bin.
 #define TAD_LIDX_SHIFT    14
-#define REGION_SPLIT_CHARACTER   '|'
 #define DEFAULT_DELIMITER '\t'
-
+#define MAX_REGION_STR_LEN 10000
 
 typedef struct {
 	uint64_t u, v;
@@ -43,6 +43,7 @@ struct __ti_index_t {
         khash_t(s) *tname;
         khash_t(i) **index;
         ti_lidx_t *index2;
+        int linecount;
 };
 
 struct __ti_iter_t {
@@ -52,17 +53,21 @@ struct __ti_iter_t {
         kstring_t str;
         const ti_index_t *idx;
         pair64_t *off;
+        ti_intv_t intv;
 };
 
+ti_conf_t ti_conf_null = { 0, 0, 0, 0, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '@', 0 };
+ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_pairs = { TI_PRESET_PAIRS, 2, 3, 3, 4, 5, 5, '\t', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_merged_nodups = { TI_PRESET_MERGED_NODUPS, 2, 3, 3, 6, 7, 7, ' ', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
+ti_conf_t ti_conf_old_merged_nodups = { TI_PRESET_OLD_MERGED_NODUPS, 3, 4, 4, 7, 8, 8, ' ', DEFAULT_REGION_SPLIT_CHARACTER, '#', 0 };
 
+char global_region_split_character = DEFAULT_REGION_SPLIT_CHARACTER;
 
-
-
-ti_conf_t ti_conf_gff = { 0, 1, 4, 5, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_bed = { TI_FLAG_UCSC, 1, 2,  3, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_psltbl = { TI_FLAG_UCSC, 15, 17, 18, 0, 0, 0, '\t', '#', 0 };
-ti_conf_t ti_conf_sam = { TI_PRESET_SAM, 3, 4, 0, 0, 0, 0, '\t', '@', 0 };
-ti_conf_t ti_conf_vcf = { TI_PRESET_VCF, 1, 2, 0, 0, 0, 0, '\t', '#', 0 };
 
 /***************
  * read a line *
@@ -135,7 +140,7 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 	intv->ss = intv->se = 0; intv->ss2 = intv->se2 = 0; intv->beg = intv->end = -1; intv->beg2 = intv->end2 = -1;
 	for (i = 0; i <= len; ++i) {
 		if (line[i] == conf->delimiter || line[i] == 0) {
-            ++ncols;
+                        ++ncols;
 			if (id == conf->sc) {
 				intv->ss = line + b; intv->se = line + i;
                         } else if (conf->sc2 && id == conf->sc2) {
@@ -155,8 +160,8 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 				if (intv->beg2 < 0) intv->beg2 = 0;
 				if (intv->end2 < 1) intv->end2 = 1;
 			} else if(id == conf->ec) {
-				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
-					if (id == conf->ec) intv->end = strtol(line + b, &s, 0);
+				if ((conf->preset&0xffff) != TI_PRESET_VCF && (conf->preset&0xffff) != TI_PRESET_SAM) {
+					intv->end = strtol(line + b, &s, 0);
 				} else if ((conf->preset&0xffff) == TI_PRESET_SAM) {
 					if (id == 6) { // CIGAR
 						int l = 0, op;
@@ -188,10 +193,10 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 					}
 				}
 			} else if(conf->ec2 && id == conf->ec2) {
-				if ((conf->preset&0xffff) == TI_PRESET_GENERIC) {
-					if (id == conf->ec2) intv->end2 = strtol(line + b, &s, 0);
+				if ((conf->preset&0xffff) != TI_PRESET_VCF && (conf->preset&0xffff) != TI_PRESET_SAM) {
+					intv->end2 = strtol(line + b, &s, 0);
                                 }
-			} else {
+	      	        } else {
 				if ((conf->preset&0xffff) == TI_PRESET_SAM) {
 					if (id == 6) { // CIGAR
 						int l = 0, op;
@@ -228,13 +233,6 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 			++id;
 		}
 	}
-/*
-	if (ncols < conf->sc || ncols < conf->bc || ncols < conf->ec) {
-		if (ncols == 1) fprintf(stderr,"[get_intv] Is the file tab-delimited? The line has %d field only: %s\n", ncols, line);
-		else fprintf(stderr,"[get_intv] The line has %d field(s) only: %s\n", ncols, line);
-		return(1);
-	}
-*/
 	if (intv->ss == 0 || intv->se == 0 || intv->beg < 0 || intv->end < 0 ) return -1;
         if(conf->sc2 && (intv->ss2 == 0 || intv->se2 == 0)) return -1;
         if(conf->bc2 && (intv->beg2 < 0 || intv->end2 < 0)) return -1;
@@ -242,12 +240,14 @@ int ti_get_intv(const ti_conf_t *conf, int len, char *line, ti_interval_t *intv)
 	return 0;
 }
 
+
 static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
 {
 	ti_interval_t x;
         char *str_ptr;
         char sname_double[strlen(str->s)+1];
 	intv->tid = intv->beg = intv->end = intv->beg2 = intv->end2 = intv->bin = intv->bin2 =  -1;
+        char region_split_character = idx->conf.region_split_character;
 	if (ti_get_intv(&idx->conf, str->l, str->s, &x) == 0) {
 
 		char c = *x.se;
@@ -260,7 +260,7 @@ static int get_intv(ti_index_t *idx, kstring_t *str, ti_intv_t *intv)
                   *x.se2 = '\0';
                   strcpy(sname_double,x.ss);
                   str_ptr = sname_double+strlen(sname_double);
-                  *str_ptr=REGION_SPLIT_CHARACTER;
+                  *str_ptr=region_split_character;
                   str_ptr++;
                   strcpy(str_ptr,x.ss2);
                   intv->tid = get_tid(idx, sname_double);
@@ -374,10 +374,12 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 	idx->tname = kh_init(s);
 	idx->index = 0;
 	idx->index2 = 0;
+        idx->linecount=0;
 
 	save_bin = save_tid = last_tid = last_bin = 0xffffffffu;
 	save_off = last_off = bgzf_tell(fp); last_coor = 0xffffffffu;
 	while ((ret = ti_readline(fp, str)) >= 0) {
+                idx->linecount++;
 		ti_intv_t intv;
 		++lineno;
 		if (lineno <= idx->conf.line_skip || str->s[0] == idx->conf.meta_char) {
@@ -385,22 +387,22 @@ ti_index_t *ti_index_core(BGZF *fp, const ti_conf_t *conf)
 			continue;
 		}
 		get_intv(idx, str, &intv);
-        if ( intv.beg<0 || intv.end<0 )
-        {
-            fprintf(stderr,"[ti_index_core] the indexes overlap or are out of bounds\n");
-            return(NULL);
-        }
+                if ( intv.beg<0 || intv.end<0 )
+                {
+                    fprintf(stderr,"[ti_index_core] the indexes overlap or are out of bounds\n");
+                    return(NULL);
+                }
 		if (last_tid != intv.tid) { // change of chromosomes
-            if (last_tid>intv.tid )
-            {
-                fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted? [pos %d]\n",(unsigned long long)lineno,intv.beg+1);
-                return(NULL);
-            }
-			last_tid = intv.tid;
-			last_bin = 0xffffffffu;
+                if (last_tid>intv.tid )
+                {
+                    fprintf(stderr,"[ti_index_core] the chromosome blocks not continuous at line %llu, is the file sorted? [pos %d]\n",(unsigned long long)lineno,intv.beg+1);
+                    return(NULL);
+                }
+		    last_tid = intv.tid;
+		    last_bin = 0xffffffffu;
 		} else if (last_coor > intv.beg) {
-			fprintf(stderr, "[ti_index_core] the file out of order at line %llu\n", (unsigned long long)lineno);
-			return(NULL);
+		    fprintf(stderr, "[ti_index_core] the file out of order at line %llu\n", (unsigned long long)lineno);
+		    return(NULL);
 		}
 		tmp = insert_offset2(&idx->index2[intv.tid], intv.beg, intv.end, last_off);
 		if (last_off == 0) offset0 = tmp;
@@ -469,11 +471,15 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 	int32_t i, size, ti_is_be;
 	khint_t k;
 	ti_is_be = bam_is_big_endian();
-	bgzf_write(fp, "TBI\1", 4);
+	bgzf_write(fp, "PX2.002\1", 8);
 	if (ti_is_be) {
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
 	} else bgzf_write(fp, &idx->n, 4);
+	if (ti_is_be) {
+		uint32_t x = idx->linecount;
+		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
+	} else bgzf_write(fp, &idx->linecount, 4);
 	assert(sizeof(ti_conf_t) == 40);
 	if (ti_is_be) { // write ti_conf_t;
 		uint32_t x[6];
@@ -546,21 +552,23 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 static ti_index_t *ti_index_load_core(BGZF *fp)
 {
 	int i, ti_is_be;
-	char magic[4];
+	char magic[8];
 	ti_index_t *idx;
 	ti_is_be = bam_is_big_endian();
 	if (fp == 0) {
 		fprintf(stderr, "[ti_index_load_core] fail to load index.\n");
 		return 0;
 	}
-	bgzf_read(fp, magic, 4);
-	if (strncmp(magic, "TBI\1", 4)) {
-		fprintf(stderr, "[ti_index_load] wrong magic number.\n");
+	bgzf_read(fp, magic, 8);
+	if (strncmp(magic, "PX2.002\1", 8)) {
+		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
 		return 0;
 	}
 	idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));
 	bgzf_read(fp, &idx->n, 4);
 	if (ti_is_be) bam_swap_endian_4p(&idx->n);
+	bgzf_read(fp, &idx->linecount, 4);
+	if (ti_is_be) bam_swap_endian_4p(&idx->linecount);
 	idx->tname = kh_init(s);
 	idx->index = (khash_t(i)**)calloc(idx->n, sizeof(void*));
 	idx->index2 = (ti_lidx_t*)calloc(idx->n, sizeof(ti_lidx_t));
@@ -689,7 +697,7 @@ static void download_from_remote(const char *url)
 
 static char *get_local_version(const char *fn)
 {
-    struct stat sbuf;
+        struct stat sbuf;
 	char *fnidx = (char*)calloc(strlen(fn) + 5, 1);
 	strcat(strcpy(fnidx, fn), ".px2");
 	if ((strstr(fnidx, "ftp://") == fnidx || strstr(fnidx, "http://") == fnidx)) {
@@ -706,8 +714,9 @@ static char *get_local_version(const char *fn)
 		download_from_remote(url);
 		free(url);
 	}
-    if (stat(fnidx, &sbuf) == 0) return fnidx;
-	free(fnidx); return 0;
+        if (stat(fnidx, &sbuf) == 0) return fnidx;
+	free(fnidx);
+        return 0;
 }
 
 const char **ti_seqname(const ti_index_t *idx, int *n)
@@ -725,11 +734,11 @@ const char **ti_seqname(const ti_index_t *idx, int *n)
 ti_index_t *ti_index_load(const char *fn)
 {
 	ti_index_t *idx;
-    char *fname = get_local_version(fn);
+        char *fname = get_local_version(fn);
 	if (fname == 0) return 0;
 	idx = ti_index_load_local(fname);
 	if (idx == 0) fprintf(stderr, "[ti_index_load] fail to load the index: %s\n", fname);
-    free(fname);
+        if(fname) free(fname);
 	return idx;
 }
 
@@ -808,7 +817,7 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 	} else *end = 1<<29;
 	if (*begin > 0) --*begin;
 	free(s);
-	if (*begin > *end) return -1;
+	if (*begin > *end) return -2;
 
 	return 0;
 }
@@ -816,12 +825,14 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 
 // thie function can handle both 1d and 2d query automatically
 // if 1d, begin2 and end2 will have value -1.
+// query string error: -1
+// region_split_character not matching error: -2
 int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2)
 {
 	char *s, *p, *sname;
 	int i, l, k, h;
         int coord1s, coord1e, coord2s, coord2e, pos1s, pos2s;
-
+        char region_split_character = ti_get_region_split_character(idx);
 
 	l = strlen(str);
 	p = s = (char*)malloc(l+1);
@@ -831,69 +842,78 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	s[k] = 0;
 
         /* split by dimension */
-        for(i = 0; i != k; i++) if( s[i] == REGION_SPLIT_CHARACTER) break;
+        for(i = 0; i != k; i++) if( s[i] == region_split_character) break;
         s[i]=0;
 
-        if(i == k) { //1d query
+        /* get data dimension */
+        int dim = ti_get_sc2(idx)+1==0?1:2;
+
+        if(i == k && dim == 1) { //1d query
           *begin2=-1; *end2=-1;
-          if(ti_parse_region(idx,str,tid,begin,end)==0) {  free(s); return 0; }
-          else {free(s); return -1; }
-
-        }else{ //2d query
-          coord1s=0; coord1e=i; coord2s=i+1; coord2e=k;
-
-          /* split into chr and pos */
-          for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
-          s[i]=0; pos1s=i+1;
-          for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
-          s[i]=0; pos2s=i+1;
-
-          /* concatenate chromosomes */
-          sname = (char*)malloc(l+1);
-          strcpy(sname, s + coord1s);
-          h=strlen(sname);
-          sname[h]= REGION_SPLIT_CHARACTER;
-          strcpy(sname+h+1, s+coord2s);
-
-
-  	  if ((*tid = ti_get_tid(idx, sname)) < 0) {
-  		free(s); free(sname);
-  		return -1;
-  	  }
-
-          /* parsing pos1 */
-  	  if (pos1s-1 == coord1e) { /* dump the whole sequence */
-  		*begin = 0; *end = 1<<29;
-    	  } else {
-            p = s + pos1s;
-  	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
-  	    *begin = atoi(p);
-  	    if (i < coord1e) {
-  		p = s + i + 1;
-  		*end = atoi(p);
-    	    } else *end = 1<<29;
-    	    if (*begin > 0) --*begin;
-          }
-
-          /* parsing pos2 */
-  	  if (pos2s-1 == coord2e) { /* dump the whole sequence */
-  		*begin2 = 0; *end2 = 1<<29;
-  	  } else{
-            p = s + pos2s;
-  	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
-  	    *begin2 = atoi(p);
-  	    if (i < coord2e) {
-  		p = s + i + 1;
-  		*end2 = atoi(p);
-  	    } else *end2 = 1<<29;
-  	    if (*begin2 > 0) --*begin2;
-          }
-
-  	  free(s); free(sname);
-  	  if (*begin > *end) return -1;
-     	  if (*begin2!=-1 && *begin2 > *end2) return -1;
-   	  return 0;
+          int res = ti_parse_region(idx,str,tid,begin,end);
+          free(s); return (res);
         }
+        if(i == k && dim == 2) { //1d query on 2d data : interprete query 'x' as 'x|x'
+          s = (char*)realloc(s, k*2+2);
+          strcpy(s+i+1, s);
+          s[i] = region_split_character;
+          k = k*2+1;
+        }
+
+        //2d query on 2d data
+        coord1s=0; coord1e=i; coord2s=i+1; coord2e=k;
+
+        /* split into chr and pos */
+        for (i = coord1s; i != coord1e; ++i) if (s[i] == ':') break;
+        s[i]=0; pos1s=i+1;
+        for (i = coord2s; i != coord2e; ++i) if (s[i] == ':') break;
+        s[i]=0; pos2s=i+1;
+
+        /* concatenate chromosomes */
+        sname = (char*)malloc(l+1);
+        strcpy(sname, s + coord1s);
+        h=strlen(sname);
+        sname[h]= region_split_character;
+        strcpy(sname+h+1, s+coord2s);
+
+
+        if ((*tid = ti_get_tid(idx, sname)) < 0) {
+	    free(s); free(sname);
+	    return -1;
+        }
+
+        /* parsing pos1 */
+        if (pos1s-1 == coord1e) { /* dump the whole sequence */
+	    *begin = 0; *end = 1<<29;
+        } else {
+            p = s + pos1s;
+	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
+	    *begin = atoi(p);
+	    if (i < coord1e) {
+		p = s + i + 1;
+		*end = atoi(p);
+  	    } else *end = 1<<29;
+  	    if (*begin > 0) --*begin;
+        }
+
+        /* parsing pos2 */
+        if (pos2s-1 == coord2e) { /* dump the whole sequence */
+		*begin2 = 0; *end2 = 1<<29;
+        } else {
+            p = s + pos2s;
+	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
+	    *begin2 = atoi(p);
+	    if (i < coord2e) {
+		p = s + i + 1;
+		*end2 = atoi(p);
+	    } else *end2 = 1<<29;
+	    if (*begin2 > 0) --*begin2;
+        }
+
+	free(s); free(sname);
+	if (*begin > *end) return -1;
+   	if (*begin2!=-1 && *begin2 > *end2) return -1;
+ 	return 0;
 }
 
 
@@ -927,6 +947,13 @@ ti_iter_t ti_iter_first()
 	iter->from_first = 1;
 	return iter;
 }
+
+
+int get_linecount(const ti_index_t *idx)
+{
+        return(idx->linecount);
+}
+
 
 ti_iter_t ti_iter_query(const ti_index_t *idx, int tid, int beg, int end, int beg2, int end2 ){ //beg2, end2 should be -1 for 1d query.
 	uint16_t *bins;
@@ -1028,20 +1055,19 @@ const char *ti_iter_read(BGZF *fp, ti_iter_t iter, int *len, char seqonly)
 			++iter->i;
 		}
 		if ((ret = ti_readline(fp, &iter->str)) >= 0) {
-			ti_intv_t intv;
 			iter->curr_off = bgzf_tell(fp);
 			if (iter->str.s[0] == iter->idx->conf.meta_char) continue;
-			get_intv((ti_index_t*)iter->idx, &iter->str, &intv);
-                        if(seqonly) 
-                                if(intv.tid == iter->tid) { 
+			get_intv((ti_index_t*)iter->idx, &iter->str, &iter->intv);
+                        if(seqonly)
+                                if(iter->intv.tid == iter->tid) {
                                       if (len) *len = iter->str.l;
                                       return iter->str.s;  // compare only chromosome (chromosome pair) not position.
                                 } else break;
-			else if (intv.tid != iter->tid || intv.beg >= iter->end ) break; // no need to proceed
-			else if (intv.end > iter->beg && iter->end > intv.beg && ( iter->beg2==-1 || iter->end2==-1 || (intv.end2 > iter->beg2 && iter->end2 > intv.beg2) )) {
+			else if (iter->intv.tid != iter->tid || iter->intv.beg >= iter->end ) break; // no need to proceed
+			else if (iter->intv.end > iter->beg && iter->end > iter->intv.beg && ( iter->beg2==-1 || iter->end2==-1 || (iter->intv.end2 > iter->beg2 && iter->end2 > iter->intv.beg2) )) {
 				if (len) *len = iter->str.l;
 				return iter->str.s;
-			} else continue; 
+			} else continue;
 		} else break; // end of file
 	}
 	iter->finished = 1;
@@ -1082,6 +1108,17 @@ int ti_fetch_2d(BGZF *fp, const ti_index_t *idx, int tid, int beg, int end, int 
 
 const ti_conf_t *ti_get_conf(ti_index_t *idx) { return idx? &idx->conf : 0; }
 
+/* Get 0-based column index and delimiter */
+int ti_get_sc(ti_index_t *idx) { return idx? idx->conf.sc-1 : -1; }
+int ti_get_sc2(ti_index_t *idx) { return idx? idx->conf.sc2-1 : -1; }
+int ti_get_bc(ti_index_t *idx) { return idx? idx->conf.bc-1 : -1; }
+int ti_get_bc2(ti_index_t *idx) { return idx? idx->conf.bc2-1 : -1; }
+int ti_get_ec(ti_index_t *idx) { return idx? idx->conf.ec-1 : -1; }
+int ti_get_ec2(ti_index_t *idx) { return idx? idx->conf.ec2-1 : -1; }
+char ti_get_delimiter(ti_index_t *idx) { return idx? idx->conf.delimiter : 0; }
+char ti_get_region_split_character(ti_index_t *idx){ return idx? idx->conf.region_split_character : 0; }
+
+
 /*******************
  * High-level APIs *
  *******************/
@@ -1118,9 +1155,99 @@ int ti_lazy_index_load(pairix_t *t)
 	return 0;
 }
 
+
+// reg can contain wildcard for one of the two mates ('*')
+sequential_iter_t *ti_querys_2d_general(pairix_t *t, const char *reg)
+{
+   int n_seqpair_list;
+   int n_sub_list;
+   char *sp, **chr1list, **chr2list;
+   char *chrend;
+   char chronly=1;
+   int i;
+
+   char region_split_character = t->idx->conf.region_split_character;
+
+   if((sp = strchr(reg, region_split_character)) != NULL){
+      if(sp == reg + 1 && reg[0]=='*') {    // '*|c:s-e'
+         char *chr2 = sp + 1;
+
+         // get the second chromosome and the list of the first chromosomes pairing with the second chromosome.
+         // extract only chr part temporarily (split the beg and end part for now)
+         if( (chrend = strchr(chr2, ':')) != NULL) {
+            *chrend=0; chronly=0;
+         }
+         char **chrpairlist = ti_seqname(t->idx, &n_seqpair_list);
+         chr1list = get_seq1_list_for_given_seq2(chr2, chrpairlist, n_seqpair_list, &n_sub_list);
+         if(chronly==0) *chrend=':';  // revert to original region string including beg and end
+         // create an array of regions in string.
+         char **regions = malloc(n_sub_list * sizeof(char*));
+         for(i=0;i<n_sub_list;i++){
+            regions[i] = malloc((strlen(chr1list[i]) + strlen(chr2) + 2) * sizeof(char));
+            strcpy(regions[i], chr1list[i]);
+            *(regions[i] + strlen(regions[i]) + 1) = 0;
+            *(regions[i] + strlen(regions[i])) = region_split_character;
+            strcat(regions[i], chr2);
+         }
+         free(chrpairlist);
+         for(i=0;i<n_sub_list;i++) free(chr1list[i]);
+         free(chr1list);
+
+         // multi-region query
+         sequential_iter_t *siter = ti_querys_2d_multi(t, regions, n_sub_list);
+         for(i=0;i<n_sub_list;i++) free(regions[i]);
+         free(regions);
+         return(siter);
+
+      } else if(strlen(sp) == 2 && sp[1]=='*'){  // 'c:s-e|*'
+         *sp=0; char *chr1 = reg;
+         if( (chrend = strchr(chr1, ':')) != NULL) {
+            *chrend=0; chronly=0;
+         }
+         char **chrpairlist = ti_seqname(t->idx, &n_seqpair_list);
+         chr2list = get_seq2_list_for_given_seq1(chr1, chrpairlist, n_seqpair_list, &n_sub_list);
+         if(chronly==0) *chrend=':';  // revert to original region string including beg and end
+
+         // create an array of regions in string.
+         char **regions = malloc(n_sub_list * sizeof(char*));
+         for(i=0;i<n_sub_list;i++){
+            regions[i] = malloc((strlen(chr2list[i]) + strlen(chr1) + 2) * sizeof(char));
+            strcpy(regions[i], chr1);
+            *(regions[i] + strlen(regions[i]) + 1) = 0;
+            *(regions[i] + strlen(regions[i])) = region_split_character;
+            strcat(regions[i], chr2list[i]);
+         }
+         free(chrpairlist);
+         for(i=0;i<n_sub_list;i++) free(chr2list[i]);
+         free(chr2list);
+
+         sequential_iter_t *siter = ti_querys_2d_multi(t, regions, n_sub_list);
+         for(i=0;i<n_sub_list;i++) free(regions[i]);
+         free(regions);
+         return(siter);
+
+      } else {  // no wildcard
+         sequential_iter_t *siter = create_sequential_iter(t);
+         add_to_sequential_iter ( siter, ti_querys_2d(t,reg) );
+         return(siter);
+      }
+   }else {  // 1d query (let's regard it as 1d query on 1d index for now)
+         sequential_iter_t *siter = create_sequential_iter(t);
+         add_to_sequential_iter ( siter, ti_querys_2d(t,reg) );
+         return(siter);
+   }
+}
+
+
+
 ti_iter_t ti_queryi(pairix_t *t, int tid, int beg, int end)
 {
         return ti_queryi_2d(t,tid,beg,end,-1,-1);
+}
+
+sequential_iter_t *ti_queryi_general(pairix_t *t, int tid, int beg, int end)
+{
+        return ti_queryi_2d_general(t,tid,beg,end,-1,-1);
 }
 
 ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end2)
@@ -1130,10 +1257,25 @@ ti_iter_t ti_queryi_2d(pairix_t *t, int tid, int beg, int end, int beg2, int end
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
 }
 
+sequential_iter_t *ti_queryi_2d_general(pairix_t *t, int tid, int beg, int end, int beg2, int end2)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    add_to_sequential_iter ( siter, ti_queryi_2d(t,tid,beg,end,beg2,end2) );
+    return(siter);
+}
+
 ti_iter_t ti_querys(pairix_t *t, const char *reg)
 {
         return ti_querys_2d(t,reg);
 }
+
+sequential_iter_t *ti_querys_general(pairix_t *t, const char *reg)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    add_to_sequential_iter ( siter, ti_querys(t, reg) );
+    return(siter);
+}
+
 
 ti_iter_t ti_querys_2d(pairix_t *t, const char *reg)
 {
@@ -1142,6 +1284,16 @@ ti_iter_t ti_querys_2d(pairix_t *t, const char *reg)
 	if (ti_lazy_index_load(t) != 0) return 0;
 	if (ti_parse_region2d(t->idx, reg, &tid, &beg, &end, &beg2, &end2) < 0) return 0;
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
+}
+
+sequential_iter_t *ti_querys_2d_multi(pairix_t *t, const char **regs, int nRegs)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    int i;
+    for(i=0;i<nRegs;i++){
+      add_to_sequential_iter ( siter, ti_querys_2d(t, regs[i]) );
+    }
+    return(siter);
 }
 
 ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end)
@@ -1154,13 +1306,22 @@ ti_iter_t ti_query(pairix_t *t, const char *name, int beg, int end)
 	return ti_iter_query(t->idx, tid, beg, end, -1, -1);
 }
 
+sequential_iter_t *ti_query_general(pairix_t *t, const char *name, int beg, int end)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    add_to_sequential_iter (siter, ti_query(t, name, beg, end));
+    return(siter);
+}
+
 ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
 	int tid;
         char namepair[1000], *str_ptr;
+        char region_split_character = get_region_split_character(t);
+
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
-        *str_ptr = REGION_SPLIT_CHARACTER;
+        *str_ptr = region_split_character;
         str_ptr++;
         strcpy(str_ptr,name2);
 
@@ -1169,6 +1330,13 @@ ti_iter_t ti_query_2d(pairix_t *t, const char *name, int beg, int end, const cha
 	if (ti_lazy_index_load(t) != 0) return 0;
 	if ((tid = ti_get_tid(t->idx, namepair)) < 0) return 0;
 	return ti_iter_query(t->idx, tid, beg, end, beg2, end2);
+}
+
+sequential_iter_t *ti_query_2d_general(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
+{
+    sequential_iter_t *siter = create_sequential_iter(t);
+    add_to_sequential_iter (siter, ti_query_2d(t, name, beg, end, name2, beg2, end2));
+    return(siter);
 }
 
 int ti_querys_tid(pairix_t *t, const char *reg)
@@ -1182,33 +1350,38 @@ int ti_querys_2d_tid(pairix_t *t, const char *reg)
 	if (reg == 0) return -3;  // null region
 	if (ti_lazy_index_load(t) != 0) return -3; // index not loaded
 	parse_err = ti_parse_region2d(t->idx, reg, &tid, &beg, &end, &beg2, &end2);
-        if(tid != -1 && tid != -3 && parse_err == -1) tid = -2;  // -2 is parsing error. 
+        if(tid != -1 && tid != -3 && parse_err == -1) tid = -2;  // -2 is parsing error.
         return(tid);  // -1 means chromosome (pair) doesn't exist.
 }
 
 int ti_query_tid(pairix_t *t, const char *name, int beg, int end)
 {
-	int tid;
 	if (name == 0) return -3 ;
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return -3;
-	return( ti_get_tid(t->idx, name) );
+	if (ti_get_tid(t->idx, name) <0) return -1;
+        if (beg > end) return -2;
+        else return 0;
 }
 
 int ti_query_2d_tid(pairix_t *t, const char *name, int beg, int end, const char *name2, int beg2, int end2)
 {
-	int tid;
         char namepair[1000], *str_ptr;
+        char region_split_character = t->idx->conf.region_split_character;
+
         strcpy(namepair,name);
         str_ptr = namepair + strlen(namepair);
-        *str_ptr = REGION_SPLIT_CHARACTER;
+        *str_ptr = region_split_character;
         str_ptr++;
         strcpy(str_ptr,name2);
 
 	if (name == 0) return ti_iter_first();
 	// then need to load the index
 	if (ti_lazy_index_load(t) != 0) return 0;
-	return (ti_get_tid(t->idx, namepair));
+        if(ti_get_tid(t->idx, namepair) <0) return -1;
+        if (beg > end) return -2;
+        if (beg2 > end2) return -2;
+        else return 0;
 }
 
 
@@ -1218,19 +1391,51 @@ const char *ti_read(pairix_t *t, ti_iter_t iter, int *len)
 }
 
 
+// create an empty sequential iterator
+sequential_iter_t *create_sequential_iter(pairix_t *t)
+{
+  sequential_iter_t *siter = malloc(sizeof(sequential_iter_t));
+  siter->t = t;
+  siter->n = 0;
+  siter->curr = 0;
+  siter->iter = NULL;
+  return(siter);
+}
+
+// destroy a sequential iterator
+void destroy_sequential_iter(sequential_iter_t *siter)
+{
+  int i;
+  if(siter){
+    for(i=0;i<siter->n;i++) ti_iter_destroy(siter->iter[i]);
+    free(siter->iter);
+    free(siter);
+  }
+}
+
+// add an iter element to a sequential iterator, the size is dynamically incremented.
+void add_to_sequential_iter(sequential_iter_t *siter, ti_iter_t iter)
+{
+  siter->n++;
+  siter->iter=realloc(siter->iter, siter->n * sizeof(ti_iter_t));
+  siter->iter[siter->n-1] = iter;
+}
+
 // create an empty merged_iter_t struct with predefined length
 merged_iter_t *create_merged_iter(int n)
 {
+   int i;
    merged_iter_t *miter = malloc(sizeof(merged_iter_t));
    if(miter){
-     if( miter->iu = calloc(n,sizeof(iter_unit))) {
+     if( miter->iu = calloc(n,sizeof(iter_unit*))) {
        miter->n = n;
        miter->first=1;
+       for(i=0;i<n;i++) miter->iu[i] = calloc(1,sizeof(iter_unit));
      } else { fprintf(stderr,"Cannot allocate memory for iter_unit array in merged_iter_t\n"); }
      return(miter);
-   } else { 
-      fprintf(stderr,"Cannot allocate memory for merged_iter_t\n"); 
-      return(NULL); 
+   } else {
+      fprintf(stderr,"Cannot allocate memory for merged_iter_t\n");
+      return(NULL);
    }
 }
 
@@ -1239,9 +1444,9 @@ void destroy_merged_iter(merged_iter_t *miter)
   int i;
   if(miter && miter->n>0 && miter->iu){
     for(i=0;i<miter->n;i++){
-      ti_iter_destroy(miter->iu[i].iter);
-      if(miter->iu[i].len) free(miter->iu[i].len); 
-      if(miter->iu[i].intv) free(miter->iu[i].intv); 
+      ti_iter_destroy(miter->iu[i]->iter);
+      if(miter->iu[i]->len) free(miter->iu[i]->len);
+      if(miter->iu[i]) free(miter->iu[i]);
     }
     free(miter->iu);
     free(miter);
@@ -1253,25 +1458,24 @@ void create_iter_unit(pairix_t *t, ti_iter_t iter, iter_unit *iu)
 {
    if(iu){
      iu->t=t; iu->iter=iter; iu->len=malloc(sizeof(int)); iu->s=NULL;
-     iu->intv = malloc(sizeof(ti_intv_t));
    }
 }
 
 
 int compare_iter_unit (const void *a, const void *b)
 {
-  if ((iter_unit*)a == NULL || ((iter_unit*)a)->s == NULL) {
-    if ((iter_unit*)b == NULL) return(0);
-    else if (((iter_unit*)b)->s == NULL) return(0);
+  iter_unit *aa=*(iter_unit**)a;
+  iter_unit *bb=*(iter_unit**)b;
+  if (aa == NULL || aa->s == NULL) {
+    if (bb == NULL) return(0);
+    else if (bb->s == NULL) return(0);
     else return(1); // non-NULL iter should go before a NULL iter.
-  } else if((iter_unit*)b == NULL || ((iter_unit*)b)->s == NULL) {
+  } else if(bb == NULL || bb->s == NULL) {
     return(-1);
   } else {
-    if( ((iter_unit*)a)->intv && ((iter_unit*)b)->intv) {
-       int res = ((iter_unit*)a)->intv->beg - ((iter_unit*)b)->intv->beg;  // sort first by beg
-       if (res == 0 && ((iter_unit*)a)->intv->beg2 && ((iter_unit*)b)->intv->beg2) return ( ((iter_unit*)a)->intv->beg2 - ((iter_unit*)b)->intv->beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
-       else return (res); 
-    } else { fprintf(stderr,"Error in getting interval\n"); return(0); }
+    int res = aa->iter->intv.beg - bb->iter->intv.beg;  // sort first by beg
+    if (res == 0 && aa->iter->intv.beg2 && bb->iter->intv.beg2) return ( aa->iter->intv.beg2 - bb->iter->intv.beg2 );  // sort second by beg2 (skip if beg2 doesn't exist - 1D case)
+    else return (res);
   }
 }
 
@@ -1279,51 +1483,68 @@ int compare_iter_unit (const void *a, const void *b)
 // read method for merged_iter
 const char *merged_ti_read(merged_iter_t *miter, int *len)
 {
-    iter_unit tmp_iu;
+    iter_unit *tmp_iu;
     int i,k;
     char *s;
     char seqonly=1; // seqonly=1 forces ti_iter_read to only check tid not positions. (faster, given the position comparison is done within this function)
 
     if(!miter) { fprintf(stderr,"Null merged_iter_t\n"); return(NULL); }
     if(miter->n<=0) { fprintf(stderr,"No iter_unit lement in merged_iter_t\n"); return(NULL); }
+    iter_unit **miu = miter->iu;
 
-    // initial sorting of the iterators based on their first entry
-    if (miter->first){ 
-      for(i=0;i<miter->n;i++) { 
-        if(miter->iu[i].t && miter->iu[i].iter && miter->iu[i].t->fp){
-          miter->iu[i].s = ti_iter_read(miter->iu[i].t->fp, miter->iu[i].iter, miter->iu[i].len, seqonly); 
-          get_intv(miter->iu[i].t->idx, &(miter->iu[i].iter->str), miter->iu[i].intv);
-        } 
+    // initi al sorting of the iterators based on their first entry
+    if (miter->first){
+      for(i=0;i<miter->n;i++) {
+        miu[i]->s = ti_iter_read(miu[i]->t->fp, miu[i]->iter, miu[i]->len, seqonly);
       } // get first entry for each iter
-      qsort((void*)(miter->iu), miter->n, sizeof(iter_unit), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
+      qsort((void*)(miu), miter->n, sizeof(iter_unit*), compare_iter_unit);  // sort by the first entry. finished iters go to the end.
       miter->first=0;
     }
-    else if(miter->iu[0].s==NULL) {
-      miter->iu[0].s = ti_iter_read(miter->iu[0].t->fp, miter->iu[0].iter, miter->iu[0].len, seqonly); // get next entry for the flushed iter 
-      get_intv(miter->iu[0].t->idx, &(miter->iu[0].iter->str), miter->iu[0].intv);
-    
+    else if(miu[0]->s==NULL) {
+      miu[0]->s = ti_iter_read(miu[0]->t->fp, miu[0]->iter, miu[0]->len, seqonly); // get next entry for the flushed iter
+
+      //qsort((void*)(miu), miter->n, sizeof(iter_unit*), compare_iter_unit); // sort again
+
       // put it at the right place in the sorted iu array
       k=0;
-      while( k < miter->n-1 && compare_iter_unit((void*)(miter->iu), (void*)(miter->iu + k + 1 )) >0 ) k++;
+      while( k < miter->n-1 && compare_iter_unit((void*)(miu), (void*)(miu + k + 1 )) >0 ) k++;
       if (k>=1) {
-        tmp_iu = miter->iu[0];
-        for(i=1;i<=k;i++) miter->iu[i-1] = miter->iu[i];
-        miter->iu[k]= tmp_iu; 
+        tmp_iu = miu[0];
+        for(i=1;i<=k;i++) miu[i-1] = miu[i];
+        miu[k]= tmp_iu;
       }
     }
-    if(miter->iu[0].iter==NULL) return(NULL);
+    if(miu[0]->iter==NULL) return(NULL);
 
     // flush the lowest
-    s = miter->iu[0].s;
-    miter->iu[0].s=NULL;
+    s=miu[0]->s;
+    miu[0]->s=NULL;
 
-    *len = *(miter->iu[0].len);
+    *len = *(miu[0]->len);
 
-    return ( s );  // if s is null, iteration finishes.
+    return ( s );
 }
 
 
-int strcmp2(const void* a, const void* b)
+const char *sequential_ti_read(sequential_iter_t *siter, int *len)
+{
+    if(!siter) { fprintf(stderr,"Null sequential_iter_t\n"); return(NULL); }
+    if(siter->n<=0) { fprintf(stderr,"No iter_unit lement in merged_iter_t\n"); return(NULL); }
+
+    char *s = ti_iter_read(siter->t->fp,siter->iter[siter->curr], len, 0);
+    while(s==NULL && siter->curr < siter->n - 1) {
+      siter->curr++;
+      s = ti_iter_read(siter->t->fp,siter->iter[siter->curr], len, 0);
+    }
+    return s;
+}
+
+
+
+
+//compare two strings, but different from strcmp.
+//for a pair of strings 'chr1|chr2' vs 'chr10|chr13', it compares chr1 vs chr10 first and then do chr2 vs chr13. This results in an ordering different from strcmp-based sort, because 'chr10' comes before 'chr1|' whereas 'chr1' comes before 'chr10'.
+int strcmp2d(const void* a, const void* b)
 {
     //char aa[strlen(*(char**)a)], bb[strlen(*(char**)b)];
     //strcpy(aa, *(char**)a);
@@ -1333,8 +1554,8 @@ int strcmp2(const void* a, const void* b)
     char *aa=*(char**)a;
     char *bb=*(char**)b;
     char *a2,*b2;
-    char *a_split = strchr(aa,REGION_SPLIT_CHARACTER);
-    char *b_split = strchr(bb,REGION_SPLIT_CHARACTER);
+    char *a_split = strchr(aa, global_region_split_character);
+    char *b_split = strchr(bb, global_region_split_character);
     if(a_split && b_split) {  // 2D name
       c = a_split[0]; d=b_split[0];
       a2 = a_split+1; b2 = b_split+1;
@@ -1352,6 +1573,12 @@ int strcmp2(const void* a, const void* b)
 }
 
 
+// same as strcmp, argument types modified to be compatible with qsort
+int strcmp1d(const void* a, const void* b)
+{
+   return( strcmp(*(char**)a, *(char**)b) );
+}
+
 pairix_t *load_from_file(char *fn)
 {
       char *fnidx = calloc(strlen(fn) + 5, 1);
@@ -1365,10 +1592,11 @@ pairix_t *load_from_file(char *fn)
 }
 
 
+// The returned array must be freed later.
 char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
 {
      int i,j, k, len, n_seq_list=0;
-     char **conc_seq_list=NULL, **uniq_seq_list=NULL;
+     char **conc_seq_list=NULL;
      char **seqnames=NULL;
      if(n<=0) { fprintf(stderr, "Null pairix_t array\n"); return(0); }
      for(i=0;i<n;i++){
@@ -1390,99 +1618,326 @@ char** get_unique_merged_seqname(pairix_t **tbs, int n, int *pn_uniq_seq)
     }
 
     if(conc_seq_list){
-      uniq_seq_list = merge_seqlist_to_uniq(conc_seq_list,n_seq_list,pn_uniq_seq);
+      // given an array, do sort|uniq, but doing it as if sorting by two chromosome columns (e.g. by chr1 first then chr2) rather than by a single merged chromosome pair string (e.g. 'chr1|chr2')
+      qsort(conc_seq_list, n_seq_list, sizeof(char*), strcmp2d);  // This part does the sorting. see strcmp2d for more details.
+      char **uniq_seq_list = uniq(conc_seq_list, n_seq_list, pn_uniq_seq);
       free(conc_seq_list);
-      return(uniq_seq_list);
+      return ( uniq_seq_list );
     } else { fprintf(stderr,"Null concatenated seq list\n"); return(0); }
 }
 
-char **merge_seqlist_to_uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
+
+// given a chromosome for mate1 (seq1='chr1') return the array containing all seqpairs matching seq1 ('chr1', 'chr2', ... for seqpairs 'chr1|chr1', 'chr1|chr2', ... )
+// the returned subarray contains copies of seq2 sequences (need to be freed later)
+char **get_seq2_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split, b;
+    char **sublist;
+
+    // first round, count the number
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
+      b_split[0] = b;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1)==0 ) {
+         sublist[k] = malloc((strlen(b_split+1)+1)*sizeof(char));
+         strcpy(sublist[k], b_split+1);
+         k++;
+      }
+      b_split[0] = b;
+    }
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
+
+
+// given a chromosome for mate2 (seq2='chr1') return the array containing all seqpairs matching seq2 ('chr1','chr2', ... for seqpairs 'chr1|chr1', 'chr2|chr1', ... )
+// the returned subarray contains copies of seq1 sequences (need to be freed later)
+char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split;
+    char **sublist;
+
+    // first round, count the number
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      if ( strcmp(b_split+1, seq2)==0 ) k++;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      if ( strcmp(b_split+1, seq2)==0 ) {
+         *b_split=0;
+         sublist[k] = malloc((strlen(seqpair_list[i])+1)*sizeof(char));
+         strcpy(sublist[k], seqpair_list[i]);
+         *b_split =  global_region_split_character;
+         k++;
+      }
+    }
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
+
+/* convert string 'region1|region2' to 'region2|region1' */
+char *flip_region ( char* s, char region_split_character) {
+    char s_flp[MAX_REGION_STR_LEN];
+    int l, i, l2, split_pos;
+    l = strlen(s);
+    for(i = 0; i != l; i++) if( s[i] == region_split_character) break;
+    s[i]=0;
+    split_pos = i;
+    l2 = l-1-i;
+    strcpy(s_flp, s + i + 1);
+    s_flp[l2] = region_split_character;
+    strcpy(s_flp + l2 + 1, s);
+    s[i]= region_split_character;
+    return(s_flp);
+}
+
+// given a chromosome for mate1 (seq1='chr1') return the array containing all seqpairs matching seq1 ('chr1|chr1', 'chr1|chr2', ... )
+// the returned subarray contains pointers to the original seqpair_list elements.
+char **get_sub_seq_list_for_given_seq1(char *seq1, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split, b;
+    char **sublist;
+
+    // first round, count the number
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1)==0 ) k++;
+      b_split[0] = b;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      b = b_split[0];
+      b_split[0] = 0;
+      if ( strcmp(seqpair_list[i], seq1)==0 ) { sublist[k] = seqpair_list[i]; k++; }
+      b_split[0] = b;
+    }
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
+
+
+// given a chromosome for mate2 (seq2='chr1') return the array containing all seqpairs matching seq2 ('chr1|chr1', 'chr2|chr1', ... )
+// the returned subarray contains pointers to the original seqpair_list elements.
+char **get_sub_seq_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpair_list, int *pn_sub_list)
+{
+    int i,k;
+    char *b_split;
+    char **sublist;
+
+    // first round, count the number
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      if ( strcmp(b_split+1, seq2)==0 ) k++;
+    }
+    *pn_sub_list = k;
+
+    // second round, get the list of pointers
+    sublist = malloc((*pn_sub_list)*sizeof(char*));
+    k=0;
+    for(i=0;i<n_seqpair_list;i++){
+      b_split = strchr(seqpair_list[i], global_region_split_character);
+      if ( strcmp(b_split+1, seq2)==0 ) { sublist[k] = seqpair_list[i]; k++; }
+    }
+    assert (k = *pn_sub_list);
+
+    return(sublist);
+}
+
+
+// given a list of seqpairs (either unique or non-unique), return an sorted array of unique seq1 list
+// the returned array must be freed later. (first for the string elements and then itself)
+char **get_seq1_list_from_seqpair_list(char** seqpair_list, int n_seqpair_list, int *pn_seq1)
+{
+    if(seqpair_list){
+        char *b_split,b;
+        char *seq1_list[n_seqpair_list];
+        char **uniq_seq1_list=NULL;
+        char *seqpair;
+        int i;
+
+        // extract seq1 from all seqpairs in the seqpair_list
+        for(i=0;i<n_seqpair_list;i++){
+          seqpair = seqpair_list[i];
+          b_split = strchr(seqpair, global_region_split_character);
+          b = b_split[0];
+          b_split[0] = 0;
+          seq1_list[i] = malloc((strlen(seqpair)+1)*sizeof(char));
+          strcpy(seq1_list[i], seqpair);
+          b_split[0] = b;
+        }
+
+        // uniquefy
+        qsort(seq1_list, n_seqpair_list, sizeof(char*), strcmp1d); // sort first
+        uniq_seq1_list = uniq(seq1_list, n_seqpair_list, pn_seq1); // uniq
+
+        // free the non-unique seq1 list
+        for(i=0;i<n_seqpair_list;i++) free(seq1_list[i]);
+
+        // return the uniq list
+        return(uniq_seq1_list);
+
+    } else {
+      fprintf(stderr, "Null seqpair list\n");
+      return(0);
+    }
+}
+
+char **uniq(char** seq_list, int n_seq_list, int *pn_uniq_seq)
 {
     int k,i,prev_i;
     char **uniq_seq_list=NULL;
-  
-    fprintf(stderr,"(total %d seq names)\n",n_seq_list);
-    if(seq_list){
-      qsort(seq_list, n_seq_list, sizeof(char*), strcmp2);
+
+    // first round, just simulate uniquifying to get the length of the output array.
+    k=0; prev_i=0;
+    for(i=1;i<n_seq_list;i++){
+      if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;   // This part does the uniquifying
+      else {
+        k++;
+        prev_i=i;
+      }
+    }
+    *pn_uniq_seq=k+1;
+    fprintf(stderr,"(total %d unique seq names)\n",*pn_uniq_seq);
+
+    // second round, allocate memory and actually create an array containing uniquified array
+    if( (uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*))) != NULL ) {
       k=0; prev_i=0;
+      uniq_seq_list[0] = malloc((strlen(seq_list[0])+1)*sizeof(char));
+      strcpy(uniq_seq_list[0],seq_list[0]);
       for(i=1;i<n_seq_list;i++){
-        if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;
+        if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;  // uniquifying
         else {
-          k++;
+          ++k;
+          uniq_seq_list[k] = malloc((strlen(seq_list[i])+1)*sizeof(char));
+          strcpy(uniq_seq_list[k],seq_list[i]);
           prev_i=i;
         }
       }
-      *pn_uniq_seq=k+1;
-      fprintf(stderr,"(total %d unique seq names)\n",*pn_uniq_seq);
-      if( uniq_seq_list = malloc((*pn_uniq_seq)*sizeof(char*)) ) {
-        k=0; prev_i=0; uniq_seq_list[0]=seq_list[0];
-        for(i=1;i<n_seq_list;i++){
-          if ( strcmp(seq_list[i], seq_list[prev_i])==0) continue;
-          else {
-            uniq_seq_list[++k]=seq_list[i];
-            prev_i=i;
-          }
-        }
-        assert(k+1==*pn_uniq_seq);
-      } else { fprintf(stderr, "Cannot allocate memory for unique_seq_list\n"); return(0); }
-    } else { fprintf(stderr, "Null seq list\n"); return(0); } 
+      assert(k+1==*pn_uniq_seq);
+    } else { fprintf(stderr, "Cannot allocate memory for unique_seq_list\n"); return(0); }
 
     return(uniq_seq_list);
 }
 
 
-void fail(BGZF* fp)
+char get_region_split_character(pairix_t *t)
 {
-    fprintf(stderr, "Error: %d\n", fp->errcode);
-    exit(1);
+    return(t->idx->conf.region_split_character);
 }
 
 
-// pairs merger - merge multiple 2D-sorted files into a merged, 2D-sorted stream 
-//pass null - bgzf_write is slower than piping to bgzip -c.
-int pairs_merger(char **fn, int n, BGZF *bzfp)  // pass bgfp if the result should be bgzipped. or pass NULL.
+sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip)
 {
-    pairix_t *tbs[n];
-    int i,j;
-    int reslen;
-    int n_uniq_seq=0;
-    char **uniq_seq_list=NULL;
-    char *s=NULL;
-    merged_iter_t *miter=NULL;
-    ti_iter_t iter;
+    int tid_test;
+    sequential_iter_t *result;
 
-    // opening files and creating an array of pairix_t struct and prepare a concatenated seqname array
-    fprintf(stderr,"Opening files...\n");
-    for(i=0;i<n;i++)  tbs[i] = load_from_file(fn[i]);
-
-    // get a sorted unique seqname list
-    fprintf(stderr,"creating a sorted unique seqname list...\n");
-    uniq_seq_list = get_unique_merged_seqname(tbs, n, &n_uniq_seq);
-
-    // loop over the seq_list (chrpair list) and merge
-    if(uniq_seq_list){
-      fprintf(stderr,"Merging...\n");
-      for(i=0;i<n_uniq_seq;i++){
-        miter = create_merged_iter(n);
-        for(j=0;j<n;j++){
-           iter = ti_querys_2d(tbs[j],uniq_seq_list[i]);
-           create_iter_unit(tbs[j], iter, miter->iu + j);
+    tid_test = ti_querys_tid(tb, reg);
+    if (tid_test == -1) {
+        const char *reg2 = flip_region(reg, get_region_split_character(tb));
+        int tid_test_rev = ti_querys_tid(tb, reg2);
+        if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
+            result = ti_querys_2d_general(tb, reg2);
+            if (flip == 1){
+                if (result == NULL) {
+                   fprintf(stderr, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.");
+                   return(NULL);
+                }else{
+                    return(result);
+                }
+            }
+            else{
+                fprintf(stderr, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file. You may wish to also automatically test chromsomes in flipped order. To do this, include 1 as the last argument.");
+                return(NULL);
+            }
         }
-        while ( s=merged_ti_read(miter,&reslen) ) puts(s);
-        //while ( s=merged_ti_read(miter,&reslen) ) if (bgzf_write(bzfp, s, reslen) < 0) fail(bzfp);
-        destroy_merged_iter(miter); miter=NULL;     
-      }
-      for(i=0;i<n;i++) ti_close(tbs[i]);
-      free(uniq_seq_list);
-      return(0);
-    } else { fprintf(stderr,"Null unique seq list\n"); return(0); }
+    }
+    else if (tid_test == -2){
+        fprintf(stderr, "The start coordinate must be less than the end coordinate.");
+        return(NULL);
+    }
+    else if (tid_test == -3){
+        fprintf(stderr, "The specific cause could not be found. Please adjust your arguments.");
+        return(NULL);
+    }
+
+    result = ti_querys_2d_general(tb, reg);
+    return(result);  // result may be null but that's okay
+}
+
+int get_nblocks(ti_index_t *idx, int tid, BGZF *fp)
+{
+    ti_iter_t iter = ti_iter_query(idx, tid, 0, 1<<29, 0, 1<<29);
+    int64_t start_block_address = iter->off[0].u>>16;  // in bytes
+    int64_t end_block_offset = iter->off[0].v;
+    int nblocks=0;
+    int64_t curr_off = start_block_address<<16;
+    do {
+      int block_length = bgzf_block_length(fp, curr_off);
+      nblocks++;
+      curr_off += block_length<<16;
+    } while(curr_off <= end_block_offset);
+    ti_iter_destroy(iter);
+
+    return((int)nblocks);
 }
 
 
-// Uc->Up converter - convert a single 2D-sorted file into a 1D-sorted stream.
-void stream_1d(char *fn)
+// returns 1 if triangle
+// returns 0 if not a triangle
+// returns -1 if no chrom (pairs) is found in file
+// returns -2 if the file is 1D-indexed (not applicable)
+int check_triangle(ti_index_t *idx)
 {
+    if(ti_get_sc2(idx) == -1) return(-2);  // not a 2d file (not applicable)
 
+    int len;
+    char **seqnames = ti_seqname(idx,&len);
+    if(seqnames){
+      int i;
+      for(i=0;i<len;i++){
+        const char *reg2 = flip_region(seqnames[i], ti_get_region_split_character(idx));
+        if(strcmp(seqnames[i], reg2)!=0)
+          if(ti_get_tid(idx, reg2)!=-1) { free(seqnames); return(0); }  // not a triangle
+      }
+      free(seqnames);
+      return(1);  // is a triangle
+    } else return(-1);  // no chromosome (pairs) found in file 
 
 }
 
