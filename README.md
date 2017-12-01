@@ -1,4 +1,7 @@
 # pairix
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6e73d29f423f49ff9293f60b25b4778a)](https://www.codacy.com/app/SooLee/pairix?utm_source=github.com&utm_medium=referral&utm_content=4dn-dcic/pairix&utm_campaign=badger)
+
 * Pairix is a tool for indexing and querying on a block-compressed text file containing pairs of genomic coordinates.
 * Pairix is a stand-alone C program that was written on top of tabix (https://github.com/samtools/tabix) as a tool for the 4DN-standard pairs file format describing Hi-C data: [pairs_format_specification.md](pairs_format_specification.md)
 * However, Pairix can be used as a generic tool for indexing and querying any bgzipped text file containing genomic coordinates, for either 2D- or 1D- indexing and querying.
@@ -93,6 +96,7 @@ make
 # In order to use utils, add util path to PATH
 # In order to use bam2pairs, add util/bam2pairs to PATH
 # eg: PATH=~/git/pairix/bin/:~/git/pairix/util:~/git/pairix/util/bam2pairs:$PATH
+
 ```
 Alternatively, `conda install pairix` can be used to install both Pairix and Pypairix together. This requires Anaconda or Miniconda.
 <br>
@@ -105,6 +109,8 @@ sudo apt-get install zlib1g-dev
 # centos
 sudo yum install zlib-devel
 ```
+
+<br>
 
 <br>
 
