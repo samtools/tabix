@@ -923,7 +923,9 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
  * retrieve a specified region *
  *******************************/
 
-#define MAX_BIN 37450 // =(8^6-1)/7+1
+// #define MAX_BIN 37450 // =(8^6-1)/7+1
+#define MAX_BIN 74898
+// #define MAX_BIN 149794
 
 static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 {
