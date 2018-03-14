@@ -163,6 +163,15 @@ if [ "$res" != "The file is a triangle." ]; then
   return 1;
 fi
 
+# test large chromosome
+echo "test large chr"
+$VALGRIND pairix samples/mock.largechr.pairs.gz 'chr21:800000000-900000000|chr22' > log1
+gunzip -c  samples/mock.largechr.pairs.gz | awk '$2=="chr21" && $3>800000000 && $3<900000000 && $4=="chr22"' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "test large chromosome failed"
+  return 1;
+fi
+
 
 ## process merged_nodups
 echo "test 9"
@@ -274,3 +283,4 @@ if [ ! -z "$(diff out.1d.pairs out2.1d.pairs)" ]; then
 fi
 rm -f out.1d.pairs out2.1d.pairs
 $VALGRIND pairix -f -p merged_nodups samples/merged_nodups.space.chrblock_sorted.subsample2.txt.gz  ## revert
+
