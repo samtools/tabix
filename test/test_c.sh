@@ -173,6 +173,26 @@ if [ ! -z "$(diff log1 log2)" ]; then
 fi
 
 
+# test large chromosome
+echo "test large chr2"
+$VALGRIND pairix samples/mock.largechr.pairs.gz 'chr22:800000000-997027270|chr22' > log1
+gunzip -c samples/mock.largechr.pairs.gz | awk '$2=="chr22" && $3>=800000000 && $3<=997027270  && $4=="chr22"' > log2
+if [ ! -z "$(diff log1 log2)" ]; then
+  echo "test large chromosome2 failed"
+  return 1;
+fi
+
+# test large chromosome
+#echo "test large chr3"
+#$VALGRIND pairix samples/mock.largechr.pairs.gz 'chr22:1073741820-1073741824|chr22' > log1
+#gunzip -c samples/mock.largechr.pairs.gz | awk '$2=="chr22" && $3>=1073741820 && $3<=1073741824 && $4=="chr22"' > log2
+#if [ ! -z "$(diff log1 log2)" ]; then
+#  echo "test large chromosome3 failed"
+#  return 1;
+#fi
+
+
+
 ## process merged_nodups
 echo "test 9"
 source util/process_merged_nodup.sh samples/test_merged_nodups.txt

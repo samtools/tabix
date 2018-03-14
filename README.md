@@ -639,6 +639,9 @@ ulimit -n 2000
 
 ## Version history
 
+### 0.3.4
+* The maximum chromosome size allowed is now 2^30-1 instead of 2^29-1. No need to re-index.
+
 ### 0.3.3
 * The problem of `pypairix` `get_blocknames` crashing python when called twice now fixed.
 

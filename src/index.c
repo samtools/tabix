@@ -931,7 +931,10 @@ static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 {
 	int i = 0, k;
 	if (beg >= end) return 0;
-	if (end >= 1u<<30) end = 1u<<30;
+	if (end > 1u<<30) {
+            end = 1u<<30;
+            fprintf(stderr, "Warning: maximum chromosome size is 2^30.");
+        }
 	--end;
 	list[i++] = 0;
 	for (k =    1 + (beg>>26); k <=    1 + (end>>26); ++k) list[i++] = k;
