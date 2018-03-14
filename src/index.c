@@ -806,7 +806,7 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 		return -1;
 	}
 	if (i == k) { /* dump the whole sequence */
-		*begin = 0; *end = 1<<29; free(s);
+		*begin = 0; *end = 1<<30; free(s);
 		return 0;
 	}
 	for (p = s + i + 1; i != k; ++i) if (s[i] == '-') break;
@@ -814,7 +814,7 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 	if (i < k) {
 		p = s + i + 1;
 		*end = atoi(p);
-	} else *end = 1<<29;
+	} else *end = 1<<30;
 	if (*begin > 0) --*begin;
 	free(s);
 	if (*begin > *end) return -2;
@@ -884,7 +884,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 
         /* parsing pos1 */
         if (pos1s-1 == coord1e) { /* dump the whole sequence */
-	    *begin = 0; *end = 1<<29;
+	    *begin = 0; *end = 1<<30;
         } else {
             p = s + pos1s;
 	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
@@ -892,13 +892,13 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	    if (i < coord1e) {
 		p = s + i + 1;
 		*end = atoi(p);
-  	    } else *end = 1<<29;
+  	    } else *end = 1<<30;
   	    if (*begin > 0) --*begin;
         }
 
         /* parsing pos2 */
         if (pos2s-1 == coord2e) { /* dump the whole sequence */
-		*begin2 = 0; *end2 = 1<<29;
+		*begin2 = 0; *end2 = 1<<30;
         } else {
             p = s + pos2s;
 	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
@@ -906,7 +906,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	    if (i < coord2e) {
 		p = s + i + 1;
 		*end2 = atoi(p);
-	    } else *end2 = 1<<29;
+	    } else *end2 = 1<<30;
 	    if (*begin2 > 0) --*begin2;
         }
 
@@ -929,7 +929,7 @@ static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 {
 	int i = 0, k;
 	if (beg >= end) return 0;
-	if (end >= 1u<<29) end = 1u<<29;
+	if (end >= 1u<<30) end = 1u<<30;
 	--end;
 	list[i++] = 0;
 	for (k =    1 + (beg>>26); k <=    1 + (end>>26); ++k) list[i++] = k;
@@ -1902,7 +1902,7 @@ sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip)
 
 int get_nblocks(ti_index_t *idx, int tid, BGZF *fp)
 {
-    ti_iter_t iter = ti_iter_query(idx, tid, 0, 1<<29, 0, 1<<29);
+    ti_iter_t iter = ti_iter_query(idx, tid, 0, 1<<30, 0, 1<<30);
     int64_t start_block_address = iter->off[0].u>>16;  // in bytes
     int64_t end_block_offset = iter->off[0].v;
     int nblocks=0;
