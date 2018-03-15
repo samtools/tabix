@@ -401,7 +401,7 @@ class PairixTest2DSpace(unittest.TestCase):
 
 
 ## 2D query on 2D indexed file with chromosomes using a pairs file with large chromosomes
-class PairixTest2D_4DN(unittest.TestCase):
+class PairixTest2D_LargeChr(unittest.TestCase):
     f_type = find_pairs_type(TEST_FILE_LARGE_CHR)
     regions = read_pairs(TEST_FILE_LARGE_CHR, f_type)
     chrom = 'chr21'
