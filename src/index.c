@@ -560,7 +560,7 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 		return 0;
 	}
 	bgzf_read(fp, magic, 8);
-	if (strncmp(magic, "PX3.002\1", 8)) {
+	if (strncmp(magic, "PX2.003\1", 8)) {
 		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
 		return 0;
 	}
