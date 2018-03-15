@@ -31,7 +31,7 @@ TEST_FILE_2D_4DN_2 = 'samples/test_4dn.pairs.gz'
 TEST_FILE_2D_4DN_NOT_TRIANGLE = 'samples/4dn.bsorted.chr21_22_only.nontriangle.pairs.gz'
 TEST_FILE_1D = 'samples/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 TEST_FILE_2D_SPACE = 'samples/merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
-
+TEST_FILE_LARGE_CHR = 'samples/mock.largechr.pairs.gz'
 
 def get_header(filename, meta_char='#'):
     """Read gzipped file and retrieve lines beginning with '#'."""
@@ -394,6 +394,59 @@ class PairixTest2DSpace(unittest.TestCase):
     def test_build_index_with_force_merged_nodups_with_no_preset(self):  ## recognizing custom parameters
         pypairix.build_index(TEST_FILE_2D_SPACE, delimiter=' ', sc=2, bc=3, ec=3, sc2=6, bc2=7, ec2=7, force=1)
         pr2 = pypairix.open(TEST_FILE_2D_SPACE)
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it2 = pr2.querys2D(query)
+        pr2_result = build_it_result(it2, self.f_type)
+        self.assertEqual(self.result, pr2_result)
+
+
+## 2D query on 2D indexed file with chromosomes using a pairs file with large chromosomes
+class PairixTest2D_LargeChr(unittest.TestCase):
+    f_type = find_pairs_type(TEST_FILE_LARGE_CHR)
+    regions = read_pairs(TEST_FILE_LARGE_CHR, f_type)
+    chrom = 'chr21'
+    start = 1
+    end = 1073741824
+    chrom2 = 'chr22'
+    start2 = 1
+    end2 = 1073741824
+    # reverse reversed results to get them in the required order here
+    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
+    pr = pypairix.open(TEST_FILE_LARGE_CHR)
+
+    def test_query2_4dn(self):
+        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
+
+    def test_querys_2_4dn(self):
+        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it = self.pr.querys2D(query)
+        pr_result = build_it_result(it, self.f_type)
+        self.assertEqual(self.result, pr_result)
+
+    def test_build_index_without_force(self):
+        # expect an error here... the px2 file already exists
+        with self.assertRaises(pypairix.PairixError) as error:
+            pypairix.build_index(TEST_FILE_LARGE_CHR)
+        # errors are handled differently in python 2 and python 3
+        if sys.version_info > (3,0):
+            self.assertEqual(error.exception.__str__(), "The index file exists. Please use force=1 to overwrite.")
+        else:
+            self.assertEqual(error.exception.message, "The index file exists. Please use force=1 to overwrite.")
+
+    def test_build_index_with_region_split_character(self):
+        pypairix.build_index(TEST_FILE_LARGE_CHR, region_split_character="^", force=1)
+        pr2 = pypairix.open(TEST_FILE_LARGE_CHR)
+        query = '{}:{}-{}^{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+        it2 = pr2.querys2D(query)
+        pr2_result = build_it_result(it2, self.f_type)
+        pypairix.build_index(TEST_FILE_LARGE_CHR, force=1)  # revert
+        self.assertEqual(self.result, pr2_result)
+
+    def test_build_index_with_force(self):   ## recognizing file extension pairs.gz
+        pypairix.build_index(TEST_FILE_LARGE_CHR, force=1)
+        pr2 = pypairix.open(TEST_FILE_LARGE_CHR)
         query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
         it2 = pr2.querys2D(query)
         pr2_result = build_it_result(it2, self.f_type)

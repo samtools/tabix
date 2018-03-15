@@ -12,8 +12,8 @@
 #include <time.h>
 
 #define TAD_MIN_CHUNK_GAP 32768
-// 1<<14 is the size of minimum bin.
-#define TAD_LIDX_SHIFT    14
+// 1<<15 is the size of minimum bin.
+#define TAD_LIDX_SHIFT    15
 #define DEFAULT_DELIMITER '\t'
 #define MAX_REGION_STR_LEN 10000
 
@@ -101,11 +101,11 @@ int ti_readline(BGZF *fp, kstring_t *str)
 static inline int ti_reg2bin(uint32_t beg, uint32_t end)
 {
 	--end;
-	if (beg>>14 == end>>14) return 4681 + (beg>>14);
-	if (beg>>17 == end>>17) return  585 + (beg>>17);
-	if (beg>>20 == end>>20) return   73 + (beg>>20);
-	if (beg>>23 == end>>23) return    9 + (beg>>23);
-	if (beg>>26 == end>>26) return    1 + (beg>>26);
+	if (beg>>15 == end>>15) return  4681 + (beg>>15);
+	if (beg>>18 == end>>18) return   585 + (beg>>18);
+	if (beg>>21 == end>>21) return    73 + (beg>>21);
+	if (beg>>24 == end>>24) return     9 + (beg>>24);
+	if (beg>>27 == end>>27) return     1 + (beg>>27);
 	return 0;
 }
 
@@ -471,7 +471,7 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 	int32_t i, size, ti_is_be;
 	khint_t k;
 	ti_is_be = bam_is_big_endian();
-	bgzf_write(fp, "PX2.002\1", 8);
+	bgzf_write(fp, "PX2.003\1", 8);
 	if (ti_is_be) {
 		uint32_t x = idx->n;
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
@@ -560,7 +560,7 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 		return 0;
 	}
 	bgzf_read(fp, magic, 8);
-	if (strncmp(magic, "PX2.002\1", 8)) {
+	if (strncmp(magic, "PX2.003\1", 8)) {
 		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
 		return 0;
 	}
@@ -806,7 +806,7 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 		return -1;
 	}
 	if (i == k) { /* dump the whole sequence */
-		*begin = 0; *end = 1<<29; free(s);
+		*begin = 0; *end = 1<<30; free(s);
 		return 0;
 	}
 	for (p = s + i + 1; i != k; ++i) if (s[i] == '-') break;
@@ -814,7 +814,7 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 	if (i < k) {
 		p = s + i + 1;
 		*end = atoi(p);
-	} else *end = 1<<29;
+	} else *end = 1<<30;
 	if (*begin > 0) --*begin;
 	free(s);
 	if (*begin > *end) return -2;
@@ -884,7 +884,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 
         /* parsing pos1 */
         if (pos1s-1 == coord1e) { /* dump the whole sequence */
-	    *begin = 0; *end = 1<<29;
+	    *begin = 0; *end = 1<<30;
         } else {
             p = s + pos1s;
 	    for (i = pos1s ; i != coord1e; ++i) if (s[i] == '-') break;
@@ -892,13 +892,13 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	    if (i < coord1e) {
 		p = s + i + 1;
 		*end = atoi(p);
-  	    } else *end = 1<<29;
+  	    } else *end = 1<<30;
   	    if (*begin > 0) --*begin;
         }
 
         /* parsing pos2 */
         if (pos2s-1 == coord2e) { /* dump the whole sequence */
-		*begin2 = 0; *end2 = 1<<29;
+		*begin2 = 0; *end2 = 1<<30;
         } else {
             p = s + pos2s;
 	    for (i = pos2s ; i != coord2e; ++i) if (s[i] == '-') break;
@@ -906,7 +906,7 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
 	    if (i < coord2e) {
 		p = s + i + 1;
 		*end2 = atoi(p);
-	    } else *end2 = 1<<29;
+	    } else *end2 = 1<<30;
 	    if (*begin2 > 0) --*begin2;
         }
 
@@ -924,19 +924,25 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
  *******************************/
 
 #define MAX_BIN 37450 // =(8^6-1)/7+1
+// #define MAX_BIN 74898
+// #define MAX_BIN 149794
+// #define MAX_BIN 299594
 
 static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 {
 	int i = 0, k;
 	if (beg >= end) return 0;
-	if (end >= 1u<<29) end = 1u<<29;
+	if (end > 1u<<30) {
+            end = 1u<<30;
+            fprintf(stderr, "Warning: maximum chromosome size is 2^30.\n");
+        }
 	--end;
 	list[i++] = 0;
-	for (k =    1 + (beg>>26); k <=    1 + (end>>26); ++k) list[i++] = k;
-	for (k =    9 + (beg>>23); k <=    9 + (end>>23); ++k) list[i++] = k;
-	for (k =   73 + (beg>>20); k <=   73 + (end>>20); ++k) list[i++] = k;
-	for (k =  585 + (beg>>17); k <=  585 + (end>>17); ++k) list[i++] = k;
-	for (k = 4681 + (beg>>14); k <= 4681 + (end>>14); ++k) list[i++] = k;
+	for (k =     1 + (beg>>27); k <=     1 + (end>>27); ++k) list[i++] = k;
+	for (k =     9 + (beg>>24); k <=     9 + (end>>24); ++k) list[i++] = k;
+	for (k =    73 + (beg>>21); k <=    73 + (end>>21); ++k) list[i++] = k;
+	for (k =   585 + (beg>>18); k <=   585 + (end>>18); ++k) list[i++] = k;
+	for (k =  4681 + (beg>>15); k <=  4681 + (end>>15); ++k) list[i++] = k;
 	return i;
 }
 
@@ -1902,7 +1908,7 @@ sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip)
 
 int get_nblocks(ti_index_t *idx, int tid, BGZF *fp)
 {
-    ti_iter_t iter = ti_iter_query(idx, tid, 0, 1<<29, 0, 1<<29);
+    ti_iter_t iter = ti_iter_query(idx, tid, 0, 1<<30, 0, 1<<30);
     int64_t start_block_address = iter->off[0].u>>16;  // in bytes
     int64_t end_block_offset = iter->off[0].v;
     int nblocks=0;
