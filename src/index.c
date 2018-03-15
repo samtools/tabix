@@ -12,8 +12,8 @@
 #include <time.h>
 
 #define TAD_MIN_CHUNK_GAP 32768
-// 1<<14 is the size of minimum bin.
-#define TAD_LIDX_SHIFT    14
+// 1<<15 is the size of minimum bin.
+#define TAD_LIDX_SHIFT    15
 #define DEFAULT_DELIMITER '\t'
 #define MAX_REGION_STR_LEN 10000
 
@@ -101,11 +101,11 @@ int ti_readline(BGZF *fp, kstring_t *str)
 static inline int ti_reg2bin(uint32_t beg, uint32_t end)
 {
 	--end;
-	if (beg>>14 == end>>14) return 4681 + (beg>>14);
-	if (beg>>17 == end>>17) return  585 + (beg>>17);
-	if (beg>>20 == end>>20) return   73 + (beg>>20);
-	if (beg>>23 == end>>23) return    9 + (beg>>23);
-	if (beg>>26 == end>>26) return    1 + (beg>>26);
+	if (beg>>15 == end>>15) return  4681 + (beg>>15);
+	if (beg>>18 == end>>18) return   585 + (beg>>18);
+	if (beg>>21 == end>>21) return    73 + (beg>>21);
+	if (beg>>24 == end>>24) return     9 + (beg>>24);
+	if (beg>>27 == end>>27) return     1 + (beg>>27);
 	return 0;
 }
 
@@ -923,9 +923,10 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
  * retrieve a specified region *
  *******************************/
 
-// #define MAX_BIN 37450 // =(8^6-1)/7+1
-#define MAX_BIN 74898
+#define MAX_BIN 37450 // =(8^6-1)/7+1
+// #define MAX_BIN 74898
 // #define MAX_BIN 149794
+// #define MAX_BIN 299594
 
 static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 {
@@ -933,15 +934,15 @@ static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 	if (beg >= end) return 0;
 	if (end > 1u<<30) {
             end = 1u<<30;
-            fprintf(stderr, "Warning: maximum chromosome size is 2^30.");
+            fprintf(stderr, "Warning: maximum chromosome size is 2^30.\n");
         }
 	--end;
 	list[i++] = 0;
-	for (k =    1 + (beg>>26); k <=    1 + (end>>26); ++k) list[i++] = k;
-	for (k =    9 + (beg>>23); k <=    9 + (end>>23); ++k) list[i++] = k;
-	for (k =   73 + (beg>>20); k <=   73 + (end>>20); ++k) list[i++] = k;
-	for (k =  585 + (beg>>17); k <=  585 + (end>>17); ++k) list[i++] = k;
-	for (k = 4681 + (beg>>14); k <= 4681 + (end>>14); ++k) list[i++] = k;
+	for (k =     1 + (beg>>27); k <=     1 + (end>>27); ++k) list[i++] = k;
+	for (k =     9 + (beg>>24); k <=     9 + (end>>24); ++k) list[i++] = k;
+	for (k =    73 + (beg>>21); k <=    73 + (end>>21); ++k) list[i++] = k;
+	for (k =   585 + (beg>>18); k <=   585 + (end>>18); ++k) list[i++] = k;
+	for (k =  4681 + (beg>>15); k <=  4681 + (end>>15); ++k) list[i++] = k;
 	return i;
 }
 
