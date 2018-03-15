@@ -406,10 +406,10 @@ class PairixTest2D_LargeChr(unittest.TestCase):
     regions = read_pairs(TEST_FILE_LARGE_CHR, f_type)
     chrom = 'chr21'
     start = 1
-    end = 107129895
+    end = 1073741824
     chrom2 = 'chr22'
     start2 = 1
-    end2 = 107304566
+    end2 = 1073741824
     # reverse reversed results to get them in the required order here
     result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
     pr = pypairix.open(TEST_FILE_LARGE_CHR)
