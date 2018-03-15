@@ -640,7 +640,7 @@ ulimit -n 2000
 ## Version history
 
 ### 0.3.4
-* The maximum chromosome size allowed is now 2^30 instead of 2^29 with new index.
+* The maximum chromosome size allowed is now 2^30 instead of 2^29 with new index. *Index structure changed.*
 
 ### 0.3.3
 * The problem of `pypairix` `get_blocknames` crashing python when called twice now fixed.
@@ -674,7 +674,7 @@ ulimit -n 2000
 * `pairix` has now option `-w` which specifies region split character (default '|') during indexing. A query string should use this character as a separater.
 * `pypairix` also now has a parameter `region_split_character` in function `build_index` (default '|')
 * `juicer_shortform2pairs.pl` is now available in the `util` folder.
-* Index structure changed - please re-index if you're using an older version of index.
+* *Index structure changed* - please re-index if you're using an older version of index.
 
 ### 0.2.4
 * Updated magic number for the new index, to avoid crash caused by different index structure.
