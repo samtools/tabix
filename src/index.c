@@ -954,6 +954,7 @@ static inline int reg2bins(uint32_t beg, uint32_t end, uint16_t list[MAX_BIN])
 	if (end > 1u<<MAX_CHR) {
             end = 1u<<MAX_CHR;
             fprintf(stderr, "Warning: maximum chromosome size is 2^%d.\n", MAX_CHR);
+            if(MAX_CHR == MAX_CHR_ORIGINAL) fprintf(stderr, "Old version of index detected. Re-index to increase the chromosomze size limit to 2^%d.\n", MAX_CHR_LARGE_CHR);
         }
 	--end;
 	list[i++] = 0;
