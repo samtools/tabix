@@ -26,9 +26,8 @@
 int TAD_LIDX_SHIFT = TAD_LIDX_SHIFT_LARGE_CHR;
 int MAX_CHR = MAX_CHR_LARGE_CHR;
 
-#define CURR_MAGIC_NUMBER "PX2.003\1"
+#define MAGIC_NUMBER "PX2.003\1"
 #define OLD_MAGIC_NUMBER "PX2.002\1"  // magic number for older version of pairix (up to 0.3.3)
-char MAGIC_NUMBER[8] = CURR_MAGIC_NUMBER;
 
 
 typedef struct {
