@@ -340,32 +340,6 @@ class PairixTest2DSpace(unittest.TestCase):
         self.assertEqual(self.result, pr_result)
 
 
-## 2D query on 2D indexed file with chromosomes using a pairs file with large chromosomes
-class PairixTest2D_LargeChr(unittest.TestCase):
-    f_type = find_pairs_type(TEST_FILE_LARGE_CHR)
-    regions = read_pairs(TEST_FILE_LARGE_CHR, f_type)
-    chrom = 'chr21'
-    start = 1
-    end = 1073741824
-    chrom2 = 'chr22'
-    start2 = 1
-    end2 = 1073741824
-    # reverse reversed results to get them in the required order here
-    result = get_result_2D(regions, chrom, start, end, chrom2, start2, end2)
-    pr = pypairix.open(TEST_FILE_LARGE_CHR)
-
-    def test_query2_4dn(self):
-        it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        pr_result = build_it_result(it, self.f_type)
-        self.assertEqual(self.result, pr_result)
-
-    def test_querys_2_4dn(self):
-        query = '{}:{}-{}|{}:{}-{}'.format(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
-        it = self.pr.querys2D(query)
-        pr_result = build_it_result(it, self.f_type)
-        self.assertEqual(self.result, pr_result)
-
-
 ## 1D query on 2D indexed file
 class PairixTest_1_on_2(unittest.TestCase):
     f_type='4DN'
