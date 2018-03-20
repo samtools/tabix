@@ -163,30 +163,30 @@ if [ "$res" != "The file is a triangle." ]; then
   return 1;
 fi
 
-# test large chromosome
+# test large chromosome - this should fail.
 echo "test large chr"
 $VALGRIND pairix samples/old_index/mock.largechr.pairs.gz 'chr21:800000000-900000000|chr22' > log1
 gunzip -c  samples/old_index/mock.largechr.pairs.gz | awk '$2=="chr21" && $3>800000000 && $3<900000000 && $4=="chr22"' > log2
-if [ ! -z "$(diff log1 log2)" ]; then
+if [ -z "$(diff log1 log2)" ]; then
   echo "test large chromosome failed"
   return 1;
 fi
 
 
-# test large chromosome
+# test large chromosome - this should fail
 echo "test large chr2"
 $VALGRIND pairix samples/old_index/mock.largechr.pairs.gz 'chr22:800000000-997027270|chr22' > log1
 gunzip -c samples/old_index/mock.largechr.pairs.gz | awk '$2=="chr22" && $3>=800000000 && $3<=997027270  && $4=="chr22"' > log2
-if [ ! -z "$(diff log1 log2)" ]; then
+if [ -z "$(diff log1 log2)" ]; then
   echo "test large chromosome2 failed"
   return 1;
 fi
 
-# test large chromosome
+# test large chromosome - this should fail
 echo "test large chr3"
 $VALGRIND pairix samples/old_index/mock.largechr.pairs.gz 'chr22:1073741820-1073741824|chr22' > log1
 gunzip -c samples/old_index/mock.largechr.pairs.gz | awk '$2=="chr22" && $3>=1073741820 && $3<=1073741824 && $4=="chr22"' > log2
-if [ ! -z "$(diff log1 log2)" ]; then
+if [ -z "$(diff log1 log2)" ]; then
   echo "test large chromosome3 failed"
   return 1;
 fi

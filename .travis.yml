@@ -21,3 +21,4 @@ script:
   python test/test.py
   fi
 - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
+- source test/test_c_oldindex.sh  # test for old index
