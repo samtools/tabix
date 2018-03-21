@@ -12,11 +12,10 @@ matrix:
       - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
       - source test/test_c_oldindex.sh  # test for old index
     - language: python
-      sudo: required
       python:
       - '2.7'
       - '3.6'
       script:
-      - sudo python3 setup.py install
-      - python3 test/test.py
-      - python3 test/test_oldindex.py
+      - sudo python setup.py install
+      - python test/test.py
+      - python test/test_oldindex.py
