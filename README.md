@@ -1,6 +1,6 @@
 # pairix
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6e73d29f423f49ff9293f60b25b4778a)](https://www.codacy.com/app/SooLee/pairix?utm_source=github.com&utm_medium=referral&utm_content=4dn-dcic/pairix&utm_campaign=badger)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6e73d29f423f49ff9293f60b25b4778a)](https://www.codacy.com/app/SooLee/pairix?utm_source=github.com&utm_medium=referral&utm_content=4dn-dcic/pairix&utm_campaign=badger)   [![Build Status](https://travis-ci.org/4dn-dcic/pairix.svg?branch=master)](https://travis-ci.org/4dn-dcic/pairix)
 
 * Pairix is a tool for indexing and querying on a block-compressed text file containing pairs of genomic coordinates.
 * Pairix is a stand-alone C program that was written on top of tabix (https://github.com/samtools/tabix) as a tool for the 4DN-standard pairs file format describing Hi-C data: [pairs_format_specification.md](pairs_format_specification.md)
