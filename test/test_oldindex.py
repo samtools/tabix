@@ -32,6 +32,7 @@ TEST_FILE_2D_4DN_NOT_TRIANGLE = 'samples/old_index/4dn.bsorted.chr21_22_only.non
 TEST_FILE_1D = 'samples/old_index/SRR1171591.variants.snp.vqsr.p.vcf.gz'
 TEST_FILE_2D_SPACE = 'samples/old_index/merged_nodups.space.chrblock_sorted.subsample1.txt.gz'
 TEST_FILE_LARGE_CHR = 'samples/old_index/mock.largechr.pairs.gz'
+print('-- USING -->', str(sys.version))
 
 def get_header(filename, meta_char='#'):
     """Read gzipped file and retrieve lines beginning with '#'."""
