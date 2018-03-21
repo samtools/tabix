@@ -1,4 +1,4 @@
-language: c python
+language: python
 sudo: required
 compiler: gcc
 python:
@@ -14,5 +14,8 @@ script:
 - sudo python setup.py install
 - python test/test.py
 - python test/test_oldindex.py
-- source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
-- source test/test_c_oldindex.sh  # test for old index
+- |
+  if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then
+    source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
+    source test/test_c_oldindex.sh  # test for old index
+  fi
