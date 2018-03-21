@@ -13,7 +13,6 @@ matrix:
       - source test/test_c_oldindex.sh  # test for old index
     - language: python
       sudo: required
-      compiler: gcc
       python:
       - '2.7'
       - '3.6'
