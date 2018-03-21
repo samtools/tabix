@@ -1,5 +1,15 @@
 matrix:
   include:
+    - language: python
+      sudo: false
+      python:
+      - '2.7'
+      - '3.6'
+      install:
+      - python setup.py install
+      script:
+      - python test/test.py
+      - python test/test_oldindex.py
     - language: c
       sudo: required
       compiler: gcc
@@ -11,13 +21,3 @@ matrix:
       - make
       - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
       - source test/test_c_oldindex.sh  # test for old index
-    - language: python
-      sudo: false
-      python:
-      - '2.7'
-      - '3.6'
-      install:
-      - python setup.py install
-      script:
-      - python test/test.py
-      - python test/test_oldindex.py
