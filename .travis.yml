@@ -24,7 +24,7 @@ matrix:
       before_install:
       - sudo apt-get install -qq valgrind
       - sudo apt-get update
-      - sudo apt-get install python3.5
+      - sudo apt-get install python3
       script:
       - make
       - sudo python setup.py install
