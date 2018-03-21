@@ -15,10 +15,7 @@ matrix:
       python:
       - '2.7'
       - '3.6'
-      sudo: required
-      compiler: gcc
       script:
-      - make
-      - sudo python setup.py install
+      - python setup.py install
       - python test/test.py
       - python test/test_oldindex.py
