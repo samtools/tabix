@@ -1,34 +1,23 @@
 matrix:
   include:
-    - language: c python
+    - language: c
+      sudo: required
+      compiler: gcc
+      env:
+      - VALGRIND_TEST_ON=1
+      before_install:
+      - sudo apt-get install -qq valgrind
+      script:
+      - make
+      - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
+      - source test/test_c_oldindex.sh  # test for old index
+    - language: python
       sudo: required
       compiler: gcc
       python:
       - '2.7'
-      env:
-      - VALGRIND_TEST_ON=1
-      before_install:
-      - sudo apt-get install -qq valgrind
-      script:
-      - make
-      - echo $TRAVIS_PYTHON_VERSION
-      - sudo python setup.py install
-      - python test/test.py
-      - python test/test_oldindex.py
-    - language: c python
-      sudo: required
-      compiler: gcc
-      python:
       - '3.6'
-      env:
-      - VALGRIND_TEST_ON=1
-      before_install:
-      - sudo apt-get install -qq valgrind
       script:
-      - make
-      - echo $TRAVIS_PYTHON_VERSION
       - sudo python3 setup.py install
       - python3 test/test.py
       - python3 test/test_oldindex.py
-      - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
-      - source test/test_c_oldindex.sh  # test for old index
