@@ -10,6 +10,7 @@ before_install:
 - sudo apt-get install -qq valgrind
 script:
 - make
+- echo $TRAVIS_PYTHON_VERSION
 - |
   if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
   sudo python3 setup.py install
