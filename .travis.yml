@@ -27,6 +27,6 @@ matrix:
       - sudo apt-get install python3
       script:
       - make
-      - sudo python setup.py install
-      - python test/test.py
-      - python test/test_oldindex.py
+      - sudo python3 setup.py install
+      - python3 test/test.py
+      - python3 test/test_oldindex.py
