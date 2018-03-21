@@ -1,14 +1,5 @@
 matrix:
   include:
-    - language: python
-      sudo: false
-      python:
-      - '2.7'
-      install:
-      - python setup.py install
-      script:
-      - python test/test.py
-      - python test/test_oldindex.py
     - language: c
       sudo: required
       compiler: gcc
@@ -16,7 +7,28 @@ matrix:
       - VALGRIND_TEST_ON=1
       before_install:
       - sudo apt-get install -qq valgrind
+      - sudo apt-get update
+      - sudo apt-get install python2.7
       script:
       - make
+      - sudo python setup.py install
+      - python test/test.py
+      - python test/test_oldindex.py
+      - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
+      - source test/test_c_oldindex.sh  # test for old index
+    - language: c
+      sudo: required
+      compiler: gcc
+      env:
+      - VALGRIND_TEST_ON=1
+      before_install:
+      - sudo apt-get install -qq valgrind
+      - sudo apt-get update
+      - sudo apt-get install python3.6
+      script:
+      - make
+      - sudo python setup.py install
+      - python test/test.py
+      - python test/test_oldindex.py
       - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
       - source test/test_c_oldindex.sh  # test for old index
