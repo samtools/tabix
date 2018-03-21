@@ -1,21 +1,36 @@
-language: c python
-sudo: required
-compiler: gcc
-python:
-- '3.6'
-- '2.7'
-env:
-- VALGRIND_TEST_ON=1
-before_install:
-- sudo apt-get install -qq valgrind
-script:
-- make
-- echo $TRAVIS_PYTHON_VERSION
-- sudo python setup.py install
-- python test/test.py
-- python test/test_oldindex.py
-- |
-  if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then
-    source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
-    source test/test_c_oldindex.sh  # test for old index
-  fi
+matrix:
+  include:
+    - language: c python
+      sudo: required
+      compiler: gcc
+      python:
+      - '2.7'
+      env:
+      - VALGRIND_TEST_ON=1
+      before_install:
+      - sudo apt-get install -qq valgrind
+      script:
+      - make
+      - echo $TRAVIS_PYTHON_VERSION
+      - sudo python setup.py install
+      - python test/test.py
+      - python test/test_oldindex.py
+      - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
+      - source test/test_c_oldindex.sh  # test for old index
+    - language: c python
+      sudo: required
+      compiler: gcc
+      python:
+      - '3.6'
+      env:
+      - VALGRIND_TEST_ON=1
+      before_install:
+      - sudo apt-get install -qq valgrind
+      script:
+      - make
+      - echo $TRAVIS_PYTHON_VERSION
+      - sudo python setup.py install
+      - python test/test.py
+      - python test/test_oldindex.py
+      - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
+      - source test/test_c_oldindex.sh  # test for old index
