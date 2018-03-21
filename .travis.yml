@@ -1,4 +1,4 @@
-language: python
+language: c python
 sudo: required
 compiler: gcc
 python:
