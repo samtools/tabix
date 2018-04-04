@@ -845,9 +845,10 @@ int ti_parse_region(const ti_index_t *idx, const char *str, int *tid, int *begin
 // if 1d, begin2 and end2 will have value -1.
 // query string error: -1
 // region_split_character not matching error: -2
+// memory allocation error: -3
 int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *begin, int *end, int *begin2, int *end2)
 {
-	char *s, *p, *sname;
+	char *s, *p, *sname, *tmp_s;
 	int i, l, k, h;
         int coord1s, coord1e, coord2s, coord2e, pos1s, pos2s;
         char region_split_character = ti_get_region_split_character(idx);
@@ -872,7 +873,9 @@ int ti_parse_region2d(const ti_index_t *idx, const char *str, int *tid, int *beg
           free(s); return (res);
         }
         if(i == k && dim == 2) { //1d query on 2d data : interprete query 'x' as 'x|x'
-          s = (char*)realloc(s, k*2+2);
+          tmp_s = (char*)realloc(s, k*2+2);
+          if(tmp_s) s = tmp_s;
+          else return(-3);  // memory alloc error
           strcpy(s+i+1, s);
           s[i] = region_split_character;
           k = k*2+1;
