@@ -1,3 +1,5 @@
+#!/bin/bash
+
 PATH=./bin:$PATH
 
 if [ $VALGRIND_TEST_ON -eq 1 ]; then
