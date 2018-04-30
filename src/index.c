@@ -26,7 +26,8 @@
 int TAD_LIDX_SHIFT = TAD_LIDX_SHIFT_LARGE_CHR;
 int MAX_CHR = MAX_CHR_LARGE_CHR;
 
-#define MAGIC_NUMBER "PX2.003\1"
+#define MAGIC_NUMBER "PX2.004\1"
+#define OLD_MAGIC_NUMBER2 "PX2.003\1"  // magic number for older version of pairix (0.3.4 - 0.3.5)
 #define OLD_MAGIC_NUMBER "PX2.002\1"  // magic number for older version of pairix (up to 0.3.3)
 
 
@@ -56,7 +57,7 @@ struct __ti_index_t {
         khash_t(s) *tname;
         khash_t(i) **index;
         ti_lidx_t *index2;
-        int linecount;
+        uint64_t linecount;
 };
 
 struct __ti_iter_t {
@@ -490,9 +491,9 @@ void ti_index_save(const ti_index_t *idx, BGZF *fp)
 		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
 	} else bgzf_write(fp, &idx->n, 4);
 	if (ti_is_be) {
-		uint32_t x = idx->linecount;
-		bgzf_write(fp, bam_swap_endian_4p(&x), 4);
-	} else bgzf_write(fp, &idx->linecount, 4);
+		uint64_t x = idx->linecount;
+		bgzf_write(fp, bam_swap_endian_8p(&x), 8);
+	} else bgzf_write(fp, &idx->linecount, 8);
 	assert(sizeof(ti_conf_t) == 40);
 	if (ti_is_be) { // write ti_conf_t;
 		uint32_t x[6];
@@ -574,19 +575,28 @@ static ti_index_t *ti_index_load_core(BGZF *fp)
 	}
 	bgzf_read(fp, magic, 8);
 	if (strncmp(magic, MAGIC_NUMBER, 8)) {
-            if (strncmp(magic, OLD_MAGIC_NUMBER, 8)) {
-		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
-		return 0;
-            } else {
+            if (strncmp(magic, OLD_MAGIC_NUMBER, 8)==0) {
                 TAD_LIDX_SHIFT = TAD_LIDX_SHIFT_ORIGINAL;
                 MAX_CHR = MAX_CHR_ORIGINAL; 
+            }
+            else if(strncmp(magic, OLD_MAGIC_NUMBER2, 8)==0) {
+            }
+            else {
+		fprintf(stderr, "[ti_index_load] wrong magic number. Re-index if your index file was created by an earlier version of pairix.\n");
+		return 0;
             }
 	}
 	idx = (ti_index_t*)calloc(1, sizeof(ti_index_t));
 	bgzf_read(fp, &idx->n, 4);
 	if (ti_is_be) bam_swap_endian_4p(&idx->n);
-	bgzf_read(fp, &idx->linecount, 4);
-	if (ti_is_be) bam_swap_endian_4p(&idx->linecount);
+        if(strncmp(magic, MAGIC_NUMBER, 8)==0) {
+      	    bgzf_read(fp, &idx->linecount, 8);
+	    if (ti_is_be) bam_swap_endian_8p(&idx->linecount);
+        }
+        else if(strncmp(magic, OLD_MAGIC_NUMBER2, 8)==0 || strncmp(magic, OLD_MAGIC_NUMBER, 8)==0) {
+            bgzf_read(fp, &idx->linecount, 4);
+            if (ti_is_be) bam_swap_endian_4p(&idx->linecount);
+        }
 	idx->tname = kh_init(s);
 	idx->index = (khash_t(i)**)calloc(idx->n, sizeof(void*));
 	idx->index2 = (ti_lidx_t*)calloc(idx->n, sizeof(ti_lidx_t));
@@ -978,7 +988,7 @@ ti_iter_t ti_iter_first()
 }
 
 
-int get_linecount(const ti_index_t *idx)
+uint64_t get_linecount(const ti_index_t *idx)
 {
         return(idx->linecount);
 }
