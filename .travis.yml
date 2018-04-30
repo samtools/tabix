@@ -14,8 +14,10 @@ matrix:
       - sudo python setup.py install
       - python test/test.py
       - python test/test_oldindex.py
+      - python test/test_oldindex2.py
       - source test/test_c.sh  # valgrind test is applied when VALGRIND_TEST_ON=1
       - source test/test_c_oldindex.sh  # test for old index
+      - source test/test_c_oldindex2.sh  # test for old index
     - language: c
       sudo: required
       compiler: gcc

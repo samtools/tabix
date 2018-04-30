@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include "bgzf.h"
 #include "pairix.h"
 #include "knetfile.h"
@@ -220,8 +221,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "[main] fail to load the index file.\n");
             return 1;
         }
-        int linecount = get_linecount(idx);
-        printf("%d\n", linecount);
+        printf("%"PRIu64"\n", get_linecount(idx));
         ti_index_destroy(idx);
         return 0;
     }

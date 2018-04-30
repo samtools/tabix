@@ -5,7 +5,7 @@ my $chrsizefile;
 &GetOptions( 'l|leftmost' => sub { $pos_is_5end=0 },
              'c|chromsize=s' => \$chrsizefile );  ## This defines ordering between mates
 
-if(@ARGV<1){ &print_usage(); exit(); }
+if(@ARGV<2){ &print_usage(); exit(); }
 my $input = $ARGV[0];
 my $prefix = $ARGV[1];
 my $outpairs = "$prefix.bsorted.pairs";

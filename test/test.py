@@ -253,10 +253,10 @@ class PairixTest2D(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             # trigger a warning
-            it = self.pr.querys2D(query)
+            self.pr.querys2D(query)
             # verify some things about the warning
-            assert len(w) == 1
-            assert issubclass(w[-1].category, pypairix.PairixWarning)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, pypairix.PairixWarning))
 
     def test_build_index_with_force_merged_nodups_tab(self):  ## recognizing custom set
         pypairix.build_index(TEST_FILE_2D, sc=2, bc=3, ec=3, sc2=6, bc2=7, ec2=7, force=1)
@@ -300,10 +300,10 @@ class PairixTest2D_reverse(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             # trigger a warning
-            it = self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
+            self.pr.query2D(self.chrom, self.start, self.end, self.chrom2, self.start2, self.end2)
             # verify some things about the warning
-            assert len(w) == 1
-            assert issubclass(w[-1].category, pypairix.PairixWarning)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, pypairix.PairixWarning))
 
 
 ## 2D query on 2D indexed file with chromosomes using a 4DN pairs file
