@@ -593,7 +593,7 @@ pairix_querys_2D(PairixObject *self, PyObject *args)
 static PyObject *
 pairix_get_linecount(PairixObject *self)
 {
-  return Py_BuildValue("i", self->linecount);
+  return Py_BuildValue("l", self->linecount);
 }
 
 static PyObject *
