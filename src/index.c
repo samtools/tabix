@@ -1741,9 +1741,9 @@ char **get_seq1_list_for_given_seq2(char *seq2, char **seqpair_list, int n_seqpa
 
 /* convert string 'region1|region2' to 'region2|region1' */
 char *flip_region ( char* s, char region_split_character) {
-    char s_flp[MAX_REGION_STR_LEN];
     int l, i, l2, split_pos;
     l = strlen(s);
+    char *s_flp = calloc(l+1, sizeof(char));
     for(i = 0; i != l; i++) if( s[i] == region_split_character) break;
     s[i]=0;
     split_pos = i;
@@ -1908,10 +1908,11 @@ sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip)
 
     tid_test = ti_querys_tid(tb, reg);
     if (tid_test == -1) {
-        const char *reg2 = flip_region(reg, get_region_split_character(tb));
+        char *reg2 = flip_region(reg, get_region_split_character(tb));
         int tid_test_rev = ti_querys_tid(tb, reg2);
         if (tid_test_rev != -1 && tid_test_rev != -2 && tid_test_rev != -3) {
             result = ti_querys_2d_general(tb, reg2);
+            free(reg2);
             if (flip == 1){
                 if (result == NULL) {
                    fprintf(stderr, "Cannot find matching chromosome pair. Check that chromosome naming conventions match between your query and input file.");
@@ -1925,6 +1926,7 @@ sequential_iter_t *querys_2D_wrapper(pairix_t *tb, const char *reg, int flip)
                 return(NULL);
             }
         }
+        else free(reg2);
     }
     else if (tid_test == -2){
         fprintf(stderr, "The start coordinate must be less than the end coordinate.");
@@ -1972,7 +1974,8 @@ int check_triangle(ti_index_t *idx)
       for(i=0;i<len;i++){
         const char *reg2 = flip_region(seqnames[i], ti_get_region_split_character(idx));
         if(strcmp(seqnames[i], reg2)!=0)
-          if(ti_get_tid(idx, reg2)!=-1) { free(seqnames); return(0); }  // not a triangle
+          if(ti_get_tid(idx, reg2)!=-1) { free(seqnames); free(reg2); return(0); }  // not a triangle
+        free(reg2);
       }
       free(seqnames);
       return(1);  // is a triangle
