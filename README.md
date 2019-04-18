@@ -327,13 +327,14 @@ chr2:1-20000|*
 
 cat samples/test.regions2
 chrX:100000000-110000000|chrY
-chr19:1-100000|chr19
+chr19:1-300000|chr19
 
 bin/pairix -L samples/test_4dn.pairs.gz samples/test.regions samples/test.regions2
 SRR1658581.49364897	chr1	36379	chr20	62713042	+	+
 SRR1658581.31672330	chr1	12627	chr9	23963238	+	-
 SRR1658581.22713561	chr1	14377	chrX	107423076	-	+
 SRR1658581.31992022	chrX	108223782	chrY	5017118	-	-
+SRR1658581.55524746	chr19	105058	chr19	105558	+	-
 ```
 
 
