@@ -9,7 +9,7 @@ gunzip -c $f | grep "^#" > $outprefix.pairs
 gunzip -c $f | grep -v '^#' | sort -k2,2 -k4,4 -k3,3g -k5,5g >> $outprefix.pairs
     
 # compressing
-bgzip $outprefix.pairs
+bgzip -f $outprefix.pairs
 
 # indexing
 pairix -f $outprefix.pairs.gz
