@@ -62,8 +62,6 @@ tabix_getnames(t)
 		XPUSHs(sv_2mortal(newSVpv(names[i], 0)));
 	free(names);
 
-MODULE = Tabix PACKAGE = TabixIterator
-
 void
 tabix_iter_free(iter)
 	ti_iter_t iter
